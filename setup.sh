@@ -58,6 +58,43 @@ else
     info "📄 Arquivo .env já existe"
 fi
 
+# Garantir que DB_HOST esteja correto para Docker
+if grep -q "DB_HOST=127.0.0.1" .env; then
+    log "🔧 Ajustando DB_HOST para 'mysql' no arquivo .env..."
+    sed -i 's/DB_HOST=127.0.0.1/DB_HOST=mysql/g' .env
+fi
+
+# Garantir que WWWGROUP e WWWUSER existam no .env
+if ! grep -q "WWWGROUP=" .env; then
+    log "🔧 Adicionando WWWGROUP ao .env..."
+    echo "WWWGROUP=1000" >> .env
+fi
+
+if ! grep -q "WWWUSER=" .env; then
+    log "🔧 Adicionando WWWUSER ao .env..."
+    echo "WWWUSER=1000" >> .env
+fi
+
+# Verificar se a pasta vendor existe
+if [ ! -d "vendor" ]; then
+    log "📦 Pasta vendor não encontrada. Instalando dependências com container temporário..."
+    docker run --rm \
+        -u "$(id -u):$(id -g)" \
+        -v "$(pwd):/var/www/html" \
+        -w /var/www/html \
+        laravelsail/php83-composer:latest \
+        composer install --ignore-platform-reqs
+    
+    if [ $? -eq 0 ]; then
+        log "✅ Dependências instaladas com sucesso via container temporário"
+    else
+        error "Falha ao instalar dependências iniciais"
+        exit 1
+    fi
+else
+    info "📦 Pasta vendor já existe"
+fi
+
 # Subir containers
 log "📦 Subindo containers Docker..."
 if docker-compose up -d; then
@@ -125,7 +162,31 @@ fi
 
 # Aguardar MySQL estar pronto
 log "🗄️ Aguardando MySQL estar pronto..."
-sleep 20
+log "🗄️ Aguardando MySQL estar pronto..."
+max_tries=60
+count=0
+connected=false
+
+while [ $count -lt $max_tries ]; do
+    if docker-compose exec -T laravel.test php artisan tinker --execute="try { \DB::connection()->getPdo(); echo 'DB_OK'; } catch (\Exception \$e) { }" 2>/dev/null | grep -q "DB_OK"; then
+        connected=true
+        break
+    fi
+    
+    echo -n "."
+    sleep 2
+    count=$((count+1))
+done
+
+echo ""
+
+if [ "$connected" = true ]; then
+    log "✅ MySQL está pronto!"
+else
+    error "MySQL não ficou pronto a tempo. Último erro:"
+    docker-compose exec -T laravel.test php artisan tinker --execute="try { \DB::connection()->getPdo(); } catch (\Exception \$e) { echo \$e->getMessage(); }"
+    exit 1
+fi
 
 # Executar migrações
 log "🗄️ Executando migrações do banco de dados..."

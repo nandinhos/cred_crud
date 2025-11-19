@@ -12,6 +12,10 @@ class EditCredential extends EditRecord
 {
     protected static string $resource = CredentialResource::class;
 
+    protected ?string $heading = 'Editar Credencial';
+
+    protected ?string $subheading = 'Modifique os dados da credencial de segurança';
+
     protected function getHeaderActions(): array
     {
         return [

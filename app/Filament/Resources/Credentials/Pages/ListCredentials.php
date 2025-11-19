@@ -10,6 +10,10 @@ class ListCredentials extends ListRecords
 {
     protected static string $resource = CredentialResource::class;
 
+    protected ?string $heading = 'Credenciais';
+
+    protected ?string $subheading = 'Gerencie as credenciais de segurança';
+
     protected function getHeaderActions(): array
     {
         return [

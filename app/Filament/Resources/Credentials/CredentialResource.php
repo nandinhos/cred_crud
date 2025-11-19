@@ -25,6 +25,12 @@ class CredentialResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
 
+    protected static ?string $navigationLabel = 'Credenciais';
+
+    protected static ?string $modelLabel = 'credencial';
+
+    protected static ?string $pluralModelLabel = 'credenciais';
+
     public static function form(Schema $schema): Schema
     {
         return $schema
