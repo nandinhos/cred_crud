@@ -11,4 +11,5 @@
 - Sempre que for realizar qualquer alteração no banco de dados, crie um backup antes de fazer qualquer modificação.
 - Para acessar o banco de dados, utilize sempre a documentação que versa sobre o tema (verifique as credenciais, o container em que ele está rodando, portas, database correto). Faça uma análise dos campos de cada tabela para mapear e ter assetividade no momento de trazer ou inserir dados.
 - Utilize sempre o MCP do Context 7 para manter a documentação atualizada.
+- Sempre que for criar uma nova task, faça o fluxo de  verificar a complexidade da tarefa e depois expandir a tarefa em sub-tarefas.
 

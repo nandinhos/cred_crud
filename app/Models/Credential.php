@@ -11,7 +11,7 @@ class Credential extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'id',
+        'user_id',
         'fscs',
         'name',
         'secrecy',
@@ -24,4 +24,13 @@ class Credential extends Model
         'concession' => 'date',
         'validity' => 'date',
     ];
+
+    /**
+     * Relacionamento com User
+     * Uma credencial pertence a um usuário
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -56,4 +56,13 @@ class User extends Authenticatable implements FilamentUser
         // Verificar roles se o usuário tiver
         return $this->hasRole('super_admin') || $this->hasRole('admin');
     }
+
+    /**
+     * Relacionamento com Credential
+     * Um usuário pode ter muitas credenciais
+     */
+    public function credentials()
+    {
+        return $this->hasMany(Credential::class);
+    }
 }
