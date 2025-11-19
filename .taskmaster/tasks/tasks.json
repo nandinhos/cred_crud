@@ -237,7 +237,7 @@
         "description": "Migração completa da aplicação atual para Laravel 12 e implementação do Filament 4 como painel administrativo, substituindo controllers/views Blade por recursos Filament modernos.",
         "details": "1. **Atualização de Dependências Base**:\n   ```bash\n   composer require laravel/framework:^12.0\n   composer require filament/filament:^4.0\n   composer require spatie/laravel-permission:^6.0\n   ```\n\n2. **Configuração Inicial do Filament 4**:\n   ```bash\n   php artisan filament:install --panels\n   php artisan make:filament-user\n   ```\n   - Configurar AdminPanelProvider em app/Providers/Filament/\n   - Adicionar plugins: Shield (permissions), Spatie Media Library\n\n3. **Migração de Models para Laravel 12**:\n   - Atualizar sintaxe de casts para formato array:\n     ```php\n     protected function casts(): array {\n         return [\n             'concession' => 'date',\n             'validity' => 'date',\n             'created_at' => 'datetime',\n         ];\n     }\n     ```\n   - Implementar SoftDeletes com observers para auditoria\n   - Adicionar scopes para filtros de validade\n\n4. **Criação de Resources Filament**:\n   ```bash\n   php artisan make:filament-resource Credential --generate --soft-deletes\n   ```\n   - CredentialResource com campos:\n     * TextInput para name, fscs\n     * Select para secrecy (options: ['OSTENSIVO', 'RESERVADO', 'CONFIDENCIAL', 'SECRETO'])\n     * DatePicker para concession/validity com validação validity > today\n     * Toggle para is_active\n   - Implementar Table com filters (secrecy, status, date range)\n   - Bulk actions para exportação PDF/Excel\n   - Custom page para visualização com tabs (dados, histórico, anexos)\n\n5. **Sistema de Autenticação e Permissões**:\n   - Integrar Spatie Permission com Filament Shield:\n     ```bash\n     composer require bezhansalleh/filament-shield\n     php artisan shield:install\n     ```\n   - Criar roles: super_admin, admin, consulta\n   - Policies para Credential (view, create, update, delete, restore)\n   - Configurar navigation groups e badges\n\n6. **Widgets e Dashboard**:\n   - StatsOverviewWidget: total credenciais, expirando (30d), expiradas\n   - ChartWidget: credenciais por grau de sigilo (pie chart)\n   - TableWidget: últimas 10 credenciais criadas\n   - NotificationWidget: alertas de vencimento\n\n7. **Relatórios e Exportação**:\n   - Implementar ExportAction no CredentialResource:\n     ```php\n     ->headerActions([\n         ExportAction::make()\n             ->exporter(CredentialExporter::class)\n             ->formats([ExportFormat::Xlsx, ExportFormat::Pdf])\n     ])\n     ```\n   - Criar CredentialExporter com colunas customizadas\n   - Implementar filtros de data no export\n\n8. **Notificações com Filament**:\n   - DatabaseNotification para vencimentos:\n     ```php\n     Notification::make()\n         ->warning()\n         ->title('Credencial expirando em 7 dias')\n         ->body(\"{$credential->name} vence em {$credential->validity}\")\n         ->sendToDatabase($users);\n     ```\n   - Command agendado no Kernel para verificar vencimentos\n   - Badge no menu com contagem de não lidas\n\n9. **Temas e Customização**:\n   - Configurar cores do painel no AdminPanelProvider\n   - Custom theme com Tailwind (npm run build)\n   - Logo e favicon personalizados\n   - Traduções pt-BR: composer require filament/spatie-laravel-translatable-plugin\n\n10. **Migração de Rotas e Controllers**:\n    - Remover rotas web.php relacionadas ao CRUD (Filament gerencia)\n    - Manter apenas rotas públicas se necessário\n    - Depreciar CredentialController antigo após migração completa\n\n11. **Testes de Compatibilidade**:\n    - Atualizar phpunit.xml para Laravel 12\n    - Migrar factories para sintaxe nova\n    - Pest tests para Filament Resources usando actingAs($user)\n\n12. **Otimizações Laravel 12**:\n    - Implementar eager loading nos relationships\n    - Configurar cache de rotas/config/views\n    - Ativar horizon para queues se necessário\n    - Database optimization com indexes",
         "testStrategy": "1. **Testes de Instalação**:\n   - Verificar php artisan about mostra Laravel 12.x\n   - Verificar composer show filament/filament retorna ^4.0\n   - Acessar /admin e confirmar painel renderiza\n\n2. **Testes Funcionais Filament**:\n   - Criar credencial via painel: preencher form, validar campos obrigatórios\n   - Editar credencial existente e verificar atualização\n   - Soft delete e restore através do resource\n   - Testar filtros: secrecy, date range, status (ativo/expirado)\n   - Bulk actions: selecionar 10 registros e exportar Excel\n\n3. **Testes de Permissões**:\n   - Login como 'consulta': verificar que botões edit/delete não aparecem\n   - Login como 'admin': verificar acesso total ao CRUD\n   - Teste de policy: usuário sem permission tenta acessar rota direta (403)\n\n4. **Testes de Notificações**:\n   - Executar artisan check:expiring-credentials\n   - Verificar badge de notificações no menu\n   - Marcar notificação como lida\n\n5. **Testes de Performance**:\n   - Seed de 10.000 credenciais\n   - Teste de paginação com 100 registros por página\n   - Verificar queries com Debugbar (N+1 problems)\n   - Exportar PDF com 1000 registros (tempo < 10s)\n\n6. **Testes de Regressão**:\n   - Suite completa Pest: php artisan test\n   - Verificar todas features antigas funcionam\n   - Teste de validação de datas mantém regras\n   - Auditoria de exclusões funcionando\n\n7. **Testes de UI/UX**:\n   - Responsividade em mobile/tablet\n   - Traduções em pt-BR funcionando\n   - SweetAlert2 integrado com Filament notifications\n   - Performance do front-end (Lighthouse score > 90)",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "1",
           "2",
@@ -256,9 +256,10 @@
             "description": "Atualizar composer.json para Laravel 12 e instalar Filament 4 com todas as dependências necessárias para o painel administrativo",
             "dependencies": [],
             "details": "Executar comandos de atualização do composer para Laravel 12.x e Filament 4.x. Instalar dependências complementares como spatie/laravel-permission ^6.0, filament-shield para gerenciamento de permissões, e configurar o painel administrativo básico. Verificar compatibilidade de todas as dependências existentes no composer.json atual com Laravel 12. Executar php artisan filament:install --panels e criar o primeiro usuário administrativo com php artisan make:filament-user. Configurar o AdminPanelProvider em app/Providers/Filament/ com configurações básicas de idioma (pt-BR), timezone e cores do tema.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que php artisan about exibe Laravel 12.x e composer show filament/filament retorna versão 4.x. Acessar /admin e confirmar que o painel renderiza corretamente. Testar login com usuário criado e verificar dashboard padrão do Filament.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-19T01:22:32.408Z"
           },
           {
             "id": 2,
@@ -268,9 +269,10 @@
               1
             ],
             "details": "Refatorar app/Models/Credential.php e app/Models/User.php para usar protected function casts(): array em vez de propriedade. Atualizar casts para 'concession' => 'date', 'validity' => 'date', 'created_at' => 'datetime', 'updated_at' => 'datetime'. Implementar SoftDeletes trait e criar CredentialObserver para registrar eventos de criação, atualização e deleção. Adicionar scopes úteis como scopeExpired(), scopeExpiringSoon(), scopeActiveOnly() para facilitar queries. Criar policies com php artisan make:policy CredentialPolicy --model=Credential com métodos viewAny, view, create, update, delete, restore, forceDelete.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar php artisan tinker e testar Credential::factory()->create() para verificar casts funcionando. Testar soft delete e verificar deleted_at sendo preenchido. Testar scopes criados retornando resultados corretos. Verificar que policies são chamadas corretamente com Gate::allows().",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-19T01:23:10.676Z"
           },
           {
             "id": 3,
@@ -281,9 +283,10 @@
               2
             ],
             "details": "Executar php artisan make:filament-resource Credential --generate --soft-deletes. Configurar form schema com TextInput para name e fscs, Select para secrecy com options ['OSTENSIVO', 'RESERVADO', 'CONFIDENCIAL', 'SECRETO'], DatePicker para concession e validity com validação customizada (validity deve ser >= hoje), Toggle para is_active. Implementar table com colunas name, fscs, secrecy (badge colorido), concession, validity (com indicador visual de expiração), is_active (icon boolean). Adicionar filters para secrecy (SelectFilter), status de validade (TernaryFilter), range de datas (DateRangeFilter). Criar bulk actions para exportação e deleção em massa. Implementar páginas customizadas: ViewCredential com tabs para dados básicos, histórico de alterações e anexos futuros.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Acessar /admin/credentials e verificar listagem renderizando. Criar nova credencial via formulário e validar que campos obrigatórios funcionam. Testar validação de data de validade (não aceitar datas passadas). Aplicar filtros diversos e verificar resultados. Testar soft delete e restore via actions. Verificar bulk actions funcionando com múltiplos registros selecionados.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-19T01:24:34.188Z"
           },
           {
             "id": 4,
@@ -295,9 +298,10 @@
               3
             ],
             "details": "Instalar bezhansalleh/filament-shield e executar php artisan shield:install para gerar permissions automáticas. Criar roles no seeder: super_admin (all permissions), admin (view/create/update credentials), consulta (apenas view credentials). Configurar policies em CredentialPolicy usando can() do Spatie. Adicionar middleware no AdminPanelProvider para verificar permissões. Implementar navigation badges mostrando contagens apenas para usuários com permissão. Configurar grupos de navegação (Gestão, Relatórios, Configurações) com visibilidade baseada em permissões. Criar RoleResource e PermissionResource do Filament Shield para gerenciamento visual de permissões.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Criar usuário com role 'consulta' e verificar que não pode criar/editar credenciais. Criar usuário 'admin' e verificar acesso a CRUD completo mas não a configurações de roles. Logar como super_admin e verificar acesso total incluindo shield resources. Testar navigation items aparecendo/sumindo conforme permissões. Verificar que policies bloqueiam ações não autorizadas com mensagens apropriadas.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-19T01:25:03.794Z"
           },
           {
             "id": 5,
@@ -309,18 +313,20 @@
               3
             ],
             "details": "Criar StatsOverviewWidget com cards: total de credenciais (icon: heroicon-o-document-text), credenciais expirando em 30 dias (icon warning), credenciais já expiradas (icon danger). Desenvolver CredentialsBySecrecyChart usando ChartWidget tipo pie com dados agrupados por grau de sigilo. Criar LatestCredentialsWidget (TableWidget) mostrando últimas 10 credenciais criadas com links para edição. Implementar Command CheckExpiringCredentials que roda diariamente via Kernel schedule, verifica credenciais expirando em 30/7 dias e cria DatabaseNotifications. Configurar DatabaseNotification no painel Filament com título, corpo e ações (view credential). Adicionar badge no ícone de notificações mostrando contagem de não lidas. Criar migration para adicionar índices em validity para performance.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Acessar /admin e verificar todos os widgets renderizando com dados corretos. Executar php artisan app:check-expiring-credentials manualmente e verificar notificações sendo criadas. Verificar que notificações duplicadas não são geradas em execuções subsequentes. Testar clicando em notificação e sendo redirecionado para credencial. Verificar badge de contagem atualizando ao marcar como lida. Testar performance do command com 1000+ credenciais.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-19T01:25:05.489Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-19T01:25:05.489Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-19T01:03:23.953Z",
+      "lastModified": "2025-11-19T01:25:05.490Z",
       "taskCount": 11,
-      "completedCount": 1,
+      "completedCount": 2,
       "tags": [
         "master"
       ]

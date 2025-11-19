@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,19 +15,46 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('auth.login');
+    return redirect('/admin');
+});
+
+// Rota temporária para login automático do admin
+Route::get('/login-admin', function () {
+    $user = \App\Models\User::where('email', 'admin@admin.com')->first();
+    if ($user) {
+        \Illuminate\Support\Facades\Auth::login($user);
+        session()->regenerate();
+        return redirect('/admin')->with('success', 'Login realizado com sucesso! Usuário: ' . $user->email);
+    }
+    return redirect('/admin/login')->with('error', 'Usuário admin não encontrado!');
+});
+
+// Rota de teste para verificar permissões
+Route::get('/test-permissions', function () {
+    $user = \Illuminate\Support\Facades\Auth::user();
+    if (!$user) {
+        return 'Usuário não logado. <a href="/login-admin">Fazer login como admin</a>';
+    }
+    
+    $canAccess = $user->canAccessPanel(app(\Filament\Panel::class));
+    
+    return [
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'roles' => $user->roles->pluck('name')->toArray(),
+        'can_access_panel' => $canAccess,
+        'is_authenticated' => \Illuminate\Support\Facades\Auth::check(),
+    ];
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect('/admin');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::resource('/credentials', CredentialController::class);
 });
 
 require __DIR__.'/auth.php';

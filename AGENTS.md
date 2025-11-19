@@ -5,7 +5,10 @@
 - Sempre que iniciar, atualizar ou finalizar qualquer tarefa (ou sub-tarefa), utilize o comando task-master set-status --id=<id> --status=done.
 - O Status de uma tarefa Pai sempre deve refletir o Status de todas as suas sub-tarefas.
 - A cada alteração de status de tarefa ou subtarefa, realize testes unitários, verifique se está totalmente funcional e sendo positivo, faça o commit utilizando o padrão conventional commits.
-- Sistema é um projeto para funcionar em ambiente legacy, portanto, utilize apenas tecnologias e bibliotecas compatíveis com essa versão.
+- Sistema é um projeto para funcionar em ambiente com laravel 12 e filament 4. Atente-se para as versões de cada framework e suas dependências.
+- Sempre que terminar uma tarefa, faça teste para ver se a pagina está funcionando corretamente.
 - Atente-se para manusear o banco de dados de forma correta, evitando modificar ou deletar dados importantes. 
 - Sempre que for realizar qualquer alteração no banco de dados, crie um backup antes de fazer qualquer modificação.
 - Para acessar o banco de dados, utilize sempre a documentação que versa sobre o tema (verifique as credenciais, o container em que ele está rodando, portas, database correto). Faça uma análise dos campos de cada tabela para mapear e ter assetividade no momento de trazer ou inserir dados.
+- Utilize sempre o MCP do Context 7 para manter a documentação atualizada.
+
