@@ -6,6 +6,7 @@ use App\Models\Credential;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class CredentialController extends Controller
 {
@@ -35,11 +36,16 @@ class CredentialController extends Controller
     {
         // Validação dos campos enviados no formulário
         $request->validate([
-            'fscs' => 'required|string|max:255',
+            'fscs' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('credentials')->whereNull('deleted_at')
+            ],
             'name' => 'required|string|max:255',
-            'secrecy' => 'required|string|in:R,S', // Verifica se o valor é "R" ou "S"
-            'concession' => 'string|max:255',
-            'validity' => 'required|string|max:255',
+            'secrecy' => 'nullable|string|in:R,S', // Verifica se o valor é "R" ou "S"
+            'concession' => 'nullable|date',
+            'validity' => 'required|date|after:today',
         ]);
 
         // Criação da nova credencial no banco de dados
@@ -71,11 +77,16 @@ class CredentialController extends Controller
     {
         // Validação dos campos enviados no formulário
         $request->validate([
-            'fscs' => 'required|string|max:255',
+            'fscs' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('credentials')->whereNull('deleted_at')->ignore($credential->id)
+            ],
             'name' => 'required|string|max:255',
-            'secrecy' => 'required|string|max:255',
-            'concession' => 'required|string|max:255',
-            'validity' => 'required|string|max:255',
+            'secrecy' => 'nullable|string|in:R,S',
+            'concession' => 'nullable|date',
+            'validity' => 'required|date|after:today',
         ]);
 
         // Atualizar as informações da credencial com os dados do formulário

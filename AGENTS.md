@@ -1,0 +1,11 @@
+- Todos os commits devem ser em português.
+- Para toda e qualquer atividade ou ação que envolva a gestão de tarefas do projeto, utilize o Task Master.
+- Todas as intruções de como utilizar o Task Master estão disponíveis no arquivo .taskmaster/docs/taskmaster-commands.md.
+- Sempre que for iniciar uma nova tarefa, busque qual tarefa fazer utilizando o comando task-master next.
+- Sempre que iniciar, atualizar ou finalizar qualquer tarefa (ou sub-tarefa), utilize o comando task-master set-status --id=<id> --status=done.
+- O Status de uma tarefa Pai sempre deve refletir o Status de todas as suas sub-tarefas.
+- A cada alteração de status de tarefa ou subtarefa, realize testes unitários, verifique se está totalmente funcional e sendo positivo, faça o commit utilizando o padrão conventional commits.
+- Sistema é um projeto para funcionar em ambiente legacy, portanto, utilize apenas tecnologias e bibliotecas compatíveis com essa versão.
+- Atente-se para manusear o banco de dados de forma correta, evitando modificar ou deletar dados importantes. 
+- Sempre que for realizar qualquer alteração no banco de dados, crie um backup antes de fazer qualquer modificação.
+- Para acessar o banco de dados, utilize sempre a documentação que versa sobre o tema (verifique as credenciais, o container em que ele está rodando, portas, database correto). Faça uma análise dos campos de cada tabela para mapear e ter assetividade no momento de trazer ou inserir dados.

@@ -19,4 +19,9 @@ class Credential extends Model
         'concession',
         'validity',
     ];
+
+    protected $casts = [
+        'concession' => 'date',
+        'validity' => 'date',
+    ];
 }
