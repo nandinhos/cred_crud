@@ -350,3 +350,157 @@ git commit -m "docs: adiciona guia de melhores práticas"
 **🔧 Versão do sistema:** Laravel 12.39.0 + Filament 4.2.2  
 **📊 Status:** Sistema 100% funcional  
 **🎯 Próxima revisão:** A cada problema novo identificado
+
+---
+
+## 📋 **IMPLEMENTAÇÃO DE PAINEL DE ADMINISTRAÇÃO COM FILAMENT 4**
+
+### ❌ ERRO: UserResource não aparece no menu do Filament
+**Situação:** Após criar UserResource, o menu não aparecia para o admin
+
+**Problemas identificados:**
+1. UserResource criado em namespace incorreto (`App\Filament\Resources\Users\UserResource`)
+2. Usuário admin tinha role `super_admin` ao invés de `Super Admin` criada pelo seeder
+3. Propriedades com tipos incorretos para Filament 4
+
+**✅ SOLUÇÃO:**
+```php
+// 1. UserResource no namespace correto
+namespace App\Filament\Resources; // ✅ CORRETO
+// NÃO: namespace App\Filament\Resources\Users; // ❌ ERRADO
+
+// 2. Corrigir role do usuário admin
+$admin->removeRole('super_admin');
+$admin->assignRole('Super Admin');
+
+// 3. Estrutura correta do Filament 4
+public static function form(Schema $schema): Schema // ✅ CORRETO
+// NÃO: public static function form(Form $form): Form // ❌ ERRADO Filament 3
+
+// 4. Remover propriedades problemáticas temporariamente
+protected static ?string $navigationLabel = "Usuários"; // ✅ CORRETO
+// NÃO: protected static ?string $navigationGroup = "Admin"; // ❌ Causava erro de tipo
+```
+
+### ❌ ERRO: Permissions de roles não funcionando corretamente
+**Situação:** Admin não tinha permissions para `view_users` mesmo sendo super admin
+
+**Causa:** Seeder criou roles duplicadas e usuário tinha role incorreta
+
+**✅ SOLUÇÃO:**
+```bash
+# Verificar roles existentes
+Spatie\Permission\Models\Role::all()->pluck('name');
+
+# Atribuir role correta
+$admin = User::where('email', 'admin@admin.com')->first();
+$admin->assignRole('Super Admin'); // Role criada pelo seeder
+
+# Verificar permissions
+$admin->can('view_users'); // Deve retornar true
+```
+
+### ❌ ERRO: Problemas de permissões em arquivos Docker
+**Situação:** Erro "Permission denied" ao tentar editar arquivos via find_and_replace_code
+
+**Causa:** Arquivos criados pelo Docker têm ownership diferente
+
+**✅ SOLUÇÃO:**
+```bash
+# Usar docker exec para operações de arquivo
+docker-compose exec laravel.test php -r "file_put_contents('path', 'content');"
+
+# OU criar diretórios via Docker
+docker-compose exec laravel.test mkdir -p /var/www/html/path
+```
+
+### ❌ ERRO: Estrutura de páginas incorreta no Filament 4
+**Situação:** Páginas do Resource em local errado causavam erros
+
+**✅ SOLUÇÃO:**
+```php
+// Estrutura correta:
+app/Filament/Resources/UserResource.php
+app/Filament/Resources/UserResource/Pages/ListUsers.php
+app/Filament/Resources/UserResource/Pages/CreateUser.php
+app/Filament/Resources/UserResource/Pages/EditUser.php
+
+// Namespace das páginas:
+namespace App\Filament\Resources\UserResource\Pages;
+
+// Referência no Resource:
+public static function getPages(): array
+{
+    return [
+        'index' => Pages\ListUsers::route('/'),
+        'create' => Pages\CreateUser::route('/create'),
+        'edit' => Pages\EditUser::route('/{record}/edit'),
+    ];
+}
+```
+
+### 🎯 **BOAS PRÁTICAS APRENDIDAS:**
+
+#### 1. **Verificação de Sistema de Roles**
+```bash
+# Sempre verificar roles e permissions após seeder
+php artisan tinker --execute="
+User::find(1)->roles->pluck('name');
+User::find(1)->getAllPermissions()->pluck('name');
+"
+```
+
+#### 2. **Estrutura de Resource no Filament 4**
+```php
+// Usar Schema ao invés de Form
+public static function form(Schema $schema): Schema
+{
+    return $schema->components([...]);
+}
+
+// Usar actions corretos na table
+->recordActions([Actions\EditAction::make()])
+->toolbarActions([Actions\BulkActionGroup::make([...])])
+```
+
+#### 3. **Relacionamentos em Resources**
+```php
+// Select para relacionamentos
+Select::make('roles')
+    ->multiple()
+    ->relationship('roles', 'name')
+    ->preload()
+    ->searchable();
+
+// Badge para mostrar relacionamentos
+BadgeColumn::make('roles.name')
+    ->colors(['danger' => 'Super Admin'])
+    ->separator(', ');
+```
+
+#### 4. **Sistema de Permissões**
+```php
+// Policy sempre verifica permissions do Spatie
+public function viewAny(User $user): bool
+{
+    return $user->can('view_users');
+}
+
+// Resource usa canViewAny para menu
+public static function canViewAny(): bool
+{
+    return auth()->user()?->can('view_users') ?? false;
+}
+```
+
+### 📝 **CHECKLIST para Resources do Filament:**
+- [ ] Namespace correto: `App\Filament\Resources`
+- [ ] Método `form()` usa `Schema` não `Form`
+- [ ] Método `table()` usa actions corretos
+- [ ] Páginas em `ResourceName/Pages/`
+- [ ] Permissions configuradas no Resource
+- [ ] Policy criada e registrada
+- [ ] Roles atribuídas corretamente aos usuários
+- [ ] Relacionamentos testados
+
+**🎯 Próxima revisão:** A cada problema novo identificado
