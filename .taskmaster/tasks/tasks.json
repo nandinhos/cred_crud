@@ -365,9 +365,10 @@
               2
             ],
             "details": "Executar `php artisan make:filament-resource User --generate` e customizar app/Filament/Resources/UserResource.php implementando: 1) método `form()` com TextInput para name e email, password com hash e dehydration condicional, Select multiple para roles com relationship, CheckboxList para permissions adicionais, 2) método `table()` com TextColumn para name e email searchable/sortable, BadgeColumn para roles.name com cores específicas, credentials_count, created_at formatado, 3) filters com SelectFilter para roles e Filter para has_credentials, 4) actions de Edit e Delete, 5) bulkActions com DeleteBulkAction.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Acessar painel Filament e verificar que UserResource aparece no menu. Testar criação de novo usuário preenchendo todos os campos e atribuindo roles/permissions. Verificar que senha é hashada corretamente. Testar edição mantendo senha existente quando campo vazio. Verificar que filtros funcionam corretamente e badges de roles exibem cores apropriadas. Testar ordenação e busca nas colunas.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-19T19:58:37.150Z"
           },
           {
             "id": 4,
@@ -377,9 +378,10 @@
               2
             ],
             "details": "Executar `php artisan make:policy UserPolicy --model=User` e implementar métodos: `viewAny()` retornando `$user->can('view_users')`, `create()` retornando `$user->can('create_users')`, `update()` retornando `$user->can('edit_users')`, `delete()` retornando `$user->can('delete_users') && $model->id !== $user->id` para evitar auto-exclusão. Registrar policy em `app/Providers/AuthServiceProvider.php` adicionando `User::class => UserPolicy::class` no array `$policies`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Criar usuários com diferentes roles e testar acesso ao UserResource verificando que apenas usuários com permissions adequadas conseguem visualizar, criar, editar e deletar. Testar especificamente que usuário não consegue deletar a si próprio. Verificar que usuários sem permission view_users não conseguem acessar o resource. Testar que Super Admin tem acesso total.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-19T19:58:38.694Z"
           },
           {
             "id": 5,
@@ -395,12 +397,12 @@
             "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-11-19T19:50:53.035Z"
+        "updatedAt": "2025-11-19T19:58:38.694Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-19T19:50:53.036Z",
+      "lastModified": "2025-11-19T19:58:38.695Z",
       "taskCount": 12,
       "completedCount": 2,
       "tags": [

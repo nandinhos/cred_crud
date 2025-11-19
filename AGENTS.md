@@ -12,4 +12,6 @@
 - Para acessar o banco de dados, utilize sempre a documentação que versa sobre o tema (verifique as credenciais, o container em que ele está rodando, portas, database correto). Faça uma análise dos campos de cada tabela para mapear e ter assetividade no momento de trazer ou inserir dados.
 - Utilize sempre o MCP do Context 7 para manter a documentação atualizada.
 - Sempre que for criar uma nova task, faça o fluxo de  verificar a complexidade da tarefa e depois expandir a tarefa em sub-tarefas.
+- Sempre que tivermos falhas, após as verificações de como foram corrigidas, insira as informações no arquivo de lições aprendidas.
+- Sempre que tivermos falhas, consulte nas lições aprendidas se há algum problema similar para executar a correção já implementada anteriormente (visando totalmente produtividade e economia de uso de tokens)
 
