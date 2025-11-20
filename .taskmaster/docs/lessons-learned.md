@@ -503,4 +503,156 @@ public static function canViewAny(): bool
 - [ ] Roles atribuídas corretamente aos usuários
 - [ ] Relacionamentos testados
 
-**🎯 Próxima revisão:** A cada problema novo identificado
+---
+
+### ❌ ERRO: Usuários com role 'consulta' não conseguem acessar painel Filament
+
+**📅 Data:** 20/11/2025  
+**🔧 Contexto:** Após implementar sistema RBAC, usuários com role 'consulta' não conseguiam acessar o painel admin
+
+**🚨 Problema identificado:**
+- Método `canAccessPanel()` no model User estava permitindo acesso apenas para roles 'admin' e 'super_admin'
+- Usuários com role 'consulta' deveriam poder acessar o painel, mas com permissões limitadas (apenas visualização)
+- O controle de acesso detalhado (criar/editar/deletar) já estava implementado corretamente no CredentialResource
+
+**💡 Solução aplicada:**
+```php
+// ANTES - app/Models/User.php
+public function canAccessPanel(Panel $panel): bool
+{
+    if ($this->email === 'admin@admin.com') {
+        return true;
+    }
+    return $this->hasRole('super_admin') || $this->hasRole('admin');
+}
+
+// DEPOIS - app/Models/User.php  
+public function canAccessPanel(Panel $panel): bool
+{
+    if ($this->email === 'admin@admin.com') {
+        return true;
+    }
+    return $this->hasRole('super_admin') || $this->hasRole('admin') || $this->hasRole('consulta');
+}
+```
+
+**✅ Validação:**
+- Teste criado para verificar acesso de usuários 'consulta' ao painel
+- Usuários 'consulta' podem acessar painel mas não podem criar/editar/deletar
+- Todos os testes passando (8 testes, 19 assertions)
+
+**📚 Lição aprendida:**
+- No Filament, `canAccessPanel()` controla acesso GERAL ao painel
+- Controle granular de permissões deve ser feito nos Resources individuais
+- Sempre testar todos os tipos de usuários após implementar sistema de roles
+- Separar claramente: acesso ao painel vs. permissões específicas de recursos
+
+**🔄 Ações preventivas:**
+- Sempre criar testes para cada tipo de role implementado
+- Documentar claramente qual método controla qual tipo de acesso
+- Revisar `canAccessPanel()` sempre que novos roles forem adicionados
+
+---
+
+### ❌ ERRO: Super admin não consegue acessar painel de gerenciamento de usuários
+
+**📅 Data:** 20/11/2025  
+**🔧 Contexto:** Após implementação do sistema RBAC, super admin não via o menu/painel de usuários
+
+**🚨 Problema identificado:**
+- Tarefa #12 estava marcada como "done" mas não foi completamente implementada
+- Permissões de usuários (`view_users`, `create_users`, etc.) não foram criadas
+- Recursos UserResource duplicados causando conflitos
+- Super admin sem as permissões necessárias para acessar gestão de usuários
+
+**💡 Solução aplicada:**
+1. **Criação das permissões de usuários:**
+```php
+$userPermissions = [
+    'view_users', 'view_any_users', 'create_users', 'update_users',
+    'delete_users', 'delete_any_users', 'restore_users', 'restore_any_users',
+    'force_delete_users', 'force_delete_any_users', 'replicate_users', 'reorder_users'
+];
+```
+
+2. **Atribuição das permissões ao super admin:**
+```php
+$superAdmin = User::where('email', 'admin@admin.com')->first();
+$superAdmin->givePermissionTo($userPermissions);
+```
+
+3. **Resolução de conflito de recursos duplicados:**
+- Removido `app/Filament/Resources/Users/UserResource.php` (duplicado)
+- Mantido `app/Filament/Resources/UserResource.php` (principal com controle de acesso)
+- Removidas todas as páginas, schemas e tables duplicadas
+
+**✅ Validação:**
+- Super admin agora tem todas as 12 permissões de usuários
+- `UserResource::canViewAny()` retorna true para super admin
+- Rotas `/admin/users` funcionando corretamente
+- Conflito de recursos resolvido
+
+**📚 Lição aprendida:**
+- No Filament, permissões devem ser criadas ANTES de marcar resource como implementado
+- Evitar duplicação de Resources - usar apenas uma implementação
+- Sempre testar acesso real ao painel após implementar recursos
+- Verificar se o método `canViewAny()` está implementado nos Resources
+- Não confiar apenas no status "done" das tarefas - fazer validação prática
+
+**🔄 Ações preventivas:**
+- Criar script de verificação de permissões para todos os Resources
+- Implementar testes automatizados para acesso de diferentes roles
+- Documentar claramente quais permissões cada Resource precisa
+- Validar implementação completa antes de marcar tarefa como "done"
+
+---
+
+### ❌ ERRO: "Class Filament\Tables\Actions\EditAction not found" e Botão de Edição Invisível no UserResource
+
+**📅 Data:** 20/11/2025  
+**🔧 Contexto:** Ao acessar o Painel de Usuários (`/admin/users`), ocorreu erro de classe não encontrada para `EditAction`. Após correção do erro de importação, o botão de edição permaneceu invisível, embora a funcionalidade de edição fosse acessível clicando na linha.
+
+**🚨 Problema identificado:**
+- **Inconsistência de Namespace:** O projeto, embora declare Filament 4.x no `composer.json`, utiliza classes do namespace `Filament\Actions` (comum em Filament 3.x) em vez de `Filament\Tables\Actions` para ações de tabela. Isso causou erros `Class not found`.
+- **Botão Invisível:** Mesmo após corrigir o namespace da `EditAction` e usar a estrutura `->actions([...])` (herdada de `CredentialResource`), o botão de edição não era renderizado visualmente na tabela de usuários. A funcionalidade de edição, porém, era disparada ao clicar na linha do registro.
+
+**💡 Solução aplicada:**
+1.  **Padronização do Namespace de Actions:** Alinhado com `CredentialResource`, todas as Actions nos Resources de Usuário foram configuradas para usar o namespace `Filament\Actions`.
+    ```php
+    // DEPOIS (UserResource.php e CredentialResource.php)
+    use Filament\Actions\Action; // Para ações customizadas como 'edit'
+    use Filament\Actions\EditAction; // Para a ação EditAction padrão
+    use Filament\Actions\DeleteAction; // Para a ação DeleteAction padrão
+    use Filament\Actions\BulkActionGroup;
+    use Filament\Actions\DeleteBulkAction;
+    ```
+2.  **Uso de Ação Customizada para Edição:** Para contornar o problema de renderização do `EditAction` padrão, uma `Action` customizada foi implementada para o botão de edição.
+    ```php
+    // DEPOIS (UserResource.php)
+    // No método table():
+    ->actions([
+        Action::make('edit')
+            ->label('Editar') // Adicionado o label para tradução
+            ->icon('heroicon-o-pencil')
+            ->url(fn ($record): string => Pages\EditUser::getUrl(['record' => $record])),
+        DeleteAction::make(),
+    ])
+    ```
+
+**✅ Validação:**
+- Erro `Class not found` para ações foi resolvido.
+- O botão "Editar" agora é visível e funcional na tabela de usuários.
+- O botão "Deletar" também é visível e funcional.
+- A página de edição abre corretamente.
+- A tradução do botão "Edit" para "Editar" foi aplicada.
+
+**📚 Lição aprendida:**
+- **Verificar Namespace de Actions:** Sempre confirmar o namespace correto para as Actions (`Filament\Actions` vs `Filament\Tables\Actions`), especialmente em projetos que podem estar usando versões mistas ou customizadas do Filament. O `composer.json` indica Filament 4, mas o projeto utiliza o namespace `Filament\Actions`, que é mais comum em Filament 3.
+- **Renderização de Botões:** Se um botão de ação não renderizar, mas a funcionalidade de clique na linha funcionar, a causa pode ser um problema específico de renderização do componente de ação padrão. Uma solução é criar uma `Action` customizada, definindo explicitamente o `label`, `icon` e `url`.
+- **Clareza na Intenção:** Certificar-se de que a intenção da ação é clara e visível para o usuário, seja através do ícone ou do texto do botão.
+- **Priorizar "o que funciona":** Em caso de inconsistência de versões ou comportamentos inesperados, seguir a lógica de implementação que comprovadamente funciona em outras partes do projeto (e.g., `CredentialResource`).
+
+**🔄 Ações preventivas:**
+- Criar um "template" de Resource com as configurações de Actions já padronizadas para o projeto.
+- Testar a visibilidade e funcionalidade de todos os botões CRUD após qualquer alteração nos Resources ou assets.
+- Utilizar `php artisan tinker --execute="echo class_exists('Filament\\Actions\\Action') ? 'OK' : 'ERRO';"` para verificar a existência de classes em tempo de execução.

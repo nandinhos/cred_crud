@@ -12,10 +12,11 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Actions;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 
@@ -24,6 +25,8 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationLabel = "Usuários";
+    
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $modelLabel = "usuário";
 
@@ -96,14 +99,16 @@ class UserResource extends Resource
                     ->sortable()
                     ->label("E-mail"),
 
-                BadgeColumn::make("roles.name")
+                TextColumn::make("roles.name")
                     ->label("Perfis")
-                    ->colors([
-                        "danger" => "Super Admin",
-                        "warning" => "Administrador",
-                        "success" => "Operador",
-                        "primary" => "Consulta",
-                    ])
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'super_admin' => 'danger',
+                        'admin' => 'warning', 
+                        'operador' => 'success',
+                        'consulta' => 'primary',
+                        default => 'gray',
+                    })
                     ->separator(", "),
 
                 TextColumn::make("credentials_count")
@@ -130,11 +135,11 @@ class UserResource extends Resource
                     ->toggle(),
             ])
             ->recordActions([
-                Actions\EditAction::make(),
+                EditAction::make(),
             ])
             ->toolbarActions([
-                Actions\BulkActionGroup::make([
-                    Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort("created_at", "desc");
