@@ -61,6 +61,16 @@ class UserResource extends Resource
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->abbreviation} - {$record->name} ({$record->armed_force})")
                             ->placeholder('Selecione o posto/graduação'),
 
+                        Select::make('office_id')
+                            ->label('Unidade Militar')
+                            ->relationship('office', 'office')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->helperText('Selecione a unidade militar')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->office} - {$record->description}")
+                            ->placeholder('Selecione a unidade'),
+
                         TextInput::make('email')
                             ->label('E-mail')
                             ->email()
@@ -115,6 +125,16 @@ class UserResource extends Resource
                     ->color('success')
                     ->placeholder('N/A')
                     ->tooltip(fn ($record) => $record->rank ? "{$record->rank->name} ({$record->rank->armed_force})" : 'Sem posto/graduação'),
+
+                TextColumn::make('office.office')
+                    ->label('Unidade')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('info')
+                    ->placeholder('N/A')
+                    ->tooltip(fn ($record) => $record->office ? $record->office->description : 'Sem unidade')
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 TextColumn::make('name')
                     ->searchable()

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Office;
 use App\Models\Rank;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -14,18 +15,25 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Pegar alguns ranks para os usuários fixos
+        // Pegar alguns ranks e offices para os usuários fixos
         $generalEx = Rank::where('abbreviation', 'Gen Ex')->first();
         $coronel = Rank::where('abbreviation', 'Cel')->where('armed_force', 'Exército')->first();
         $capitao = Rank::where('abbreviation', 'Cap')->where('armed_force', 'Exército')->first();
         $tenente = Rank::where('abbreviation', '1º Ten')->where('armed_force', 'Exército')->first();
         $sargento = Rank::where('abbreviation', '1º Sgt')->where('armed_force', 'Exército')->first();
 
+        $gacPac = Office::where('office', 'GAC-PAC')->first();
+        $scpEmb = Office::where('office', 'SCP-EMB')->first();
+        $ecpGpx = Office::where('office', 'ECP-GPX')->first();
+        $ecpIja = Office::where('office', 'ECP-IJA')->first();
+        $ecpPoa = Office::where('office', 'ECP-POA')->first();
+
         // Super Admin - Acesso total ao sistema
         $superAdmin = User::create([
             'name' => 'Admin',
             'full_name' => 'Super Administrador do Sistema',
             'rank_id' => $generalEx?->id,
+            'office_id' => $gacPac?->id,
             'email' => 'superadmin@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -37,6 +45,7 @@ class UserSeeder extends Seeder
             'name' => 'João',
             'full_name' => 'João Silva Santos',
             'rank_id' => $coronel?->id,
+            'office_id' => $scpEmb?->id,
             'email' => 'admin@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -48,6 +57,7 @@ class UserSeeder extends Seeder
             'name' => 'Maria',
             'full_name' => 'Maria Santos Oliveira',
             'rank_id' => $capitao?->id,
+            'office_id' => $ecpGpx?->id,
             'email' => 'admin2@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -59,6 +69,7 @@ class UserSeeder extends Seeder
             'name' => 'Pedro',
             'full_name' => 'Pedro Oliveira Costa',
             'rank_id' => $tenente?->id,
+            'office_id' => $ecpIja?->id,
             'email' => 'consulta@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -70,6 +81,7 @@ class UserSeeder extends Seeder
             'name' => 'Ana',
             'full_name' => 'Ana Costa Pereira',
             'rank_id' => $sargento?->id,
+            'office_id' => $ecpPoa?->id,
             'email' => 'consulta2@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),

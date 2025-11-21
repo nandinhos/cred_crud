@@ -1120,13 +1120,29 @@
           }
         ],
         "updatedAt": "2025-11-21T04:43:30.210Z"
+      },
+      {
+        "id": "11",
+        "title": "Implementação do Sistema de Unidades Militares (Offices)",
+        "description": "Criar a estrutura de banco de dados e a lógica de aplicação para gerenciar Unidades Militares (Offices), integrando-as ao modelo de Usuário e à interface do Filament, de forma análoga ao sistema de Postos/Graduações.",
+        "details": "Esta tarefa espelha a implementação do sistema de Ranks (Tarefa #10), criando uma nova entidade 'Office' e associando-a aos usuários. A base para modificações no schema foi estabelecida na Tarefa #8.\n\n1. **Criar Migration e Model para Offices**:\n   - Gere a migration para a tabela `offices`.\n   ```bash\n   vendor/bin/sail artisan make:model Office -m\n   ```\n   - No arquivo da migration, defina o schema:\n   ```php\n   Schema::create('offices', function (Blueprint $table) {\n       $table->id();\n       $table->string('office')->unique(); // Sigla, ex: GAC-PAC\n       $table->string('description'); // Nome completo, ex: Gabinete de Apoio à Coordenação\n       $table->timestamps();\n   });\n   ```\n   - No model `App\\Models\\Office.php`, defina os campos preenchíveis e a relação:\n   ```php\n   protected $fillable = ['office', 'description'];\n\n   public function users(): HasMany\n   {\n       return $this->hasMany(User::class);\n   }\n   ```\n\n2. **Adicionar Relacionamento na Tabela `users`**:\n   - Crie uma nova migration para adicionar a coluna `office_id`.\n   ```bash\n   vendor/bin/sail artisan make:migration add_office_id_to_users_table\n   ```\n   - Defina a chave estrangeira, posicionando-a após `rank_id` para manter a organização.\n   ```php\n   Schema::table('users', function (Blueprint $table) {\n       $table->foreignId('office_id')->nullable()->after('rank_id')->constrained('offices')->onDelete('set null');\n   });\n   ```\n\n3. **Atualizar Model `User`**:\n   - Adicione o relacionamento `belongsTo` em `App\\Models\\User.php`.\n   ```php\n   public function office(): BelongsTo\n   {\n       return $this->belongsTo(Office::class);\n   }\n   ```\n\n4. **Criar Seeder para Offices**:\n   - Gere o seeder.\n   ```bash\n   vendor/bin/sail artisan make:seeder OfficeSeeder\n   ```\n   - Popule com as unidades especificadas:\n   ```php\n   use App\\Models\\Office;\n\n   $offices = [\n       ['office' => 'GAC-PAC', 'description' => 'Gabinete de Apoio à Coordenação'],\n       ['office' => 'SCP-EMB', 'description' => 'Seção de Coordenação de Projetos Especiais'],\n       ['office' => 'ECP-GPX', 'description' => 'Escritório de Coordenação de Projetos de Gestão'],\n       ['office' => 'ECP-IJA', 'description' => 'Escritório de Coordenação de Projetos de Infraestrutura'],\n       ['office' => 'ECP-POA', 'description' => 'Escritório de Coordenação de Projetos de Portfólio'],\n   ];\n   foreach ($offices as $office) {\n       Office::create($office);\n   }\n   ```\n\n5. **Atualizar Seeders e Factories de Usuário**:\n   - Em `DatabaseSeeder.php`, chame o `OfficeSeeder::class`.\n   - Em `UserFactory.php`, atribua um `office_id` aleatório aos novos usuários.\n   ```php\n   'office_id' => \\App\\Models\\Office::inRandomOrder()->first()->id,\n   ```\n\n6. **Ajustar `UserResource` no Filament**:\n   - Em `app/Filament/Resources/UserResource.php`, atualize a tabela e o formulário.\n   - No método `table()`:\n   ```php\n   Tables\\Columns\\TextColumn::make('office.office')->label('Unidade')->sortable()->searchable(),\n   ```\n   - No método `form()`:\n   ```php\n   Forms\\Components\\Select::make('office_id')\n       ->relationship('office', 'office')\n       ->searchable()\n       ->preload()\n       ->label('Unidade'),\n   ```\n\n7. **Atualizar Documentação**:\n   - Edite o arquivo `database_schema.md` para incluir a nova tabela `offices` e o campo `office_id` na tabela `users`.",
+        "testStrategy": "1. **Teste de Migração e População**:\n   - Execute o comando para recriar e popular o banco de dados do zero. Verifique se não ocorrem erros.\n   ```bash\n   vendor/bin/sail artisan migrate:fresh --seed\n   ```\n\n2. **Verificação no Banco de Dados via Tinker**:\n   - Confirme se a tabela `offices` foi criada e populada.\n   ```bash\n   vendor/bin/sail artisan tinker\n   >>> \\App\\Models\\Office::count(); // Deve retornar 5\n   >>> \\App\\Models\\Office::where('office', 'GAC-PAC')->exists(); // Deve retornar true\n   ```\n   - Verifique se os usuários foram associados a uma unidade.\n   ```bash\n   >>> $user = \\App\\Models\\User::first();\n   >>> isset($user->office_id); // Deve retornar true\n   >>> $user->office->description; // Deve retornar o nome completo da unidade\n   ```\n\n3. **Verificação na Interface do Filament**:\n   - Acesse o painel de administração e navegue até a seção de Usuários.\n   - **Listagem**: Confirme que a coluna 'Unidade' aparece na tabela e exibe a sigla da unidade de cada usuário.\n   - **Criação/Edição**: Abra o formulário para criar ou editar um usuário. Verifique se o campo do tipo dropdown 'Unidade' está presente, populado com as 5 unidades, e permite a seleção e salvamento da associação.",
+        "status": "done",
+        "dependencies": [
+          "1",
+          "8",
+          "10"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2025-11-21T05:15:03.335Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-21T04:43:30.212Z",
-      "taskCount": 10,
-      "completedCount": 6,
+      "lastModified": "2025-11-21T05:15:03.337Z",
+      "taskCount": 11,
+      "completedCount": 7,
       "tags": [
         "master"
       ]

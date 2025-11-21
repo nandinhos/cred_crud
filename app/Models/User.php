@@ -43,6 +43,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'full_name',
         'rank_id',
+        'office_id',
         'email',
         'password',
     ];
@@ -117,5 +118,16 @@ class User extends Authenticatable implements FilamentUser
     public function rank(): BelongsTo
     {
         return $this->belongsTo(Rank::class);
+    }
+
+    /**
+     * Relacionamento com Office
+     * Um usuário pertence a uma unidade militar
+     *
+     * @return BelongsTo<Office, User>
+     */
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
     }
 }

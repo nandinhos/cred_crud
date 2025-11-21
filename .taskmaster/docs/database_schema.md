@@ -58,26 +58,54 @@
 
 ---
 
+## 🗂️ Tabela: offices
+
+### Estrutura
+
+| Campo        | Tipo             | Nullable | Default | Observações                              |
+|--------------|------------------|----------|---------|------------------------------------------|
+| id           | BIGINT UNSIGNED  | NO       | -       | Primary Key, Auto Increment              |
+| office       | VARCHAR(255)     | NO       | -       | Sigla da unidade (ex: GAC-PAC)           |
+| description  | VARCHAR(255)     | NO       | -       | Nome completo da unidade                 |
+| created_at   | TIMESTAMP        | YES      | NULL    | Data de criação                          |
+| updated_at   | TIMESTAMP        | YES      | NULL    | Data de atualização                      |
+
+### Índices:
+- **UNIQUE** `office`: Garante unicidade da sigla
+- **INDEX** `office`: Otimiza buscas por sigla
+
+### Dados:
+- **Total**: 5 unidades militares
+- **GAC-PAC**: Grupo de Acompanhamento e Controle do Programa Aeronave de Combate
+- **SCP-EMB**: Subseção de Coordenação de Projetos Embraer
+- **ECP-GPX**: Escritório de Coordenação de Projetos de Gavião Peixoto - SP
+- **ECP-IJA**: Escritório de Coordenação de Projetos de Itajubá - MG
+- **ECP-POA**: Escritório de Coordenação de Projetos de Porto Alegre - RS
+
+---
+
 ## 🗂️ Tabela: users
 
-### Estrutura Atual (Pós-Task 10)
+### Estrutura Atual (Pós-Tasks 10 e 11)
 
 | Campo              | Tipo             | Nullable | Default | Observações                          |
 |--------------------|------------------|----------|---------|--------------------------------------|
 | id                 | BIGINT UNSIGNED  | NO       | -       | Primary Key, Auto Increment          |
 | name               | VARCHAR(255)     | NO       | -       | Nome de guerra (nome curto)          |
-| full_name          | VARCHAR(255)     | NO       | -       | **NOVO** - Nome completo do usuário  |
-| rank_id            | BIGINT UNSIGNED  | YES      | NULL    | **NOVO** - Foreign Key → ranks.id    |
+| full_name          | VARCHAR(255)     | NO       | -       | Nome completo do usuário             |
+| rank_id            | BIGINT UNSIGNED  | YES      | NULL    | Foreign Key → ranks.id               |
+| office_id          | BIGINT UNSIGNED  | YES      | NULL    | **NOVO** - Foreign Key → offices.id  |
 | email              | VARCHAR(255)     | NO       | -       | Unique, email do usuário             |
 | email_verified_at  | TIMESTAMP        | YES      | NULL    | Data de verificação do email         |
 | password           | VARCHAR(255)     | NO       | -       | Senha hash                           |
 | remember_token     | VARCHAR(100)     | YES      | NULL    | Token de lembrar sessão              |
 | created_at         | TIMESTAMP        | YES      | NULL    | Data de criação                      |
 | updated_at         | TIMESTAMP        | YES      | NULL    | Data de atualização                  |
-| deleted_at         | TIMESTAMP        | YES      | NULL    | **NOVO** - Soft Delete               |
+| deleted_at         | TIMESTAMP        | YES      | NULL    | Soft Delete                          |
 
 ### Relacionamentos:
 - **belongsTo**: Rank (rank_id → ranks.id, onDelete: SET NULL)
+- **belongsTo**: Office (office_id → offices.id, onDelete: SET NULL)
 - **hasMany**: Credentials
 - **belongsToMany**: Roles (via Spatie Permission)
 - **belongsToMany**: Permissions (via Spatie Permission)
@@ -85,6 +113,7 @@
 ### Índices:
 - **UNIQUE** `email`: Garante unicidade de email
 - **INDEX** `rank_id`: Otimiza queries de relacionamento com ranks
+- **INDEX** `office_id`: Otimiza queries de relacionamento com offices
 
 ---
 
