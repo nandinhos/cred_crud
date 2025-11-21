@@ -6,6 +6,7 @@
 - [Configurações Críticas](#configurações-críticas)
 - [Comandos Salvadores](#comandos-salvadores)
 - [Prevenção de Problemas](#prevenção-de-problemas)
+- [Melhorias e Customizações](#melhorias-e-customizações)
 
 ---
 
@@ -785,3 +786,149 @@ O Filament 4 possui seu próprio sistema de estilos e não processa automaticame
 #### 🔗 Referências
 - Documentação Filament 4: https://filamentphp.com/docs/4.x/panels/pages
 - Componentes Blade do Filament: `vendor/filament/filament/resources/views/components/`
+
+---
+
+## 🎨 Melhorias e Customizações
+
+### ✅ Aplicação de Estilos Visuais no Filament 4
+
+**Data:** 2024
+**Contexto:** Layout do Filament estava muito simples, sem definição clara entre labels e dados, faltando cores e contraste visual.
+
+#### 🎯 Soluções Implementadas
+
+**1. Configuração de Cores Personalizadas**
+```php
+// app/Providers/Filament/AdminPanelProvider.php
+->colors([
+    'primary' => Color::Blue,
+    'danger' => Color::Red,
+    'gray' => Color::Slate,
+    'info' => Color::Cyan,
+    'success' => Color::Green,
+    'warning' => Color::Orange,
+])
+->font('Inter')
+```
+
+**2. Adição de Ícones aos Campos de Formulário**
+```php
+// Exemplos de ícones aplicados
+TextInput::make('name')
+    ->prefixIcon('heroicon-o-user')
+    ->label('Nome de Guerra')
+
+Select::make('type')
+    ->prefixIcon('heroicon-o-document-text')
+    ->label('Tipo de Documento')
+
+DatePicker::make('concession')
+    ->prefixIcon('heroicon-o-calendar-days')
+    ->label('Data de Concessão')
+```
+
+**3. Seções Organizadas com Ícones e Descrições**
+```php
+Section::make('Informações da Credencial')
+    ->description('Dados principais da credencial de segurança')
+    ->icon('heroicon-o-shield-check')
+    ->collapsible()
+    ->schema([...])
+```
+
+**4. Arquivo CSS Customizado**
+```css
+/* resources/css/filament-custom.css */
+@layer components {
+    /* Labels em negrito com melhor contraste */
+    .fi-fo-field-wrp-label label {
+        @apply font-semibold text-gray-800 dark:text-gray-200 text-sm;
+    }
+
+    /* Títulos de seções em azul */
+    .fi-section-header-heading {
+        @apply text-lg font-bold text-blue-600 dark:text-blue-400;
+    }
+
+    /* Cabeçalhos de tabelas com destaque */
+    .fi-ta-header-cell {
+        @apply font-bold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800;
+    }
+}
+```
+
+**5. Integração do CSS com Tailwind**
+```css
+/* resources/css/app.css */
+@import './filament-custom.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+#### 📝 Ícones Aplicados por Campo
+
+**Credenciais:**
+- Usuário Responsável: `heroicon-o-user`
+- FSCS: `heroicon-o-identification`
+- Tipo de Documento: `heroicon-o-document-text`
+- Nível de Sigilo: `heroicon-o-lock-closed`
+- Número da Credencial: `heroicon-o-hashtag`
+- Data de Concessão: `heroicon-o-calendar-days`
+- Data de Validade: `heroicon-o-clock`
+
+**Usuários:**
+- Nome de Guerra: `heroicon-o-user`
+- Nome Completo: `heroicon-o-identification`
+- Posto/Graduação: `heroicon-o-star`
+- Unidade Militar: `heroicon-o-building-office`
+- E-mail: `heroicon-o-envelope`
+- Senha: `heroicon-o-lock-closed`
+- Perfis: `heroicon-o-user-group`
+
+**Seções:**
+- Informações da Credencial: `heroicon-o-shield-check`
+- Datas: `heroicon-o-calendar`
+- Informações do Usuário: `heroicon-o-user-circle`
+- Perfis e Permissões: `heroicon-o-shield-check`
+
+#### ✅ Benefícios Obtidos
+
+1. **Melhor Hierarquia Visual**: Labels e dados agora têm contraste claro
+2. **Navegação Intuitiva**: Ícones facilitam identificação rápida dos campos
+3. **Organização**: Seções colapsáveis mantêm formulários limpos
+4. **Acessibilidade**: Cores e contrastes melhorados
+5. **Profissionalismo**: Layout mais polido e moderno
+
+#### 🔧 Comandos Utilizados
+
+```bash
+# Compilar assets do Tailwind
+vendor/bin/sail npm run build
+
+# Limpar cache do Filament
+vendor/bin/sail artisan filament:cache-components
+
+# Atualizar assets do Filament
+vendor/bin/sail artisan filament:upgrade
+
+# Limpar views
+vendor/bin/sail artisan view:clear
+```
+
+#### ⚠️ Lições Importantes
+
+1. **@import deve vir antes do Tailwind**: Ao usar `@import` no CSS, ele deve estar antes das diretivas `@tailwind`
+2. **Usar @layer components**: Classes customizadas devem estar dentro de `@layer components` para evitar erros de compilação
+3. **Cores do Tailwind**: Usar cores padrão do Tailwind (blue-600) ao invés de variáveis personalizadas (primary-600) para evitar erros
+4. **Rebuild necessário**: Sempre rodar `npm run build` após mudanças em CSS
+5. **Cache do Filament**: Limpar cache com `filament:cache-components` após mudanças estruturais
+
+#### 📚 Referências
+
+- Documentação Filament 4: https://filamentphp.com/docs
+- Heroicons: https://heroicons.com
+- Tailwind CSS: https://tailwindcss.com/docs
+
