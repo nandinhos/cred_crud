@@ -2,19 +2,19 @@
 
 namespace App\Filament\Resources\Credentials\Tables;
 
-use Filament\Forms;
-use Filament\Tables;
+use App\Filament\Resources\Credentials\Pages;
+use App\Models\Credential;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\Action;
+use Filament\Forms;
+use Filament\Tables;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\Credentials\Pages;
-use App\Models\Credential;
 
 class CredentialsTable
 {
@@ -43,19 +43,20 @@ class CredentialsTable
                         if (strlen($state) <= 50) {
                             return null;
                         }
+
                         return $state;
                     }),
 
                 Tables\Columns\TextColumn::make('secrecy')
                     ->label('Sigilo')
                     ->badge()
-                    ->color(fn (string $state): string => match($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'R' => 'success',
                         'S' => 'danger',
                         default => 'gray'
                     })
                     ->formatStateUsing(function ($state) {
-                        return match($state) {
+                        return match ($state) {
                             'R' => 'Reservado',
                             'S' => 'Secreto',
                             default => 'N/A'
@@ -73,7 +74,9 @@ class CredentialsTable
                     ->date('d/m/Y')
                     ->sortable()
                     ->color(function ($state) {
-                        if (!$state) return 'gray';
+                        if (! $state) {
+                            return 'gray';
+                        }
                         $validity = \Carbon\Carbon::parse($state);
                         $now = now();
 
@@ -82,10 +85,13 @@ class CredentialsTable
                         } elseif ($validity->diffInDays($now) <= 30) {
                             return 'warning';
                         }
+
                         return 'success';
                     })
                     ->icon(function ($state) {
-                        if (!$state) return null;
+                        if (! $state) {
+                            return null;
+                        }
                         $validity = \Carbon\Carbon::parse($state);
 
                         if ($validity->isPast()) {
@@ -93,6 +99,7 @@ class CredentialsTable
                         } elseif ($validity->diffInDays(now()) <= 30) {
                             return 'heroicon-o-clock';
                         }
+
                         return 'heroicon-o-check-circle';
                     }),
 

@@ -3,11 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class AdminUserSeeder extends Seeder
 {
@@ -38,7 +37,7 @@ class AdminUserSeeder extends Seeder
 
         // Criar role super_admin
         $role = Role::firstOrCreate(['name' => 'super_admin']);
-        
+
         // Atribuir todas as permissões ao super_admin
         $role->givePermissionTo(Permission::all());
 
@@ -56,7 +55,7 @@ class AdminUserSeeder extends Seeder
         $user->assignRole('super_admin');
 
         $this->command->info('Usuário admin criado com sucesso!');
-        $this->command->info('Email: ' . config('auth.super_admin_email'));
+        $this->command->info('Email: '.config('auth.super_admin_email'));
         $this->command->info('Senha: password');
     }
 }

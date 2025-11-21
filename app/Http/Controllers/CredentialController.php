@@ -4,15 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Credential;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class CredentialController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * 
      */
     public function index()
     {
@@ -21,14 +18,12 @@ class CredentialController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     * 
      */
     public function create()
     {
         return view('credentials.create');
     }
 
-    
     /**
      * Display the specified resource.
      */
@@ -40,7 +35,7 @@ class CredentialController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('credentials')->whereNull('deleted_at')
+                Rule::unique('credentials')->whereNull('deleted_at'),
             ],
             'name' => 'required|string|max:255',
             'secrecy' => 'nullable|string|in:R,S', // Verifica se o valor é "R" ou "S"
@@ -68,7 +63,6 @@ class CredentialController extends Controller
     {
         return view('credentials.edit', compact('credential'));
     }
-    
 
     /**
      * Update the specified resource in storage.
@@ -81,7 +75,7 @@ class CredentialController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('credentials')->whereNull('deleted_at')->ignore($credential->id)
+                Rule::unique('credentials')->whereNull('deleted_at')->ignore($credential->id),
             ],
             'name' => 'required|string|max:255',
             'secrecy' => 'nullable|string|in:R,S',
@@ -102,7 +96,6 @@ class CredentialController extends Controller
         return redirect()->route('credentials.index')->with('success', 'Credencial atualizada com sucesso!');
     }
 
-
     /**
      * Remove the specified resource from storage.
      */
@@ -110,6 +103,6 @@ class CredentialController extends Controller
     {
         $credential->delete();
 
-    return back()->with('success', 'Cliente excluído com sucesso.');
+        return back()->with('success', 'Cliente excluído com sucesso.');
     }
 }

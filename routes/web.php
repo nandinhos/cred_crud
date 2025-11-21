@@ -24,20 +24,22 @@ Route::get('/login-admin', function () {
     if ($user) {
         \Illuminate\Support\Facades\Auth::login($user);
         session()->regenerate();
-        return redirect('/admin')->with('success', 'Login realizado com sucesso! Usuário: ' . $user->email);
+
+        return redirect('/admin')->with('success', 'Login realizado com sucesso! Usuário: '.$user->email);
     }
+
     return redirect('/admin/login')->with('error', 'Usuário admin não encontrado!');
 });
 
 // Rota de teste para verificar permissões
 Route::get('/test-permissions', function () {
     $user = \Illuminate\Support\Facades\Auth::user();
-    if (!$user) {
+    if (! $user) {
         return 'Usuário não logado. <a href="/login-admin">Fazer login como admin</a>';
     }
-    
+
     $canAccess = $user->canAccessPanel(app(\Filament\Panel::class));
-    
+
     return [
         'user_id' => $user->id,
         'email' => $user->email,

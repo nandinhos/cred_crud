@@ -22,12 +22,12 @@ class CredentialFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'fscs' => 'FSCS-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'fscs' => 'FSCS-'.$this->faker->unique()->numberBetween(1000, 9999),
             'name' => $this->faker->company(),
-            'secrecy' => $this->faker->randomElement(['R', 'S']),
-            'credential' => $this->faker->word(),
-            'concession' => $this->faker->date(),
-            'validity' => $this->faker->dateTimeBetween('+1 month', '+2 years'),
+            'secrecy' => $this->faker->randomElement(['R', 'S', 'O']),
+            'credential' => $this->faker->numerify('CRED-####-####'), // String não criptografada
+            'concession' => $this->faker->optional(0.7)->date(), // 70% chance de ter data
+            'validity' => $this->faker->optional(0.8)->dateTimeBetween('+1 month', '+2 years'), // 80% chance de ter data
         ];
     }
 

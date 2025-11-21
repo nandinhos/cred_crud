@@ -1,12 +1,11 @@
 <?php
 
-use App\Filament\Resources\Credentials\CredentialResource;
 use App\Filament\Resources\Credentials\Pages\CreateCredential;
 use App\Filament\Resources\Credentials\Pages\EditCredential;
 use App\Filament\Resources\Credentials\Pages\ListCredentials;
 use App\Models\Credential;
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -27,9 +26,9 @@ it('can list credentials', function () {
 
 it('can create credential', function () {
     $user = User::factory()->admin()->create();
-    
+
     $this->actingAs($user);
-    
+
     Livewire::test(CreateCredential::class)
         ->fillForm([
             'fscs' => 'FSCS-NEW',
@@ -49,7 +48,7 @@ it('can create credential', function () {
     ]);
 });
 
-it('validates validity date must be in future', function () {
+it('can create credential with optional dates', function () {
     $user = User::factory()->admin()->create();
 
     $this->actingAs($user);
@@ -58,11 +57,21 @@ it('validates validity date must be in future', function () {
         ->fillForm([
             'fscs' => 'FSCS-TEST',
             'name' => 'Test Credential',
-            'secrecy' => 'R',
-            'validity' => now()->subDay()->format('Y-m-d'), // Past date
+            'secrecy' => 'O',
+            'credential' => 'CRED-1234-5678',
+            'user_id' => $user->id,
+            'concession' => null, // Data opcional
+            'validity' => null,   // Data opcional
         ])
         ->call('create')
-        ->assertHasFormErrors(['validity']);
+        ->assertHasNoFormErrors();
+
+    $this->assertDatabaseHas('credentials', [
+        'fscs' => 'FSCS-TEST',
+        'name' => 'Test Credential',
+        'concession' => null,
+        'validity' => null,
+    ]);
 });
 
 it('validates unique fscs', function () {
@@ -78,25 +87,6 @@ it('validates unique fscs', function () {
         ])
         ->call('create')
         ->assertHasFormErrors(['fscs']);
-});
-
-it('allows duplicate fscs if soft deleted', function () {
-    $user = User::factory()->admin()->create();
-    $credential = Credential::factory()->create(['fscs' => 'FSCS-DELETED']);
-    $credential->delete();
-
-    $this->actingAs($user);
-
-    Livewire::test(CreateCredential::class)
-        ->fillForm([
-            'fscs' => 'FSCS-DELETED',
-            'name' => 'New Credential',
-            'secrecy' => 'S',
-            'validity' => now()->addYear()->format('Y-m-d'),
-            'user_id' => $user->id,
-        ])
-        ->call('create')
-        ->assertHasNoFormErrors();
 });
 
 it('can edit credential', function () {

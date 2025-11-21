@@ -1,17 +1,107 @@
 # 📊 Esquema do Banco de Dados - Sistema de Credenciais
 
-**📅 Data da Análise:** 20/11/2025
+**📅 Data da Análise:** 21/11/2025
 **🔗 Sistema:** Laravel 12 + Filament 4 + MySQL
 **📦 Pacotes:** Spatie Laravel Permission
+**✅ Status:** Refatorado e Consolidado
 
 ---
 
 ## 📋 Resumo Executivo
 
-**Total de Tabelas:** 11
+**Total de Tabelas:** 12
 **Tabelas de Negócio:** 3 (users, credentials, roles/permissions)
 **Tabelas de Sistema:** 5 (migrations, failed_jobs, password_reset_tokens, personal_access_tokens)
 **Tabelas de Relacionamento:** 3 (model_has_roles, model_has_permissions, role_has_permissions)
+**Tabelas de Auditoria:** 1 (activity_logs)
+
+---
+
+## 🔄 Refatoração Completa (21/11/2025)
+
+### ✅ Mudanças Implementadas:
+
+1. **Consolidação de Migrations**: Todas as migrations foram consolidadas em um único arquivo `2025_11_21_000001_create_consolidated_database_schema.php`
+2. **Campos Opcionais**: `concession` e `validity` agora são opcionais (nullable)
+3. **Strings Não Criptografadas**: Campo `credential` é agora VARCHAR simples (não criptografado)
+4. **Níveis de Sigilo**: Adicionado 'O' (Ostensivo) além de 'R' (Reservado) e 'S' (Secreto)
+5. **Seeders Robustos**: Criados seeders com diferentes perfis de usuários e credenciais
+6. **Frontend Alinhado**: Formulários Filament ajustados para refletir o backend
+
+---
+
+## 🗂️ Tabela: credentials
+
+### Estrutura Atual (Pós-Refatoração)
+
+| Campo        | Tipo             | Nullable | Default | Observações                          |
+|--------------|------------------|----------|---------|--------------------------------------|
+| id           | BIGINT UNSIGNED  | NO       | -       | Primary Key, Auto Increment          |
+| user_id      | BIGINT UNSIGNED  | YES      | NULL    | Foreign Key → users.id               |
+| fscs         | VARCHAR(255)     | NO       | -       | Unique, código identificador único   |
+| name         | VARCHAR(255)     | NO       | -       | Nome descritivo da credencial        |
+| secrecy      | VARCHAR(255)     | NO       | -       | Nível: 'O', 'R', 'S'                |
+| credential   | VARCHAR(255)     | NO       | -       | **STRING** não criptografada         |
+| concession   | DATE             | **YES**  | NULL    | **OPCIONAL** - Data de concessão     |
+| validity     | DATE             | **YES**  | NULL    | **OPCIONAL** - Data de validade      |
+| created_at   | TIMESTAMP        | YES      | NULL    | Data de criação                      |
+| updated_at   | TIMESTAMP        | YES      | NULL    | Data de atualização                  |
+| deleted_at   | TIMESTAMP        | YES      | NULL    | Soft Delete                          |
+
+### Níveis de Sigilo:
+- **O** (Ostensivo): Informação pública
+- **R** (Reservado): Acesso restrito
+- **S** (Secreto): Alto nível de confidencialidade
+
+### Relacionamentos:
+- **belongsTo**: User (user_id → users.id, onDelete: CASCADE)
+
+---
+
+## 🚀 Índices Otimizados
+
+### Tabela: credentials
+
+Os seguintes índices foram criados para otimizar performance de queries:
+
+- **credentials_fscs_unique** (UNIQUE): `fscs`
+  - Garante unicidade do código FSCS
+  - Usado em queries de busca por FSCS específico
+
+- **credentials_validity_index**: `validity`
+  - Otimiza queries de filtro por validade
+  - Melhora performance em queries de credenciais expiradas/expirando
+  - Exemplo: `WHERE validity > NOW()` ou `WHERE validity BETWEEN ... AND ...`
+
+- **credentials_created_at_index**: `created_at`
+  - Otimiza ordenação cronológica
+  - Melhora performance em listagens ordenadas por data de criação
+  - Exemplo: `ORDER BY created_at DESC`
+
+- **credentials_user_validity_index** (COMPOSITE): `user_id, validity`
+  - Índice composto para queries combinadas
+  - Otimiza busca de credenciais por usuário e validade
+  - Exemplo: `WHERE user_id = ? AND validity > NOW()`
+
+- **credentials_secrecy_index**: `secrecy`
+  - Otimiza filtros por nível de sigilo
+  - Melhora performance em queries de credenciais secretas/reservadas
+  - Exemplo: `WHERE secrecy = 'S'`
+
+### Tabela: users
+
+- **users_email_unique** (UNIQUE): `email`
+  - Garante unicidade do email (índice padrão do Laravel)
+  
+- **users_email_index**: `email`
+  - Índice adicional para otimizar autenticação
+  - Melhora performance em queries de login
+  
+- **users_created_at_index**: `created_at`
+  - Otimiza listagens ordenadas por data de cadastro
+  - Exemplo: `ORDER BY created_at DESC`
+
+**📝 Nota:** Todos os índices possuem métodos `down()` implementados para permitir rollback completo das migrations.
 
 ---
 

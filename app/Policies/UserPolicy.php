@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -12,7 +11,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can("view_users");
+        return $user->can('view_users');
     }
 
     /**
@@ -20,7 +19,7 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->can("view_users");
+        return $user->can('view_users');
     }
 
     /**
@@ -28,7 +27,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can("create_users");
+        return $user->can('create_users');
     }
 
     /**
@@ -36,7 +35,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return $user->can("edit_users");
+        return $user->can('edit_users');
     }
 
     /**
@@ -48,8 +47,8 @@ class UserPolicy
         if ($user->id === $model->id) {
             return false;
         }
-        
-        return $user->can("delete_users");
+
+        return $user->can('delete_users');
     }
 
     /**
@@ -57,7 +56,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        return $user->can("edit_users");
+        return $user->can('edit_users');
     }
 
     /**
@@ -69,7 +68,7 @@ class UserPolicy
         if ($user->id === $model->id) {
             return false;
         }
-        
-        return $user->can("delete_users") && $user->hasRole("Super Admin");
+
+        return $user->can('delete_users') && $user->hasRole('Super Admin');
     }
 }

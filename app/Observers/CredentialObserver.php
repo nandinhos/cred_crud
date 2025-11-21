@@ -38,11 +38,13 @@ class CredentialObserver
     private function logActivity(string $action, Credential $credential, array $extra = []): void
     {
         DB::table('activity_logs')->insert([
-            'model_type' => Credential::class,
-            'model_id' => $credential->id,
-            'action' => $action,
-            'user_id' => Auth::id(),
-            'changes' => ! empty($extra) ? json_encode($extra) : null,
+            'log_name' => 'credentials',
+            'description' => $action,
+            'subject_type' => Credential::class,
+            'subject_id' => $credential->id,
+            'causer_type' => Auth::check() ? get_class(Auth::user()) : null,
+            'causer_id' => Auth::id(),
+            'properties' => ! empty($extra) ? json_encode($extra) : null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

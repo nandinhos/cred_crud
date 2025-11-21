@@ -8,7 +8,7 @@ return [
     ],
     'actions' => [
         'create' => 'Criar',
-        'edit' => 'Editar', 
+        'edit' => 'Editar',
         'delete' => 'Excluir',
         'save' => 'Salvar',
         'cancel' => 'Cancelar',

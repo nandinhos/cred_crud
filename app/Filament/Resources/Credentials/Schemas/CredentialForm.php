@@ -44,18 +44,19 @@ class CredentialForm
                         Forms\Components\Select::make('secrecy')
                             ->label('Nível de Sigilo')
                             ->options([
+                                'O' => 'Ostensivo',
                                 'R' => 'Reservado',
                                 'S' => 'Secreto',
                             ])
-                            ->nullable()
+                            ->required()
+                            ->default('O')
                             ->helperText('Selecione o nível de classificação'),
 
                         Forms\Components\TextInput::make('credential')
-                            ->label('Credencial')
+                            ->label('Número da Credencial')
+                            ->required()
                             ->maxLength(255)
-                            ->password()
-                            ->revealable()
-                            ->helperText('Senha ou código da credencial'),
+                            ->helperText('Número ou código identificador da credencial (texto simples)'),
                     ])
                     ->columns(2),
 
@@ -71,11 +72,10 @@ class CredentialForm
 
                         Forms\Components\DatePicker::make('validity')
                             ->label('Data de Validade')
-                            ->required()
+                            ->nullable()
                             ->native(false)
                             ->displayFormat('d/m/Y')
-                            ->after('today')
-                            ->helperText('Data de expiração da credencial (deve ser futura)'),
+                            ->helperText('Data de expiração da credencial (opcional)'),
                     ])
                     ->columns(2),
             ]);

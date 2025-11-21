@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class RolesSeeder extends Seeder
 {
@@ -32,7 +31,7 @@ class RolesSeeder extends Seeder
 
         // Verificar se existe o usuário admin e atribuir role super_admin
         $adminUser = User::where('email', config('auth.super_admin_email'))->first();
-        if ($adminUser && !$adminUser->hasRole('super_admin')) {
+        if ($adminUser && ! $adminUser->hasRole('super_admin')) {
             $adminUser->assignRole('super_admin');
         }
 
@@ -40,9 +39,9 @@ class RolesSeeder extends Seeder
         $this->command->info('- admin: Administrador com permissões de CRUD');
         $this->command->info('- super_admin: Super administrador com todas as permissões');
         $this->command->info('- consulta: Usuário com permissões apenas de visualização');
-        
+
         if ($adminUser) {
-            $this->command->info("Usuário " . config('auth.super_admin_email') . " foi definido como super_admin");
+            $this->command->info('Usuário '.config('auth.super_admin_email').' foi definido como super_admin');
         }
     }
 }

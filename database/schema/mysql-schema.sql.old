@@ -4,27 +4,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-DROP TABLE IF EXISTS `activity_logs`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `activity_logs` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `log_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `subject_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `subject_id` bigint unsigned DEFAULT NULL,
-  `causer_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `causer_id` bigint unsigned DEFAULT NULL,
-  `properties` json DEFAULT NULL,
-  `batch_uuid` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `subject` (`subject_type`,`subject_id`),
-  KEY `causer` (`causer_type`,`causer_id`),
-  KEY `activity_logs_log_name_index` (`log_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `credentials`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -33,20 +12,16 @@ CREATE TABLE `credentials` (
   `user_id` bigint unsigned DEFAULT NULL,
   `fscs` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `secrecy` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `credential` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `secrecy` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `credential` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `concession` date DEFAULT NULL,
   `validity` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `credentials_fscs_unique` (`fscs`),
-  KEY `credentials_validity_index` (`validity`),
-  KEY `credentials_created_at_index` (`created_at`),
-  KEY `credentials_user_id_validity_index` (`user_id`,`validity`),
-  KEY `credentials_secrecy_index` (`secrecy`),
-  CONSTRAINT `credentials_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  KEY `credentials_user_id_index` (`user_id`),
+  CONSTRAINT `credentials_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `failed_jobs`;
@@ -188,4 +163,13 @@ CREATE TABLE `users` (
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (1,'2025_11_21_000001_create_consolidated_database_schema',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (1,'2014_10_12_000000_create_users_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (2,'2014_10_12_100000_create_password_reset_tokens_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (3,'2019_08_19_000000_create_failed_jobs_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (4,'2019_12_14_000001_create_personal_access_tokens_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (5,'2023_07_25_152355_create_credentials_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (6,'2023_07_25_181600_add_deleted_at_to_credentials',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (7,'2023_07_25_195956_alter_credentials_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (8,'2023_07_25_200512_alter_credentials2_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (9,'2025_11_19_021120_create_permission_tables',2);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (10,'2025_11_19_194819_add_user_id_to_credentials_table',3);

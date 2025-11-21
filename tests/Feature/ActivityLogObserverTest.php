@@ -12,10 +12,11 @@ it('logs creation', function () {
     $credential = Credential::factory()->create(['fscs' => 'LOG-001']);
 
     $this->assertDatabaseHas('activity_logs', [
-        'model_type' => Credential::class,
-        'model_id' => $credential->id,
-        'action' => 'created',
-        'user_id' => $user->id,
+        'log_name' => 'credentials',
+        'description' => 'created',
+        'subject_type' => Credential::class,
+        'subject_id' => $credential->id,
+        'causer_id' => $user->id,
     ]);
 });
 
@@ -27,14 +28,15 @@ it('logs update', function () {
     $credential->update(['name' => 'Updated Name']);
 
     $this->assertDatabaseHas('activity_logs', [
-        'model_type' => Credential::class,
-        'model_id' => $credential->id,
-        'action' => 'updated',
-        'user_id' => $user->id,
+        'log_name' => 'credentials',
+        'description' => 'updated',
+        'subject_type' => Credential::class,
+        'subject_id' => $credential->id,
+        'causer_id' => $user->id,
     ]);
-    
-    $log = DB::table('activity_logs')->where('action', 'updated')->first();
-    expect($log->changes)->toContain('Updated Name');
+
+    $log = DB::table('activity_logs')->where('description', 'updated')->first();
+    expect($log->properties)->toContain('Updated Name');
 });
 
 it('logs deletion', function () {
@@ -45,9 +47,10 @@ it('logs deletion', function () {
     $credential->delete();
 
     $this->assertDatabaseHas('activity_logs', [
-        'model_type' => Credential::class,
-        'model_id' => $credential->id,
-        'action' => 'deleted',
-        'user_id' => $user->id,
+        'log_name' => 'credentials',
+        'description' => 'deleted',
+        'subject_type' => Credential::class,
+        'subject_id' => $credential->id,
+        'causer_id' => $user->id,
     ]);
 });

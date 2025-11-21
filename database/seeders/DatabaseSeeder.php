@@ -12,17 +12,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Executar seeders em ordem
+        $this->command->info('🚀 Iniciando seed do banco de dados...');
+        $this->command->info('');
+
+        // Executar seeders em ordem correta
         $this->call([
-            AdminUserSeeder::class,
-            RolesSeeder::class,
+            RolesAndPermissionsSeeder::class, // 1. Criar roles e permissions primeiro
+            UserSeeder::class,                 // 2. Criar usuários com roles
+            CredentialSeeder::class,           // 3. Criar credenciais para os usuários
         ]);
 
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        $this->command->info('');
+        $this->command->info('✅ Seed concluído com sucesso!');
     }
 }
