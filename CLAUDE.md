@@ -203,6 +203,110 @@ app/Filament/Resources/
             └── EditUser.php
 ```
 
+### Badge Color Centralization
+
+**Badge Color Enum for Consistent Styling**
+
+Use `App\Enums\BadgeColor` to centralize badge color logic across all Filament resources. This enum eliminates code duplication and ensures consistent visual styling throughout the application.
+
+**Available Methods:**
+
+```php
+use App\Enums\BadgeColor;
+
+// 1. forRole() - Returns color for user roles
+BadgeColor::forRole('super_admin')->value  // 'danger' (red)
+BadgeColor::forRole('admin')->value        // 'warning' (yellow)
+BadgeColor::forRole('operador')->value     // 'success' (green)
+BadgeColor::forRole('consulta')->value     // 'primary' (blue)
+BadgeColor::forRole('unknown')->value      // 'gray' (default)
+
+// 2. forSecrecy() - Returns color for secrecy levels
+BadgeColor::forSecrecy('S')->value  // 'danger' (Secreto = red)
+BadgeColor::forSecrecy('R')->value  // 'success' (Reservado = green)
+BadgeColor::forSecrecy('X')->value  // 'gray' (unknown = gray)
+
+// 3. forType() - Returns color for credential types
+BadgeColor::forType('CRED')->value  // 'info' (cyan)
+BadgeColor::forType('TCMS')->value  // 'warning' (yellow)
+BadgeColor::forType('OTHER')->value // 'gray' (default)
+
+// 4. forValidity() - Returns color based on validity date
+BadgeColor::forValidity($pastDate)->value      // 'danger' (expired)
+BadgeColor::forValidity($in15Days)->value      // 'warning' (expiring soon)
+BadgeColor::forValidity($inOneYear)->value     // 'success' (valid)
+BadgeColor::forValidity(null)->value           // 'gray' (no date)
+```
+
+**Color Mapping Tables:**
+
+| Role | Color | Badge |
+|------|-------|-------|
+| super_admin | danger | 🔴 Red |
+| admin | warning | 🟡 Yellow |
+| operador | success | 🟢 Green |
+| consulta | primary | 🔵 Blue |
+| other | gray | ⚪ Gray |
+
+| Secrecy | Color | Badge |
+|---------|-------|-------|
+| S (Secreto) | danger | 🔴 Red |
+| R (Reservado) | success | 🟢 Green |
+| other | gray | ⚪ Gray |
+
+| Type | Color | Badge |
+|------|-------|-------|
+| CRED | info | 🔵 Cyan |
+| TCMS | warning | 🟡 Yellow |
+| other | gray | ⚪ Gray |
+
+| Validity | Color | Badge |
+|----------|-------|-------|
+| Past date | danger | 🔴 Red |
+| ≤ 30 days | warning | 🟡 Yellow |
+| > 30 days | success | 🟢 Green |
+| null | gray | ⚪ Gray |
+
+**Usage in Filament Tables:**
+
+```php
+use App\Enums\BadgeColor;
+use Filament\Tables\Columns\TextColumn;
+
+// Example 1: Role badges
+TextColumn::make('roles.name')
+    ->label('Roles')
+    ->badge()
+    ->color(fn ($state) => BadgeColor::forRole($state)->value)
+    ->formatStateUsing(fn ($state) => ucfirst($state))
+
+// Example 2: Secrecy level badges
+TextColumn::make('secrecy')
+    ->label('Sigilo')
+    ->badge()
+    ->color(fn ($record) => BadgeColor::forSecrecy($record->secrecy)->value)
+    ->formatStateUsing(fn ($state) => $state === 'S' ? 'Secreto' : 'Reservado')
+
+// Example 3: Validity date badges
+TextColumn::make('validity')
+    ->label('Validade')
+    ->date('d/m/Y')
+    ->badge()
+    ->color(fn ($record) => BadgeColor::forValidity($record->validity)->value)
+    ->sortable()
+```
+
+**Important Notes:**
+
+- Always use `->value` to get the string representation of the enum case
+- The enum uses Carbon for date calculations in `forValidity()`
+- Validity threshold is 30 days (configurable in the enum if needed)
+- Complete test coverage available in `tests/Unit/BadgeColorEnumTest.php`
+
+**Testing Reference:**
+
+See `tests/Unit/BadgeColorEnumTest.php` for comprehensive unit tests covering all methods and edge cases.
+
 ### Credential Business Logic
 
 **Validation Rules:**
