@@ -25,6 +25,16 @@ class CredentialObserver
         $this->logActivity('deleted', $credential);
     }
 
+    public function restored(Credential $credential): void
+    {
+        $this->logActivity('restored', $credential);
+    }
+
+    public function forceDeleted(Credential $credential): void
+    {
+        $this->logActivity('force_deleted', $credential);
+    }
+
     private function logActivity(string $action, Credential $credential, array $extra = []): void
     {
         DB::table('activity_logs')->insert([
@@ -32,7 +42,7 @@ class CredentialObserver
             'model_id' => $credential->id,
             'action' => $action,
             'user_id' => Auth::id(),
-            'changes' => json_encode($extra),
+            'changes' => ! empty($extra) ? json_encode($extra) : null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

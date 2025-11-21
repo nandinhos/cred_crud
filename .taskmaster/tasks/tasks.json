@@ -3,409 +3,737 @@
     "tasks": [
       {
         "id": "1",
-        "title": "Correção de Validação de Datas e Campos do Model Credential",
-        "description": "Corrigir validação de datas (GAP001) e ajustar inconsistências entre store/update (GAP004) no CredentialController",
-        "details": "1. Atualizar regras de validação em `app/Http/Controllers/CredentialController.php`:\n   - Alterar 'concession' e 'validity' de 'string' para 'date' ou 'date_format:Y-m-d'\n   - Adicionar validação 'after:today' em 'validity'\n   - Garantir mesmas regras em store() e update()\n2. Atualizar migration se necessário para garantir tipo DATE correto\n3. Verificar casts no Model Credential:\n   ```php\n   protected $casts = [\n       'concession' => 'date',\n       'validity' => 'date',\n   ];\n   ```\n4. Remover ou documentar uso do campo 'credential' (GAP002)\n5. Adicionar validação customizada para FSCS único considerando soft deletes:\n   ```php\n   'fscs' => ['required', 'string', Rule::unique('credentials')->whereNull('deleted_at')]\n   ```",
-        "testStrategy": "1. Teste unitário com Pest para validação de datas inválidas\n2. Teste funcional tentando cadastrar credencial com data de validade no passado\n3. Teste de duplicação de FSCS em registros ativos\n4. Verificar que registros soft deleted não impedem novo cadastro com mesmo FSCS",
+        "title": "FASE 1: Documentação Centralizada e Completa",
+        "description": "Consolidar e atualizar toda documentação do projeto em arquivos centralizados (README.md, CLAUDE.md, database_schema.md, best-practices) garantindo alinhamento com Laravel 12 e Filament 4.",
+        "details": "1. **Atualizar README.md com Informações Completas**:\n   - Adicionar badges de versão (Laravel 12, Filament 4, PHP 8.3)\n   - Documentar stack tecnológico completo\n   - Incluir seção de Quick Start com comandos Sail\n   - Adicionar troubleshooting comum\n\n2. **Revisar e Expandir CLAUDE.md**:\n   - Documentar padrões Filament 4 específicos (Schemas vs Forms)\n   - Adicionar exemplos de code patterns do projeto\n   - Documentar namespaces corretos (Filament\\Actions vs Tables\\Actions)\n   - Incluir convenções de commits e testes\n\n3. **Gerar/Atualizar database_schema.md**:\n   ```bash\n   vendor/bin/sail artisan schema:dump --prune\n   ```\n   - Documentar todas as tabelas, colunas e tipos\n   - Documentar relacionamentos e foreign keys\n   - Incluir diagrama ER (mermaid)\n\n4. **Consolidar best-practices-laravel12-filament4.md**:\n   - Padrões de Resource Structure\n   - Patterns de autorização (Policy vs canAccess)\n   - Convenções de teste com Pest\n   - Patterns de Factories e Seeders\n\n5. **Documentar Lessons Learned**:\n   - Atualizar `.taskmaster/docs/lessons-learned.md`\n   - Adicionar problemas encontrados e soluções\n   - Documentar gotchas do Filament 4",
+        "testStrategy": "1. **Validação de Completude**:\n   - Verificar que README contém: instalação, setup, comandos principais\n   - Confirmar CLAUDE.md tem seção de Filament 4 patterns\n   - Validar database_schema.md está atualizado com schema atual\n\n2. **Teste de Usabilidade**:\n   - Seguir instruções do README em ambiente limpo\n   - Confirmar que links internos funcionam\n   - Verificar exemplos de código são executáveis\n\n3. **Verificação de Consistência**:\n   ```bash\n   grep -r \"Filament\\\\Forms\\\\Form\" . --include=\"*.md\"\n   ```\n   - Não deve retornar resultados (namespace obsoleto)\n   - Documentação deve usar Filament\\Schemas\\Schema\n\n4. **Peer Review**:\n   - Solicitar revisão de outro desenvolvedor\n   - Confirmar clareza e ausência de ambiguidades",
         "priority": "high",
         "dependencies": [],
         "status": "done",
+        "complexity": 2,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Dividir a tarefa de documentação em subtasks específicas: (1) Atualizar README.md com badges, stack tecnológico e Quick Start; (2) Revisar CLAUDE.md com padrões Filament 4 e namespaces corretos; (3) Gerar database_schema.md atualizado com diagrama ER; (4) Consolidar best-practices-laravel12-filament4.md; (5) Documentar lessons learned com problemas e soluções encontradas.",
+        "updatedAt": "2025-11-21T01:32:04.596Z",
         "subtasks": [
           {
             "id": 1,
-            "title": "Atualizar regras de validação no CredentialController para campos de data",
-            "description": "Modificar as regras de validação nos métodos store() e update() do CredentialController, alterando 'concession' e 'validity' de 'string' para 'date', adicionando validação 'after:today' em 'validity' e garantindo consistência entre ambos os métodos.",
+            "title": "Atualizar README.md com badges, stack tecnológico e Quick Start",
+            "description": "Adicionar badges de versão (Laravel 12, Filament 4, PHP 8.3), documentar stack tecnológico completo, incluir seção de Quick Start com comandos Sail e adicionar troubleshooting comum",
             "dependencies": [],
-            "details": "Editar app/Http/Controllers/CredentialController.php e atualizar os arrays de validação nos métodos store() e update(). Alterar as regras dos campos 'concession' e 'validity' de 'required|string' para 'required|date' ou 'required|date_format:Y-m-d'. Adicionar a regra 'after:today' ou 'after:now' no campo 'validity' para garantir que apenas datas futuras sejam aceitas. Verificar que ambos os métodos (store e update) possuem exatamente as mesmas regras de validação para evitar inconsistências (GAP004).",
+            "details": "Editar README.md para incluir: (1) Badges do shields.io mostrando Laravel 12.39.0, Filament 4.2.2, PHP 8.3+, MySQL 8.0; (2) Seção Technology Stack listando Laravel, Filament, Livewire, Alpine.js, TailwindCSS, Pest, Spatie Permission; (3) Seção Quick Start com comandos: git clone, cp .env.example .env, vendor/bin/sail up -d, sail artisan migrate --seed, acesso em http://localhost/admin; (4) Seção Troubleshooting com problemas comuns: Vite manifest not found, 403 Forbidden, permissões não funcionando",
             "status": "done",
-            "testStrategy": "Criar testes Pest verificando: (1) rejeição de datas inválidas ou em formato incorreto, (2) rejeição de 'validity' com data passada, (3) aceitação de datas válidas e futuras, (4) consistência entre validações de store() e update().",
-            "updatedAt": "2025-11-19T01:02:12.785Z",
-            "parentId": "undefined"
+            "testStrategy": "Validar que README.md contém todos os elementos: verificar presença de badges no topo, confirmar seção Technology Stack está completa, testar comandos Quick Start em ambiente limpo, verificar que troubleshooting cobre os 3 problemas principais documentados em lessons-learned.md",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T00:03:00.445Z"
           },
           {
             "id": 2,
-            "title": "Modificar migrations para garantir tipos DATE corretos nos campos de data",
-            "description": "Atualizar a migration da tabela credentials para garantir que os campos 'concession' e 'validity' utilizem o tipo DATE correto no banco de dados, criando nova migration se necessário.",
+            "title": "Revisar e expandir CLAUDE.md com padrões Filament 4 e namespaces corretos",
+            "description": "Documentar padrões Filament 4 específicos (Schemas vs Forms), adicionar exemplos de code patterns do projeto, documentar namespaces corretos (Filament\\Actions vs Tables\\Actions) e incluir convenções de commits e testes",
             "dependencies": [],
-            "details": "Verificar a migration existente em database/migrations/*_create_credentials_table.php. Se os campos 'concession' e 'validity' estiverem definidos como $table->string(), criar uma nova migration usando php artisan make:migration update_credentials_table_date_fields para alterar esses campos para $table->date('concession') e $table->date('validity'). Utilizar Schema::table() com os métodos $table->date()->change() para modificar os tipos existentes. Executar php artisan migrate para aplicar as mudanças.",
+            "details": "Atualizar CLAUDE.md com: (1) Seção 'Filament 4 Specific Patterns' mostrando uso correto de Filament\\Schemas\\Schema em vez de Forms\\Form; (2) Exemplos de namespaces: use Filament\\Actions\\Action, use Filament\\Actions\\EditAction (CORRETO) vs use Filament\\Tables\\Actions\\EditAction (INCORRETO); (3) Code patterns de Resource Structure mostrando estrutura de pastas (Pages/, Schemas/, Tables/); (4) Seção 'Important Conventions' com convenções de commit em português usando Conventional Commits; (5) Padrões de teste com Pest PHP incluindo exemplos do projeto",
             "status": "done",
-            "testStrategy": "Verificar através de php artisan migrate:fresh que a migration executa sem erros. Inspecionar o schema do banco de dados para confirmar que os campos são do tipo DATE. Testar inserção manual de registros com datas válidas.",
+            "testStrategy": "Revisar CLAUDE.md para confirmar: seção Filament 4 Patterns existe e mostra diferença Schema vs Form, namespaces corretos estão documentados com exemplos ✅ e ❌, estrutura de Resource está documentada, convenções de commit estão em português, exemplos de teste Pest estão presentes",
             "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:02:28.854Z"
+            "updatedAt": "2025-11-21T00:19:58.770Z"
           },
           {
             "id": 3,
-            "title": "Configurar casts no Model Credential para campos de data",
-            "description": "Adicionar propriedade $casts no Model Credential para realizar conversão automática dos campos 'concession' e 'validity' para instâncias de Carbon/DateTime.",
-            "dependencies": [
-              2
-            ],
-            "details": "Editar app/Models/Credential.php e adicionar ou atualizar a propriedade protected $casts com os seguintes valores: 'concession' => 'date' e 'validity' => 'date'. Isso garantirá que o Eloquent converta automaticamente esses campos para objetos Carbon ao recuperar registros do banco de dados, facilitando manipulação e formatação de datas. Verificar se não há conflitos com outras propriedades do modelo como $dates (deprecated no Laravel moderno).",
+            "title": "Gerar database_schema.md atualizado com diagrama ER",
+            "description": "Executar comando artisan schema:dump, documentar todas as tabelas, colunas e tipos, documentar relacionamentos e foreign keys, e incluir diagrama ER em formato mermaid",
+            "dependencies": [],
+            "details": "Executar: vendor/bin/sail artisan schema:dump --prune para gerar schema atualizado. Criar/atualizar .taskmaster/docs/database_schema.md com: (1) Listagem de todas as tabelas: users, credentials, roles, permissions, model_has_roles, model_has_permissions, activity_logs; (2) Para cada tabela documentar colunas, tipos, nullable, defaults, índices; (3) Documentar relacionamentos: User hasMany Credential (ON DELETE SET NULL), User belongsToMany Role, User belongsToMany Permission; (4) Criar diagrama ER usando sintaxe mermaid.js mostrando entidades e relacionamentos principais",
             "status": "done",
-            "testStrategy": "Criar teste Pest que recupera um registro de credencial do banco e verifica se $credential->concession e $credential->validity são instâncias de Illuminate\\Support\\Carbon. Testar também a formatação automática usando métodos como ->format('d/m/Y').",
+            "testStrategy": "Executar vendor/bin/sail artisan schema:dump e comparar output com database_schema.md. Verificar que todas as tabelas do dump estão documentadas. Validar diagrama mermaid renderiza corretamente copiando código para https://mermaid.live. Confirmar relacionamentos documentados batem com foreign keys no schema dump",
             "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:02:41.251Z"
+            "updatedAt": "2025-11-21T01:30:52.838Z"
           },
           {
             "id": 4,
-            "title": "Implementar validação de FSCS único considerando soft deletes",
-            "description": "Adicionar regra de validação customizada para o campo 'fscs' garantindo unicidade apenas entre registros não deletados (soft deletes), utilizando Rule::unique com whereNull('deleted_at').",
+            "title": "Consolidar best-practices-laravel12-filament4.md com padrões do projeto",
+            "description": "Documentar padrões de Resource Structure, patterns de autorização (Policy vs canAccess), convenções de teste com Pest e patterns de Factories e Seeders baseados no código atual do projeto",
             "dependencies": [
-              1
+              1,
+              2
             ],
-            "details": "No CredentialController, nos métodos store() e update(), modificar a regra de validação do campo 'fscs' para utilizar Rule::unique('credentials')->whereNull('deleted_at'). No método update(), adicionar também ->ignore($credential->id) para permitir que o mesmo registro mantenha seu FSCS atual. Importar Illuminate\\Validation\\Rule no topo do arquivo. A validação completa ficará: 'fscs' => ['required', 'string', Rule::unique('credentials')->whereNull('deleted_at')] para store() e 'fscs' => ['required', 'string', Rule::unique('credentials')->whereNull('deleted_at')->ignore($credential->id)] para update().",
+            "details": "Criar/atualizar .taskmaster/docs/best-practices-laravel12-filament4.md com: (1) Seção 'Resource Structure' mostrando organização app/Filament/Resources/EntityResource.php + Entity/Pages/ + Entity/Schemas/ + Entity/Tables/; (2) Seção 'Authorization Patterns' documentando canAccessPanel() no Model vs canAccess()/canCreate()/canEdit() no Resource, com exemplos do CredentialResource e UserResource; (3) Seção 'Testing with Pest' mostrando padrões: use de factories, it() syntax, actingAs() para autenticação, assertions Livewire; (4) Seção 'Factories and Seeders' com patterns de states, sequences e relacionamentos baseados em UserFactory e DatabaseSeeder do projeto",
             "status": "done",
-            "testStrategy": "Criar testes Pest para: (1) criação de credencial com FSCS único (sucesso), (2) tentativa de duplicar FSCS em registro ativo (falha), (3) criação de credencial com FSCS de registro soft deleted (sucesso), (4) atualização de credencial mantendo mesmo FSCS (sucesso), (5) atualização tentando usar FSCS de outro registro ativo (falha).",
+            "testStrategy": "Revisar best-practices-laravel12-filament4.md confirmando: possui seção Resource Structure com exemplo de estrutura de pastas, possui seção Authorization Patterns com diferença Model vs Resource, possui seção Testing mostrando syntax Pest com it(), possui seção Factories com exemplos de states. Validar que exemplos de código são extraídos do projeto real (CredentialResource.php, UserResource.php, RoleAuthorizationTest.php)",
             "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:02:49.966Z"
+            "updatedAt": "2025-11-21T01:31:33.140Z"
           },
           {
             "id": 5,
-            "title": "Criar testes Pest para validações de data e duplicação de FSCS",
-            "description": "Implementar suite completa de testes automatizados com Pest cobrindo todas as validações de campos de data (concession, validity) e regras de unicidade de FSCS considerando soft deletes.",
+            "title": "Documentar lessons learned com problemas e soluções encontradas",
+            "description": "Atualizar .taskmaster/docs/lessons-learned.md adicionando problemas encontrados durante desenvolvimento, soluções aplicadas e gotchas específicos do Filament 4",
             "dependencies": [
               1,
               2,
               3,
               4
             ],
-            "details": "Criar arquivo tests/Feature/Credentials/CredentialValidationTest.php com testes Pest organizados em grupos: (1) Validação de datas: testar rejeição de formato inválido, rejeição de 'validity' no passado, aceitação de datas válidas; (2) Validação de FSCS único: testar criação com FSCS duplicado (deve falhar), criação com FSCS de registro soft deleted (deve passar), atualização com FSCS de outro registro (deve falhar); (3) Consistência store/update: verificar que mesmas validações aplicam em ambos métodos. Utilizar factories para criar dados de teste e Database Transactions para rollback após cada teste. Adicionar assertions verificando mensagens de erro corretas.",
+            "details": "Atualizar .taskmaster/docs/lessons-learned.md com: (1) Seção 'Known Issues & Solutions' documentando: Vite manifest not found (solução: npm install && npm run build), 403 Forbidden em /admin (solução: usar /login-admin ou verificar canAccessPanel()), EditAction button não visível (solução: usar Filament\\Actions\\Action customizado), Permissions not working (solução: verificar roles e reseed); (2) Seção 'Filament 4 Gotchas' documentando: namespace changes (Actions vs Tables\\Actions), Schema vs Form, estrutura de Resources com subpastas; (3) Seção 'Laravel 12 Structure' documentando decisão de manter estrutura Laravel 10 (Kernel.php, Middleware em app/Http); (4) Adicionar data e contexto para cada lesson learned",
             "status": "done",
-            "testStrategy": "Executar php artisan test --filter=CredentialValidationTest para verificar todos os testes passam. Verificar cobertura de código com php artisan test --coverage-html=coverage. Objetivo: 100% de cobertura nas regras de validação implementadas nos métodos store() e update() do CredentialController.",
+            "testStrategy": "Revisar lessons-learned.md confirmando: possui pelo menos 4 problemas documentados com soluções, possui seção Filament 4 Gotchas com namespaces, possui seção Laravel 12 Structure explicando estrutura híbrida, cada item possui contexto claro do problema e solução aplicada. Validar que soluções batem com código atual do projeto (verificar User.php para canAccessPanel, verificar CredentialResource.php para Actions)",
             "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:03:23.952Z"
+            "updatedAt": "2025-11-21T01:32:04.596Z"
           }
-        ],
-        "complexity": 4,
-        "recommendedSubtasks": 5,
-        "expansionPrompt": "Divida esta tarefa em subtarefas específicas: (1) Atualizar regras de validação no CredentialController para campos de data, (2) Modificar migrations para garantir tipos DATE corretos, (3) Configurar casts no Model Credential, (4) Implementar validação de FSCS único considerando soft deletes, (5) Criar testes Pest para validações de data e duplicação",
-        "updatedAt": "2025-11-19T01:03:23.952Z"
+        ]
       },
       {
         "id": "2",
-        "title": "Implementação de Sistema de Perfis e Autorização (RBAC)",
-        "description": "Criar sistema de roles e permissions para controle de acesso granular (IMP001)",
-        "details": "1. Criar migration para tabela 'roles':\n   - id, name (admin/consulta), description, timestamps\n2. Criar migration para tabela pivot 'role_user':\n   - user_id, role_id, timestamps\n3. Criar Model Role com relacionamento:\n   ```php\n   public function users() {\n       return $this->belongsToMany(User::class);\n   }\n   ```\n4. Atualizar Model User:\n   ```php\n   public function roles() {\n       return $this->belongsToMany(Role::class);\n   }\n   public function hasRole($role) {\n       return $this->roles->contains('name', $role);\n   }\n   ```\n5. Criar middleware 'CheckRole':\n   ```php\n   if (!$request->user()->hasRole($role)) {\n       abort(403);\n   }\n   ```\n6. Aplicar middleware nas rotas de credentials\n7. Criar Seeder com roles padrão (admin, consulta)",
-        "testStrategy": "1. Teste Pest verificando que usuário 'consulta' não acessa rotas de edição/exclusão\n2. Teste que admin tem acesso total\n3. Teste de redirecionamento 403 para usuários não autorizados\n4. Verificar seeders criando roles corretamente",
+        "title": "FASE 2: Models e Eloquent - Type Safety e Factories Completas",
+        "description": "Modernizar Models com type hints completos (HasMany, BelongsTo), PHPDoc, método casts(), criar factories com states avançados para testes, implementar sistema de auditoria com Observer e externalizar email hardcoded para configuração.",
+        "details": "1. **Adicionar Type Hints e PHPDoc nos Models**:\n\n   Atualizar `app/Models/User.php`:\n   ```php\n   use Illuminate\\Database\\Eloquent\\Relations\\HasMany;\n   use Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany;\n   \n   /**\n    * @property int $id\n    * @property string $name\n    * @property string $email\n    * @property \\Illuminate\\Support\\Carbon $created_at\n    * @property \\Illuminate\\Support\\Carbon $updated_at\n    */\n   class User extends Authenticatable\n   {\n       /** @return HasMany<Credential> */\n       public function credentials(): HasMany\n       {\n           return $this->hasMany(Credential::class);\n       }\n       \n       /** @return BelongsToMany<Role> */\n       public function roles(): BelongsToMany\n       {\n           return $this->belongsToMany(Role::class);\n       }\n   }\n   ```\n\n   Atualizar `app/Models/Credential.php`:\n   ```php\n   use Illuminate\\Database\\Eloquent\\Relations\\BelongsTo;\n   \n   /**\n    * @property int $id\n    * @property string $fscs\n    * @property string $name\n    * @property string $secrecy\n    * @property \\Illuminate\\Support\\Carbon $validity\n    * @property int|null $user_id\n    */\n   class Credential extends Model\n   {\n       /** @return BelongsTo<User, Credential> */\n       public function user(): BelongsTo\n       {\n           return $this->belongsTo(User::class);\n       }\n       \n       protected function casts(): array\n       {\n           return [\n               'validity' => 'date',\n               'created_at' => 'datetime',\n               'updated_at' => 'datetime',\n               'deleted_at' => 'datetime',\n           ];\n       }\n   }\n   ```\n\n2. **Criar Factories Completas com States**:\n\n   Atualizar `database/factories/CredentialFactory.php`:\n   ```php\n   public function definition(): array\n   {\n       return [\n           'fscs' => 'FSCS-' . $this->faker->unique()->numberBetween(1000, 9999),\n           'name' => $this->faker->company(),\n           'secrecy' => $this->faker->randomElement(['R', 'S']),\n           'validity' => $this->faker->dateTimeBetween('+1 month', '+2 years'),\n           'user_id' => User::factory(),\n       ];\n   }\n   \n   public function expired(): static\n   {\n       return $this->state(fn (array $attributes) => [\n           'validity' => now()->subDays(rand(1, 365)),\n       ]);\n   }\n   \n   public function expiringSoon(): static\n   {\n       return $this->state(fn (array $attributes) => [\n           'validity' => now()->addDays(rand(1, 30)),\n       ]);\n   }\n   \n   public function reserved(): static\n   {\n       return $this->state(fn (array $attributes) => [\n           'secrecy' => 'R',\n       ]);\n   }\n   \n   public function secret(): static\n   {\n       return $this->state(fn (array $attributes) => [\n           'secrecy' => 'S',\n       ]);\n   }\n   ```\n\n   Atualizar `database/factories/UserFactory.php`:\n   ```php\n   public function withRole(string $role): static\n   {\n       return $this->afterCreating(function (User $user) use ($role) {\n           $user->assignRole($role);\n       });\n   }\n   \n   public function superAdmin(): static\n   {\n       return $this->withRole('super_admin');\n   }\n   \n   public function admin(): static\n   {\n       return $this->withRole('admin');\n   }\n   \n   public function consulta(): static\n   {\n       return $this->withRole('consulta');\n   }\n   ```\n\n3. **Implementar Observer para Activity Log**:\n\n   Criar `app/Observers/CredentialObserver.php`:\n   ```php\n   namespace App\\Observers;\n   \n   use App\\Models\\Credential;\n   use Illuminate\\Support\\Facades\\Auth;\n   use Illuminate\\Support\\Facades\\DB;\n   \n   class CredentialObserver\n   {\n       public function created(Credential $credential): void\n       {\n           $this->logActivity('created', $credential);\n       }\n       \n       public function updated(Credential $credential): void\n       {\n           $this->logActivity('updated', $credential, [\n               'changes' => $credential->getChanges(),\n           ]);\n       }\n       \n       public function deleted(Credential $credential): void\n       {\n           $this->logActivity('deleted', $credential);\n       }\n       \n       private function logActivity(string $action, Credential $credential, array $extra = []): void\n       {\n           DB::table('activity_logs')->insert([\n               'model_type' => Credential::class,\n               'model_id' => $credential->id,\n               'action' => $action,\n               'user_id' => Auth::id(),\n               'changes' => json_encode($extra),\n               'created_at' => now(),\n           ]);\n       }\n   }\n   ```\n\n   Registrar no `AppServiceProvider`:\n   ```php\n   use App\\Models\\Credential;\n   use App\\Observers\\CredentialObserver;\n   \n   public function boot(): void\n   {\n       Credential::observe(CredentialObserver::class);\n   }\n   ```\n\n4. **Externalizar Email Hardcoded**:\n\n   Adicionar em `config/auth.php`:\n   ```php\n   'super_admin_email' => env('SUPER_ADMIN_EMAIL', 'admin@admin.com'),\n   ```\n\n   Atualizar `app/Models/User.php`:\n   ```php\n   public function canAccessPanel(Panel $panel): bool\n   {\n       if ($this->email === config('auth.super_admin_email')) {\n           return true;\n       }\n       return $this->hasRole(['super_admin', 'admin', 'consulta']);\n   }\n   ```\n\n   Adicionar no `.env.example`:\n   ```\n   SUPER_ADMIN_EMAIL=admin@admin.com\n   ```",
+        "testStrategy": "1. **Testes de Type Hints e PHPDoc**:\n   ```bash\n   vendor/bin/sail composer require --dev phpstan/phpstan\n   vendor/bin/sail bin phpstan analyse app/Models\n   ```\n   - Verificar que PHPStan não reporta erros de tipagem nos Models\n   - Executar `php artisan tinker` e testar autocompletion das relações\n\n2. **Testes de Factories com States**:\n   ```bash\n   vendor/bin/sail artisan tinker\n   ```\n   ```php\n   use App\\Models\\Credential;\n   $expired = Credential::factory()->expired()->create();\n   $expiring = Credential::factory()->expiringSoon()->create();\n   $reserved = Credential::factory()->reserved()->secret()->create(); // Deve falhar\n   ```\n\n3. **Testes do Observer**:\n   ```bash\n   vendor/bin/sail artisan tinker\n   ```\n   ```php\n   $user = User::factory()->create();\n   Auth::login($user);\n   $cred = Credential::factory()->create();\n   // Verificar: DB::table('activity_logs')->latest()->first();\n   ```\n\n4. **Teste de Configuração Externa**:\n   ```bash\n   vendor/bin/sail artisan tinker --execute=\"echo config('auth.super_admin_email');\"\n   ```\n   - Deve retornar email do .env\n   - Alterar .env e verificar que muda\n\n5. **Teste de Casts**:\n   ```php\n   $cred = Credential::factory()->create();\n   dump($cred->validity); // Deve ser Carbon instance\n   ```",
         "priority": "high",
-        "dependencies": [],
-        "status": "pending",
-        "subtasks": [],
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
         "complexity": 6,
-        "recommendedSubtasks": 7,
-        "expansionPrompt": "Divida esta tarefa em subtarefas: (1) Criar migration para tabela roles, (2) Criar migration para tabela pivot role_user, (3) Criar Model Role com relacionamentos, (4) Atualizar Model User com métodos de verificação de roles, (5) Implementar middleware CheckRole, (6) Aplicar middleware nas rotas protegidas, (7) Criar seeders com roles padrão e testes de autorização"
+        "recommendedSubtasks": 8,
+        "expansionPrompt": "Decompor em subtasks: (1) Adicionar type hints e PHPDoc em User model; (2) Adicionar type hints e método casts() em Credential model; (3) Criar states avançados em CredentialFactory (expired, expiringSoon, reserved, secret); (4) Criar states de roles em UserFactory (superAdmin, admin, consulta); (5) Criar CredentialObserver para activity logging; (6) Registrar Observer no AppServiceProvider; (7) Externalizar email hardcoded para config/auth.php; (8) Atualizar .env.example e testar configuração.",
+        "updatedAt": "2025-11-21T02:43:29.467Z",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Adicionar type hints e PHPDoc completos no User model",
+            "description": "Atualizar app/Models/User.php com type hints para relacionamentos (HasMany<Credential>, BelongsToMany<Role>) e adicionar PHPDoc annotations completas para todas as propriedades do modelo.",
+            "dependencies": [],
+            "details": "Importar Illuminate\\Database\\Eloquent\\Relations\\HasMany e BelongsToMany. Adicionar PHPDoc block com @property para id, name, email, created_at, updated_at. Adicionar return types /** @return HasMany<Credential> */ para método credentials() e /** @return BelongsToMany<Role> */ para método roles(). Garantir que todos os relacionamentos tenham tipagem explícita.",
+            "status": "done",
+            "testStrategy": "Executar vendor/bin/sail composer require --dev phpstan/phpstan e vendor/bin/sail bin phpstan analyse app/Models/User.php para verificar que não há erros de tipagem. Testar no tinker que autocomplete funciona corretamente para $user->credentials e $user->roles.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:42:16.475Z"
+          },
+          {
+            "id": 2,
+            "title": "Adicionar type hints, PHPDoc e método casts() no Credential model",
+            "description": "Atualizar app/Models/Credential.php com type hints para relacionamento BelongsTo, PHPDoc annotations completas e implementar método casts() para date casting adequado.",
+            "dependencies": [],
+            "details": "Importar Illuminate\\Database\\Eloquent\\Relations\\BelongsTo. Adicionar PHPDoc block com @property para id, fscs, name, secrecy, validity, user_id. Adicionar return type /** @return BelongsTo<User, Credential> */ para método user(). Implementar protected function casts(): array com casting para validity como date e timestamps como datetime.",
+            "status": "done",
+            "testStrategy": "Executar vendor/bin/sail bin phpstan analyse app/Models/Credential.php. Testar no tinker que $credential->validity retorna Carbon instance e que $credential->user retorna User model com tipagem correta. Verificar que dates são formatadas corretamente.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:42:18.919Z"
+          },
+          {
+            "id": 3,
+            "title": "Criar states avançados na CredentialFactory",
+            "description": "Implementar states expired(), expiringSoon(), reserved() e secret() na database/factories/CredentialFactory.php para permitir geração de dados de teste em cenários específicos.",
+            "dependencies": [],
+            "details": "Atualizar método definition() com faker para gerar fscs único, name, secrecy aleatório e validity futura. Criar método expired() que retorna state com validity no passado (subDays). Criar expiringSoon() com validity entre 1-30 dias. Criar reserved() com secrecy='R' e secret() com secrecy='S'. Todos os methods devem retornar static.",
+            "status": "done",
+            "testStrategy": "Criar teste em tests/Unit/CredentialFactoryTest.php que verifica cada state: Credential::factory()->expired()->create() deve ter validity no passado, expiringSoon() entre 1-30 dias, reserved() com secrecy='R', secret() com secrecy='S'. Executar vendor/bin/sail artisan test --filter=CredentialFactoryTest.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:42:32.295Z"
+          },
+          {
+            "id": 4,
+            "title": "Criar states de roles na UserFactory",
+            "description": "Implementar methods withRole(), superAdmin(), admin() e consulta() na database/factories/UserFactory.php para facilitar criação de usuários com roles específicos em testes.",
+            "dependencies": [],
+            "details": "Criar método withRole(string $role): static que usa afterCreating callback para chamar $user->assignRole($role). Criar métodos de conveniência superAdmin(), admin() e consulta() que chamam withRole() com a role apropriada. Garantir que roles são atribuídas após criação do usuário para evitar problemas com relacionamentos.",
+            "status": "done",
+            "testStrategy": "Criar teste em tests/Unit/UserFactoryTest.php que verifica: User::factory()->superAdmin()->create() tem role 'super_admin', admin() tem 'admin', consulta() tem 'consulta'. Verificar que $user->hasRole() retorna true para role correta. Executar vendor/bin/sail artisan test --filter=UserFactoryTest.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:42:34.402Z"
+          },
+          {
+            "id": 5,
+            "title": "Criar CredentialObserver para activity logging",
+            "description": "Implementar app/Observers/CredentialObserver.php com métodos created(), updated() e deleted() que registram ações na tabela activity_logs com informações de usuário e mudanças.",
+            "dependencies": [],
+            "details": "Criar diretório app/Observers se não existir. Criar CredentialObserver.php com namespace App\\Observers. Implementar métodos created(), updated(), deleted() que chamam logActivity(). Criar método privado logActivity() que insere em DB::table('activity_logs') com campos model_type, model_id, action, user_id (Auth::id()), changes (json_encode), created_at. No método updated(), incluir $credential->getChanges() no array changes.",
+            "status": "done",
+            "testStrategy": "Criar teste em tests/Feature/CredentialObserverTest.php que verifica: ao criar credential, registro é inserido em activity_logs com action='created'; ao atualizar, action='updated' e changes contém modificações; ao deletar, action='deleted'. Usar actingAs() para simular usuário autenticado. Executar vendor/bin/sail artisan test --filter=CredentialObserverTest.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:42:54.468Z"
+          },
+          {
+            "id": 6,
+            "title": "Registrar CredentialObserver no AppServiceProvider",
+            "description": "Atualizar app/Providers/AppServiceProvider.php para registrar o CredentialObserver no método boot(), garantindo que eventos do modelo sejam observados.",
+            "dependencies": [
+              5
+            ],
+            "details": "Abrir app/Providers/AppServiceProvider.php. Importar use App\\Models\\Credential e use App\\Observers\\CredentialObserver. No método boot(), adicionar Credential::observe(CredentialObserver::class). Verificar que boot() method existe, se não, criar. Garantir que observer é registrado antes de qualquer operação de banco de dados.",
+            "status": "done",
+            "testStrategy": "Executar vendor/bin/sail artisan tinker e criar/atualizar/deletar uma Credential. Verificar que registros são inseridos na tabela activity_logs com SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 5. Confirmar que user_id, action e changes estão corretos. Executar testes de CredentialObserver novamente.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:42:56.962Z"
+          },
+          {
+            "id": 7,
+            "title": "Externalizar email hardcoded para config/auth.php",
+            "description": "Adicionar configuração 'super_admin_email' em config/auth.php lendo de variável de ambiente SUPER_ADMIN_EMAIL e atualizar User model para usar config() ao invés de string hardcoded.",
+            "dependencies": [],
+            "details": "Abrir config/auth.php e adicionar chave 'super_admin_email' => env('SUPER_ADMIN_EMAIL', 'admin@admin.com') no array de configuração principal. Atualizar app/Models/User.php, no método canAccessPanel(), substituir if ($this->email === 'admin@admin.com') por if ($this->email === config('auth.super_admin_email')). Garantir que lógica permanece inalterada.",
+            "status": "done",
+            "testStrategy": "Executar vendor/bin/sail artisan config:clear para limpar cache. Testar no tinker que config('auth.super_admin_email') retorna 'admin@admin.com'. Criar usuário com email diferente e verificar que não tem acesso ao painel. Criar usuário com email admin@admin.com e verificar que canAccessPanel() retorna true.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:43:27.325Z"
+          },
+          {
+            "id": 8,
+            "title": "Atualizar .env.example e testar configuração completa",
+            "description": "Adicionar SUPER_ADMIN_EMAIL=admin@admin.com no arquivo .env.example e executar bateria de testes completa para garantir que todas as mudanças da FASE 2 funcionam corretamente.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "details": "Abrir .env.example e adicionar linha SUPER_ADMIN_EMAIL=admin@admin.com na seção de configurações de autenticação. Executar vendor/bin/sail artisan config:clear e cache:clear. Rodar vendor/bin/sail artisan test para executar toda suíte de testes. Verificar que não há regressões. Testar manualmente criação de credential via Filament e verificar activity_logs.",
+            "status": "done",
+            "testStrategy": "Executar vendor/bin/sail artisan test e confirmar que todos os testes passam. Executar vendor/bin/sail bin pint --dirty para verificar formatação. Testar fluxo completo: criar credential via interface Filament, editar, deletar, e verificar que activity_logs tem 3 registros correspondentes. Verificar que factories funcionam com User::factory()->admin()->has(Credential::factory()->expired()->count(3))->create().",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T02:43:29.467Z"
+          }
+        ]
       },
       {
         "id": "3",
-        "title": "Sistema de Auditoria Completo com Activity Log",
-        "description": "Implementar log detalhado de todas operações CRUD em credenciais (RF007, IMP002)",
-        "details": "1. Criar migration para tabela 'activity_logs':\n   - id, user_id, credential_id (nullable), action (enum: created/updated/deleted/restored), old_values (json), new_values (json), ip_address, user_agent, timestamps\n2. Criar Model ActivityLog com relacionamentos:\n   ```php\n   public function user() { return $this->belongsTo(User::class); }\n   public function credential() { return $this->belongsTo(Credential::class); }\n   ```\n3. Criar Service class 'AuditService':\n   ```php\n   public static function log($action, $credential, $oldValues = null) {\n       ActivityLog::create([\n           'user_id' => auth()->id(),\n           'credential_id' => $credential?->id,\n           'action' => $action,\n           'old_values' => $oldValues,\n           'new_values' => $credential?->toArray(),\n           'ip_address' => request()->ip(),\n           'user_agent' => request()->userAgent()\n       ]);\n   }\n   ```\n4. Integrar em CredentialController:\n   - store(): AuditService::log('created', $credential)\n   - update(): AuditService::log('updated', $credential, $credential->getOriginal())\n   - destroy(): AuditService::log('deleted', $credential)\n5. Adicionar relacionamento em Credential Model",
-        "testStrategy": "1. Teste verificando criação de log após cada operação CRUD\n2. Teste que old_values captura estado anterior corretamente\n3. Teste de integridade: log não pode ser deletado\n4. Verificar que IP e User Agent são capturados corretamente",
-        "priority": "high",
+        "title": "FASE 3: Otimização de Database com Índices e Completar Migrations",
+        "description": "Criar migration add_indexes_to_credentials_table com índices estratégicos (fscs, validity, created_at, composite user_id+validity) e implementar métodos down() faltantes nas migrations para permitir rollback completo do banco de dados.",
+        "details": "1. **Criar Migration de Índices para Credentials**:\n   ```bash\n   vendor/bin/sail artisan make:migration add_indexes_to_credentials_table\n   ```\n   ```php\n   <?php\n   use Illuminate\\Database\\Migrations\\Migration;\n   use Illuminate\\Database\\Schema\\Blueprint;\n   use Illuminate\\Support\\Facades\\Schema;\n\n   return new class extends Migration\n   {\n       public function up(): void\n       {\n           Schema::table('credentials', function (Blueprint $table) {\n               // Índice único para FSCS (já existe via unique(), mas garantir)\n               if (!Schema::hasColumn('credentials', 'fscs')) {\n                   $table->unique('fscs', 'credentials_fscs_unique');\n               }\n               \n               // Índice para filtros por validity (queries de expiração)\n               $table->index('validity', 'credentials_validity_index');\n               \n               // Índice para ordenação por created_at\n               $table->index('created_at', 'credentials_created_at_index');\n               \n               // Índice composto para queries de credenciais por usuário e validade\n               $table->index(['user_id', 'validity'], 'credentials_user_validity_index');\n               \n               // Índice para secrecy level (filtros)\n               $table->index('secrecy', 'credentials_secrecy_index');\n           });\n       }\n\n       public function down(): void\n       {\n           Schema::table('credentials', function (Blueprint $table) {\n               $table->dropIndex('credentials_validity_index');\n               $table->dropIndex('credentials_created_at_index');\n               $table->dropIndex('credentials_user_validity_index');\n               $table->dropIndex('credentials_secrecy_index');\n           });\n       }\n   };\n   ```\n\n2. **Completar Migration 2023_07_25_200512_alter_credentials2_table**:\n\n   Localizar arquivo `database/migrations/2023_07_25_200512_alter_credentials2_table.php` e adicionar método down():\n   ```php\n   public function down(): void\n   {\n       Schema::table('credentials', function (Blueprint $table) {\n           // Reverter alterações feitas no up()\n           // Exemplo: se up() adicionou coluna 'secrecy', remover:\n           if (Schema::hasColumn('credentials', 'secrecy')) {\n               $table->dropColumn('secrecy');\n           }\n           // Adicionar reversões conforme o que foi alterado no up()\n       });\n   }\n   ```\n\n3. **Completar Migration 2023_07_25_181600_add_deleted_at_to_credentials**:\n\n   Localizar e adicionar down():\n   ```php\n   public function down(): void\n   {\n       Schema::table('credentials', function (Blueprint $table) {\n           $table->dropSoftDeletes();\n       });\n   }\n   ```\n\n4. **Criar Índices para Tabela Users (se necessário)**:\n   ```bash\n   vendor/bin/sail artisan make:migration add_indexes_to_users_table\n   ```\n   ```php\n   public function up(): void\n   {\n       Schema::table('users', function (Blueprint $table) {\n           // Email já tem unique, mas garantir índice\n           $table->index('email', 'users_email_index');\n           $table->index('created_at', 'users_created_at_index');\n       });\n   }\n   \n   public function down(): void\n   {\n       Schema::table('users', function (Blueprint $table) {\n           $table->dropIndex('users_email_index');\n           $table->dropIndex('users_created_at_index');\n       });\n   }\n   ```\n\n5. **Testar Rollback Completo**:\n   ```bash\n   # Backup antes de testar\n   docker-compose exec laravel.test mysqldump -u sail -psail cred_crud > backup_before_rollback.sql\n   \n   # Testar rollback\n   vendor/bin/sail artisan migrate:rollback --step=1\n   \n   # Re-executar\n   vendor/bin/sail artisan migrate\n   ```\n\n6. **Documentar Índices Criados**:\n   Atualizar `.taskmaster/docs/database_schema.md` com seção de índices:\n   ```markdown\n   ## Índices Otimizados\n   \n   ### Tabela: credentials\n   - `credentials_fscs_unique` (UNIQUE): fscs\n   - `credentials_validity_index`: validity\n   - `credentials_created_at_index`: created_at\n   - `credentials_user_validity_index` (COMPOSITE): user_id, validity\n   - `credentials_secrecy_index`: secrecy\n   ```",
+        "testStrategy": "1. **Teste de Criação de Índices**:\n   ```bash\n   vendor/bin/sail artisan migrate\n   vendor/bin/sail artisan tinker --execute=\"DB::select('SHOW INDEXES FROM credentials');\"\n   ```\n   - Verificar que índices foram criados: credentials_fscs_unique, credentials_validity_index, credentials_created_at_index, credentials_user_validity_index, credentials_secrecy_index\n\n2. **Teste de Performance de Queries**:\n   ```bash\n   vendor/bin/sail artisan tinker\n   ```\n   ```php\n   // Criar 10.000 registros de teste\n   Credential::factory()->count(10000)->create();\n   \n   // Query SEM índice (antes): EXPLAIN\n   DB::select('EXPLAIN SELECT * FROM credentials WHERE validity > NOW()');\n   \n   // Query COM índice (depois): deve usar credentials_validity_index\n   // Verificar 'key' na saída do EXPLAIN\n   ```\n\n3. **Teste de Rollback Completo**:\n   ```bash\n   # Rollback de todas as migrations\n   vendor/bin/sail artisan migrate:rollback --step=10\n   ```\n   - Não deve haver erros\n   - Banco deve estar limpo\n   - Re-executar migrate deve funcionar\n\n4. **Teste de Rollback Individual**:\n   ```bash\n   vendor/bin/sail artisan migrate:rollback --step=1\n   ```\n   - Verificar que índices foram removidos:\n   ```php\n   DB::select('SHOW INDEXES FROM credentials');\n   ```\n\n5. **Benchmark de Performance**:\n   ```bash\n   vendor/bin/sail artisan tinker\n   ```\n   ```php\n   // Com 10k registros\n   $start = microtime(true);\n   Credential::where('validity', '>', now())->get();\n   $time = microtime(true) - $start;\n   echo \"Query time: {$time}s\";\n   // Deve ser < 0.1s com índice\n   ```",
+        "priority": "medium",
         "dependencies": [
+          "1",
           "2"
         ],
         "status": "pending",
-        "subtasks": [],
-        "complexity": 7,
-        "recommendedSubtasks": 6,
-        "expansionPrompt": "Divida em subtarefas: (1) Criar migration para tabela activity_logs com campos JSON, (2) Criar Model ActivityLog com relacionamentos, (3) Implementar AuditService com métodos estáticos de logging, (4) Integrar AuditService em todos os métodos CRUD do CredentialController, (5) Adicionar captura de old_values antes de updates, (6) Criar testes verificando integridade e captura correta de dados de auditoria"
-      },
-      {
-        "id": "4",
-        "title": "Relacionamento User-Credential e Controle de Propriedade",
-        "description": "Adicionar relacionamento entre usuários e credenciais criadas (GAP003)",
-        "details": "1. Criar migration adicionando 'created_by' e 'updated_by' em credentials:\n   ```php\n   $table->foreignId('created_by')->nullable()->constrained('users');\n   $table->foreignId('updated_by')->nullable()->constrained('users');\n   ```\n2. Atualizar Model Credential:\n   ```php\n   public function creator() {\n       return $this->belongsTo(User::class, 'created_by');\n   }\n   public function updater() {\n       return $this->belongsTo(User::class, 'updated_by');\n   }\n   ```\n3. Atualizar CredentialController:\n   - store(): $credential->created_by = auth()->id();\n   - update(): $credential->updated_by = auth()->id();\n4. Adicionar colunas na view de listagem:\n   - Criado por: {{ $credential->creator->name }}\n   - Atualizado por: {{ $credential->updater->name ?? '-' }}\n5. Eager loading para evitar N+1:\n   ```php\n   Credential::with(['creator', 'updater'])->get();\n   ```",
-        "testStrategy": "1. Teste verificando que created_by é preenchido automaticamente\n2. Teste que updated_by muda após edição\n3. Teste de eager loading verificando quantidade de queries\n4. Verificar exibição correta dos nomes na interface",
-        "priority": "medium",
-        "dependencies": [
-          "1"
-        ],
-        "status": "pending",
-        "subtasks": [],
         "complexity": 5,
-        "recommendedSubtasks": 5,
-        "expansionPrompt": "Divida em subtarefas: (1) Criar migration adicionando campos created_by e updated_by, (2) Atualizar Model Credential com relacionamentos creator e updater, (3) Modificar CredentialController para preencher automaticamente created_by e updated_by, (4) Implementar eager loading nas queries para evitar N+1, (5) Atualizar views para exibir nomes de criador/atualizador e criar testes de relacionamento"
-      },
-      {
-        "id": "5",
-        "title": "Dashboard com Métricas e Indicadores de Credenciais",
-        "description": "Criar dashboard com estatísticas, credenciais vencendo e KPIs (IMP005)",
-        "details": "1. Criar DashboardController:\n   ```php\n   public function index() {\n       return view('dashboard', [\n           'totalActive' => Credential::count(),\n           'expiringIn30Days' => Credential::whereBetween('validity', [now(), now()->addDays(30)])->count(),\n           'expiringIn7Days' => Credential::whereBetween('validity', [now(), now()->addDays(7)])->count(),\n           'expired' => Credential::where('validity', '<', now())->count(),\n           'bySecrecy' => Credential::selectRaw('secrecy, count(*) as total')->groupBy('secrecy')->get(),\n           'recentActivity' => ActivityLog::with('user')->latest()->take(10)->get()\n       ]);\n   }\n   ```\n2. Criar view dashboard.blade.php com TailwindCSS:\n   - Cards com totais (total, vencidas, vencendo 30d, vencendo 7d)\n   - Gráfico de pizza com distribuição por grau de sigilo (usar AlpineJS + Chart.js)\n   - Lista de atividades recentes\n   - Alertas visuais para credenciais vencidas (vermelho) e vencendo (amarelo)\n3. Configurar rota GET /dashboard\n4. Adicionar link no menu de navegação",
-        "testStrategy": "1. Teste unitário verificando cálculos de métricas\n2. Teste funcional acessando dashboard e verificando cards\n3. Teste de performance com dataset grande (>1000 registros)\n4. Verificar responsividade em mobile",
-        "priority": "medium",
-        "dependencies": [
-          "3"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 6,
         "recommendedSubtasks": 6,
-        "expansionPrompt": "Divida em subtarefas: (1) Criar DashboardController com queries agregadas para métricas, (2) Implementar lógica de cálculo de credenciais vencidas e vencendo, (3) Criar view dashboard.blade.php com layout responsivo TailwindCSS, (4) Integrar Chart.js com AlpineJS para gráfico de distribuição por sigilo, (5) Adicionar componente de atividades recentes do ActivityLog, (6) Otimizar queries e criar testes de performance"
-      },
-      {
-        "id": "6",
-        "title": "Sistema de Filtros Avançados e Busca na Listagem",
-        "description": "Implementar filtros por nome, FSCS, grau de sigilo e status de validade (RF004, IMP006)",
-        "details": "1. Atualizar CredentialController@index com query builders:\n   ```php\n   $query = Credential::query();\n   \n   if ($search = request('search')) {\n       $query->where(function($q) use ($search) {\n           $q->where('name', 'like', \"%{$search}%\")\n             ->orWhere('fscs', 'like', \"%{$search}%\");\n       });\n   }\n   \n   if ($secrecy = request('secrecy')) {\n       $query->where('secrecy', $secrecy);\n   }\n   \n   if ($status = request('status')) {\n       if ($status === 'expired') {\n           $query->where('validity', '<', now());\n       } elseif ($status === 'expiring_30') {\n           $query->whereBetween('validity', [now(), now()->addDays(30)]);\n       } elseif ($status === 'valid') {\n           $query->where('validity', '>=', now()->addDays(30));\n       }\n   }\n   \n   $credentials = $query->with(['creator', 'updater'])->paginate(10)->withQueryString();\n   ```\n2. Criar componente Livewire CredentialFilters:\n   - Input de busca com debounce\n   - Select de grau de sigilo (Reservado/Secreto/Todos)\n   - Select de status (Válida/Vencendo 30d/Vencida/Todos)\n   - Botão limpar filtros\n3. Integrar Alpine.js para interatividade em tempo real\n4. Adicionar ordenação por colunas (nome, fscs, validade)",
-        "testStrategy": "1. Teste verificando filtro por nome parcial\n2. Teste combinando múltiplos filtros simultaneamente\n3. Teste de paginação mantendo filtros aplicados\n4. Teste de performance com 10.000 registros\n5. Verificar debounce funcionando corretamente",
-        "priority": "medium",
-        "dependencies": [
-          "1",
-          "4"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 7,
-        "recommendedSubtasks": 7,
-        "expansionPrompt": "Divida em subtarefas: (1) Implementar query builders dinâmicos no CredentialController com filtros compostos, (2) Criar componente Livewire CredentialFilters com inputs de busca, (3) Implementar debounce em busca de texto, (4) Adicionar filtros de select para grau de sigilo e status de validade, (5) Implementar ordenação por colunas clicáveis, (6) Garantir persistência de filtros na paginação com withQueryString, (7) Otimizar queries e criar testes de performance com 10k registros"
-      },
-      {
-        "id": "7",
-        "title": "Sistema de Notificações de Vencimento de Credenciais",
-        "description": "Implementar alertas automáticos para credenciais próximas do vencimento (RF009, IMP008)",
-        "details": "1. Criar migration para tabela 'notifications':\n   - id, user_id, credential_id, type (expiring_30/expiring_7/expired), read_at, sent_at, timestamps\n2. Criar Command 'CheckExpiringCredentials':\n   ```php\n   public function handle() {\n       $expiring30 = Credential::whereBetween('validity', [now(), now()->addDays(30)])->get();\n       $expiring7 = Credential::whereBetween('validity', [now(), now()->addDays(7)])->get();\n       \n       foreach ($expiring30 as $cred) {\n           Notification::firstOrCreate([\n               'credential_id' => $cred->id,\n               'type' => 'expiring_30'\n           ], ['user_id' => $cred->created_by]);\n       }\n       // Similar para expiring_7\n   }\n   ```\n3. Agendar comando no Kernel.php:\n   ```php\n   $schedule->command('credentials:check-expiring')->daily();\n   ```\n4. Criar componente Livewire NotificationBell:\n   - Badge com contador de não lidas\n   - Dropdown com lista de notificações\n   - Marcar como lida ao clicar\n5. Adicionar indicador visual na listagem (ícone de alerta)",
-        "testStrategy": "1. Teste artisan command criando notificações corretas\n2. Teste que notificações duplicadas não são criadas\n3. Teste de contagem de não lidas\n4. Teste marcando notificação como lida\n5. Verificar agendamento do comando",
-        "priority": "medium",
-        "dependencies": [
-          "5"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 8,
-        "recommendedSubtasks": 7,
-        "expansionPrompt": "Divida em subtarefas: (1) Criar migration para tabela notifications, (2) Criar Model Notification com relacionamentos, (3) Implementar Command CheckExpiringCredentials com lógica de detecção, (4) Adicionar lógica de prevenção de duplicatas em notificações, (5) Configurar agendamento no Kernel.php, (6) Criar componente Livewire NotificationBell com contador e dropdown, (7) Implementar funcionalidade de marcar como lida e testes do comando"
-      },
-      {
-        "id": "8",
-        "title": "Sistema de Relatórios com Exportação PDF/Excel",
-        "description": "Gerar relatórios filtrados por período, sigilo e status com exportação (RF008, IMP007)",
-        "details": "1. Instalar dependências:\n   ```bash\n   composer require barryvdh/laravel-dompdf\n   composer require maatwebsite/excel\n   ```\n2. Criar ReportController:\n   ```php\n   public function credentials(Request $request) {\n       $query = Credential::query();\n       \n       if ($request->date_from) {\n           $query->where('concession', '>=', $request->date_from);\n       }\n       if ($request->date_to) {\n           $query->where('concession', '<=', $request->date_to);\n       }\n       if ($request->secrecy) {\n           $query->where('secrecy', $request->secrecy);\n       }\n       \n       $credentials = $query->with(['creator'])->get();\n       \n       if ($request->format === 'pdf') {\n           $pdf = PDF::loadView('reports.credentials-pdf', compact('credentials'));\n           return $pdf->download('relatorio-credenciais.pdf');\n       }\n       \n       return Excel::download(new CredentialsExport($credentials), 'credenciais.xlsx');\n   }\n   ```\n3. Criar views:\n   - reports/form.blade.php (filtros de relatório)\n   - reports/credentials-pdf.blade.php (template PDF)\n4. Criar CredentialsExport class implementando FromCollection\n5. Adicionar rotas e menu de relatórios",
-        "testStrategy": "1. Teste gerando PDF com dataset de 100 registros\n2. Teste exportação Excel verificando estrutura de colunas\n3. Teste filtros de período funcionando corretamente\n4. Verificar formatação de datas no relatório\n5. Teste de performance com 5000 registros",
-        "priority": "medium",
-        "dependencies": [
-          "6"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 7,
-        "recommendedSubtasks": 8,
-        "expansionPrompt": "Divida em subtarefas: (1) Instalar e configurar dependências barryvdh/laravel-dompdf e maatwebsite/excel, (2) Criar ReportController com query builders para filtros de relatório, (3) Implementar lógica de filtragem por período, sigilo e status, (4) Criar view reports/form.blade.php com formulário de filtros, (5) Criar template PDF reports/credentials-pdf.blade.php com formatação, (6) Implementar CredentialsExport class para Excel, (7) Otimizar queries para grandes volumes, (8) Criar testes de exportação e performance com 5k registros"
-      },
-      {
-        "id": "9",
-        "title": "Correção do SweetAlert e Feedback Visual",
-        "description": "Implementar SweetAlert2 corretamente para confirmações e notificações (GAP005, RNF005)",
-        "details": "1. Instalar via NPM:\n   ```bash\n   npm install sweetalert2\n   ```\n2. Importar em resources/js/app.js:\n   ```javascript\n   import Swal from 'sweetalert2';\n   window.Swal = Swal;\n   ```\n3. Criar helper Blade em AppServiceProvider:\n   ```php\n   Blade::directive('swal', function ($expression) {\n       return \"<?php session()->flash('swal', {$expression}); ?>\";\n   });\n   ```\n4. Adicionar script no layout principal:\n   ```javascript\n   @if(session('swal'))\n       Swal.fire(@json(session('swal')));\n   @endif\n   ```\n5. Atualizar CredentialController:\n   - store(): return redirect()->with('swal', ['icon' => 'success', 'title' => 'Credencial cadastrada!'])\n   - update(): similar\n   - destroy(): confirmação antes de deletar\n6. Adicionar confirmação de exclusão:\n   ```javascript\n   function confirmDelete(id) {\n       Swal.fire({\n           title: 'Tem certeza?',\n           text: 'Esta ação não pode ser revertida',\n           icon: 'warning',\n           showCancelButton: true\n       }).then((result) => {\n           if (result.isConfirmed) {\n               document.getElementById('delete-form-' + id).submit();\n           }\n       });\n   }\n   ```",
-        "testStrategy": "1. Teste funcional verificando alert de sucesso após criar credencial\n2. Teste de confirmação antes de deletar\n3. Teste de cancelamento da exclusão\n4. Verificar estilos e tema do SweetAlert2\n5. Teste em diferentes navegadores",
-        "priority": "medium",
-        "dependencies": [
-          "1"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 4,
-        "recommendedSubtasks": 5,
-        "expansionPrompt": "Divida em subtarefas: (1) Instalar SweetAlert2 via NPM e configurar build assets, (2) Importar e expor SweetAlert2 globalmente em app.js, (3) Criar Blade directive customizado para mensagens flash, (4) Adicionar script de renderização no layout principal, (5) Integrar confirmações e notificações em CredentialController e criar testes funcionais de feedback visual"
-      },
-      {
-        "id": "10",
-        "title": "Suite Completa de Testes Automatizados com Pest",
-        "description": "Criar cobertura de testes para todas funcionalidades críticas (IMP009)",
-        "details": "1. Configurar Pest já existente e instalar plugins:\n   ```bash\n   composer require pestphp/pest-plugin-laravel --dev\n   ```\n2. Criar testes de Feature:\n   - tests/Feature/Auth/LoginTest.php (login, logout, sessão)\n   - tests/Feature/Credentials/CreateCredentialTest.php (validações, criação)\n   - tests/Feature/Credentials/UpdateCredentialTest.php (edição, validações)\n   - tests/Feature/Credentials/DeleteCredentialTest.php (soft delete, auditoria)\n   - tests/Feature/Credentials/FilterCredentialTest.php (busca, filtros)\n   - tests/Feature/Authorization/RoleTest.php (permissões por perfil)\n   - tests/Feature/Reports/ExportTest.php (PDF, Excel)\n3. Criar testes de Unit:\n   - tests/Unit/Models/CredentialTest.php (relationships, scopes)\n   - tests/Unit/Services/AuditServiceTest.php (logging)\n4. Usar factories e seeders:\n   ```php\n   it('creates credential with valid data', function () {\n       $user = User::factory()->create();\n       actingAs($user)\n           ->post('/credentials', [\n               'fscs' => '123456',\n               'name' => 'João Silva',\n               'secrecy' => 'R',\n               'validity' => now()->addYear()->format('Y-m-d')\n           ])\n           ->assertRedirect()\n           ->assertSessionHas('swal');\n       \n       expect(Credential::where('fscs', '123456')->exists())->toBeTrue();\n   });\n   ```\n5. Configurar CI para rodar testes automaticamente\n6. Meta: >80% de cobertura de código",
-        "testStrategy": "1. Executar php artisan test --coverage\n2. Verificar cobertura mínima de 80%\n3. Teste de integração completo (criar usuário -> login -> CRUD completo)\n4. Teste de regressão após cada mudança\n5. Performance test com database seeder de 1000 registros",
-        "priority": "high",
-        "dependencies": [
-          "1",
-          "2",
-          "3",
-          "4",
-          "6",
-          "7",
-          "8",
-          "9"
-        ],
-        "status": "pending",
-        "subtasks": [],
-        "complexity": 9,
-        "recommendedSubtasks": 10,
-        "expansionPrompt": "Divida em subtarefas: (1) Configurar Pest plugins e factories, (2) Criar testes de autenticação (login, logout, sessões), (3) Criar testes CRUD de credenciais com validações, (4) Implementar testes de autorização RBAC, (5) Criar testes de auditoria e activity logs, (6) Implementar testes de filtros e busca, (7) Criar testes de notificações e scheduled tasks, (8) Implementar testes de exportação PDF/Excel, (9) Criar testes de integração completos, (10) Configurar análise de cobertura e CI pipeline"
-      },
-      {
-        "id": "11",
-        "title": "Refatoração Completa do Sistema para Laravel 12 com Filament 4",
-        "description": "Migração completa da aplicação atual para Laravel 12 e implementação do Filament 4 como painel administrativo, substituindo controllers/views Blade por recursos Filament modernos.",
-        "details": "1. **Atualização de Dependências Base**:\n   ```bash\n   composer require laravel/framework:^12.0\n   composer require filament/filament:^4.0\n   composer require spatie/laravel-permission:^6.0\n   ```\n\n2. **Configuração Inicial do Filament 4**:\n   ```bash\n   php artisan filament:install --panels\n   php artisan make:filament-user\n   ```\n   - Configurar AdminPanelProvider em app/Providers/Filament/\n   - Adicionar plugins: Shield (permissions), Spatie Media Library\n\n3. **Migração de Models para Laravel 12**:\n   - Atualizar sintaxe de casts para formato array:\n     ```php\n     protected function casts(): array {\n         return [\n             'concession' => 'date',\n             'validity' => 'date',\n             'created_at' => 'datetime',\n         ];\n     }\n     ```\n   - Implementar SoftDeletes com observers para auditoria\n   - Adicionar scopes para filtros de validade\n\n4. **Criação de Resources Filament**:\n   ```bash\n   php artisan make:filament-resource Credential --generate --soft-deletes\n   ```\n   - CredentialResource com campos:\n     * TextInput para name, fscs\n     * Select para secrecy (options: ['OSTENSIVO', 'RESERVADO', 'CONFIDENCIAL', 'SECRETO'])\n     * DatePicker para concession/validity com validação validity > today\n     * Toggle para is_active\n   - Implementar Table com filters (secrecy, status, date range)\n   - Bulk actions para exportação PDF/Excel\n   - Custom page para visualização com tabs (dados, histórico, anexos)\n\n5. **Sistema de Autenticação e Permissões**:\n   - Integrar Spatie Permission com Filament Shield:\n     ```bash\n     composer require bezhansalleh/filament-shield\n     php artisan shield:install\n     ```\n   - Criar roles: super_admin, admin, consulta\n   - Policies para Credential (view, create, update, delete, restore)\n   - Configurar navigation groups e badges\n\n6. **Widgets e Dashboard**:\n   - StatsOverviewWidget: total credenciais, expirando (30d), expiradas\n   - ChartWidget: credenciais por grau de sigilo (pie chart)\n   - TableWidget: últimas 10 credenciais criadas\n   - NotificationWidget: alertas de vencimento\n\n7. **Relatórios e Exportação**:\n   - Implementar ExportAction no CredentialResource:\n     ```php\n     ->headerActions([\n         ExportAction::make()\n             ->exporter(CredentialExporter::class)\n             ->formats([ExportFormat::Xlsx, ExportFormat::Pdf])\n     ])\n     ```\n   - Criar CredentialExporter com colunas customizadas\n   - Implementar filtros de data no export\n\n8. **Notificações com Filament**:\n   - DatabaseNotification para vencimentos:\n     ```php\n     Notification::make()\n         ->warning()\n         ->title('Credencial expirando em 7 dias')\n         ->body(\"{$credential->name} vence em {$credential->validity}\")\n         ->sendToDatabase($users);\n     ```\n   - Command agendado no Kernel para verificar vencimentos\n   - Badge no menu com contagem de não lidas\n\n9. **Temas e Customização**:\n   - Configurar cores do painel no AdminPanelProvider\n   - Custom theme com Tailwind (npm run build)\n   - Logo e favicon personalizados\n   - Traduções pt-BR: composer require filament/spatie-laravel-translatable-plugin\n\n10. **Migração de Rotas e Controllers**:\n    - Remover rotas web.php relacionadas ao CRUD (Filament gerencia)\n    - Manter apenas rotas públicas se necessário\n    - Depreciar CredentialController antigo após migração completa\n\n11. **Testes de Compatibilidade**:\n    - Atualizar phpunit.xml para Laravel 12\n    - Migrar factories para sintaxe nova\n    - Pest tests para Filament Resources usando actingAs($user)\n\n12. **Otimizações Laravel 12**:\n    - Implementar eager loading nos relationships\n    - Configurar cache de rotas/config/views\n    - Ativar horizon para queues se necessário\n    - Database optimization com indexes",
-        "testStrategy": "1. **Testes de Instalação**:\n   - Verificar php artisan about mostra Laravel 12.x\n   - Verificar composer show filament/filament retorna ^4.0\n   - Acessar /admin e confirmar painel renderiza\n\n2. **Testes Funcionais Filament**:\n   - Criar credencial via painel: preencher form, validar campos obrigatórios\n   - Editar credencial existente e verificar atualização\n   - Soft delete e restore através do resource\n   - Testar filtros: secrecy, date range, status (ativo/expirado)\n   - Bulk actions: selecionar 10 registros e exportar Excel\n\n3. **Testes de Permissões**:\n   - Login como 'consulta': verificar que botões edit/delete não aparecem\n   - Login como 'admin': verificar acesso total ao CRUD\n   - Teste de policy: usuário sem permission tenta acessar rota direta (403)\n\n4. **Testes de Notificações**:\n   - Executar artisan check:expiring-credentials\n   - Verificar badge de notificações no menu\n   - Marcar notificação como lida\n\n5. **Testes de Performance**:\n   - Seed de 10.000 credenciais\n   - Teste de paginação com 100 registros por página\n   - Verificar queries com Debugbar (N+1 problems)\n   - Exportar PDF com 1000 registros (tempo < 10s)\n\n6. **Testes de Regressão**:\n   - Suite completa Pest: php artisan test\n   - Verificar todas features antigas funcionam\n   - Teste de validação de datas mantém regras\n   - Auditoria de exclusões funcionando\n\n7. **Testes de UI/UX**:\n   - Responsividade em mobile/tablet\n   - Traduções em pt-BR funcionando\n   - SweetAlert2 integrado com Filament notifications\n   - Performance do front-end (Lighthouse score > 90)",
-        "status": "done",
-        "dependencies": [
-          "1",
-          "2",
-          "5",
-          "6",
-          "7",
-          "8",
-          "9",
-          "10"
-        ],
-        "priority": "medium",
+        "expansionPrompt": "Dividir em: (1) Criar migration add_indexes_to_credentials_table com índices estratégicos (fscs, validity, created_at, composite user_id+validity, secrecy); (2) Implementar método down() completo para rollback de índices; (3) Analisar e completar down() da migration 2023_07_25_200512_alter_credentials2_table; (4) Completar down() da migration add_deleted_at_to_credentials; (5) Criar migration add_indexes_to_users_table se necessário; (6) Testar rollback completo e documentar índices criados.",
+        "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
             "id": 1,
-            "title": "Atualização de Dependências e Instalação do Laravel 12 com Filament 4",
-            "description": "Atualizar composer.json para Laravel 12 e instalar Filament 4 com todas as dependências necessárias para o painel administrativo",
+            "title": "Criar migration add_indexes_to_credentials_table com índices estratégicos",
+            "description": "Criar nova migration para adicionar índices otimizados na tabela credentials, incluindo índices simples (fscs, validity, created_at, secrecy) e índice composto (user_id, validity) para melhorar performance de queries de filtro e ordenação.",
             "dependencies": [],
-            "details": "Executar comandos de atualização do composer para Laravel 12.x e Filament 4.x. Instalar dependências complementares como spatie/laravel-permission ^6.0, filament-shield para gerenciamento de permissões, e configurar o painel administrativo básico. Verificar compatibilidade de todas as dependências existentes no composer.json atual com Laravel 12. Executar php artisan filament:install --panels e criar o primeiro usuário administrativo com php artisan make:filament-user. Configurar o AdminPanelProvider em app/Providers/Filament/ com configurações básicas de idioma (pt-BR), timezone e cores do tema.",
-            "status": "done",
-            "testStrategy": "Verificar que php artisan about exibe Laravel 12.x e composer show filament/filament retorna versão 4.x. Acessar /admin e confirmar que o painel renderiza corretamente. Testar login com usuário criado e verificar dashboard padrão do Filament.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:22:32.408Z"
+            "details": "Executar 'vendor/bin/sail artisan make:migration add_indexes_to_credentials_table' e implementar método up() com Schema::table('credentials') adicionando índices: unique para fscs (se não existir), index para validity (queries de expiração), index para created_at (ordenação), index composto para user_id+validity (queries de credenciais por usuário), e index para secrecy (filtros por nível de sigilo). Verificar existência de índices antes de criar para evitar duplicação.",
+            "status": "pending",
+            "testStrategy": "Executar 'vendor/bin/sail artisan migrate' e verificar criação dos índices com 'vendor/bin/sail artisan tinker --execute=\"DB::select('SHOW INDEXES FROM credentials');\"'. Confirmar presença de credentials_fscs_unique, credentials_validity_index, credentials_created_at_index, credentials_user_validity_index e credentials_secrecy_index.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
-            "title": "Migração de Models para Sintaxe do Laravel 12 e Configuração de Políticas",
-            "description": "Atualizar todos os models (Credential, User) para sintaxe do Laravel 12, implementar método casts() como função, adicionar SoftDeletes e criar observers para auditoria",
+            "title": "Implementar método down() completo para rollback de índices na migration de otimização",
+            "description": "Adicionar método down() completo na migration add_indexes_to_credentials_table para permitir rollback seguro removendo todos os índices criados no método up(), garantindo reversibilidade da otimização de banco de dados.",
             "dependencies": [
               1
             ],
-            "details": "Refatorar app/Models/Credential.php e app/Models/User.php para usar protected function casts(): array em vez de propriedade. Atualizar casts para 'concession' => 'date', 'validity' => 'date', 'created_at' => 'datetime', 'updated_at' => 'datetime'. Implementar SoftDeletes trait e criar CredentialObserver para registrar eventos de criação, atualização e deleção. Adicionar scopes úteis como scopeExpired(), scopeExpiringSoon(), scopeActiveOnly() para facilitar queries. Criar policies com php artisan make:policy CredentialPolicy --model=Credential com métodos viewAny, view, create, update, delete, restore, forceDelete.",
-            "status": "done",
-            "testStrategy": "Executar php artisan tinker e testar Credential::factory()->create() para verificar casts funcionando. Testar soft delete e verificar deleted_at sendo preenchido. Testar scopes criados retornando resultados corretos. Verificar que policies são chamadas corretamente com Gate::allows().",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:23:10.676Z"
+            "details": "No arquivo da migration criada na subtarefa anterior, implementar método down() usando Schema::table('credentials') com dropIndex() para cada índice criado: credentials_validity_index, credentials_created_at_index, credentials_user_validity_index e credentials_secrecy_index. Não remover credentials_fscs_unique pois pode ser índice existente da estrutura original da tabela.",
+            "status": "pending",
+            "testStrategy": "Executar 'vendor/bin/sail artisan migrate:rollback --step=1' após rodar a migration, verificar com 'SHOW INDEXES FROM credentials' que índices foram removidos, e re-executar 'vendor/bin/sail artisan migrate' para confirmar que migration funciona em ambas direções sem erros.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
-            "title": "Criação de Resource Filament para Credenciais com Formulários e Tabelas",
-            "description": "Desenvolver CredentialResource completo com formulários, tabelas, filtros e ações em massa utilizando Filament 4",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Executar php artisan make:filament-resource Credential --generate --soft-deletes. Configurar form schema com TextInput para name e fscs, Select para secrecy com options ['OSTENSIVO', 'RESERVADO', 'CONFIDENCIAL', 'SECRETO'], DatePicker para concession e validity com validação customizada (validity deve ser >= hoje), Toggle para is_active. Implementar table com colunas name, fscs, secrecy (badge colorido), concession, validity (com indicador visual de expiração), is_active (icon boolean). Adicionar filters para secrecy (SelectFilter), status de validade (TernaryFilter), range de datas (DateRangeFilter). Criar bulk actions para exportação e deleção em massa. Implementar páginas customizadas: ViewCredential com tabs para dados básicos, histórico de alterações e anexos futuros.",
-            "status": "done",
-            "testStrategy": "Acessar /admin/credentials e verificar listagem renderizando. Criar nova credencial via formulário e validar que campos obrigatórios funcionam. Testar validação de data de validade (não aceitar datas passadas). Aplicar filtros diversos e verificar resultados. Testar soft delete e restore via actions. Verificar bulk actions funcionando com múltiplos registros selecionados.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:24:34.188Z"
+            "title": "Analisar e completar método down() da migration alter_credentials2_table",
+            "description": "Localizar migration 2023_07_25_200512_alter_credentials2_table, analisar alterações feitas no método up() e implementar método down() correspondente para reverter todas as modificações (colunas adicionadas, índices, alterações de tipo).",
+            "dependencies": [],
+            "details": "Ler arquivo database/migrations/2023_07_25_200512_alter_credentials2_table.php, identificar todas operações no up() (provavelmente adição de coluna secrecy ou outras alterações), e criar down() que reverte cada operação usando dropColumn(), dropIndex() ou reversões de alterType() conforme necessário. Usar Schema::hasColumn() para verificações de segurança antes de dropar.",
+            "status": "pending",
+            "testStrategy": "Executar 'vendor/bin/sail artisan migrate:rollback' até essa migration, verificar que tabela credentials voltou ao estado anterior sem erros, inspecionar schema com 'vendor/bin/sail artisan tinker --execute=\"DB::select('DESCRIBE credentials');\"' e confirmar que alterações foram revertidas, então re-executar migrate.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
-            "title": "Implementação de Sistema de Permissões com Filament Shield e Spatie",
-            "description": "Integrar Spatie Laravel Permission com Filament Shield, criar roles (super_admin, admin, consulta) e configurar políticas de acesso granulares",
-            "dependencies": [
-              1,
-              2,
-              3
-            ],
-            "details": "Instalar bezhansalleh/filament-shield e executar php artisan shield:install para gerar permissions automáticas. Criar roles no seeder: super_admin (all permissions), admin (view/create/update credentials), consulta (apenas view credentials). Configurar policies em CredentialPolicy usando can() do Spatie. Adicionar middleware no AdminPanelProvider para verificar permissões. Implementar navigation badges mostrando contagens apenas para usuários com permissão. Configurar grupos de navegação (Gestão, Relatórios, Configurações) com visibilidade baseada em permissões. Criar RoleResource e PermissionResource do Filament Shield para gerenciamento visual de permissões.",
-            "status": "done",
-            "testStrategy": "Criar usuário com role 'consulta' e verificar que não pode criar/editar credenciais. Criar usuário 'admin' e verificar acesso a CRUD completo mas não a configurações de roles. Logar como super_admin e verificar acesso total incluindo shield resources. Testar navigation items aparecendo/sumindo conforme permissões. Verificar que policies bloqueiam ações não autorizadas com mensagens apropriadas.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:25:03.794Z"
+            "title": "Completar método down() da migration add_deleted_at_to_credentials",
+            "description": "Localizar migration 2023_07_25_181600_add_deleted_at_to_credentials e adicionar método down() que remove a coluna deleted_at usando dropSoftDeletes() para permitir rollback da funcionalidade de soft delete.",
+            "dependencies": [],
+            "details": "Editar arquivo database/migrations/2023_07_25_181600_add_deleted_at_to_credentials.php e implementar método down() com Schema::table('credentials', function (Blueprint $table) { $table->dropSoftDeletes(); }). Isso removerá a coluna deleted_at adicionada no up() que habilita soft deletes no model Credential.",
+            "status": "pending",
+            "testStrategy": "Executar 'vendor/bin/sail artisan migrate:rollback' até essa migration, verificar com 'DESCRIBE credentials' que coluna deleted_at foi removida, confirmar que model Credential ainda funciona (sem soft delete), e re-executar 'vendor/bin/sail artisan migrate' para restaurar funcionalidade.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
-            "title": "Desenvolvimento de Widgets, Dashboard e Sistema de Notificações de Vencimento",
-            "description": "Criar widgets para dashboard (estatísticas, gráficos, últimas credenciais) e implementar sistema de notificações automáticas para vencimentos",
+            "title": "Criar migration add_indexes_to_users_table para otimização de queries de usuários",
+            "description": "Criar nova migration para adicionar índices na tabela users (email e created_at) caso ainda não existam, melhorando performance de autenticação e listagens ordenadas por data de criação.",
+            "dependencies": [],
+            "details": "Executar 'vendor/bin/sail artisan make:migration add_indexes_to_users_table' e implementar up() com Schema::table('users') adicionando index para email (users_email_index) e created_at (users_created_at_index). Implementar down() correspondente com dropIndex() para ambos índices. Verificar se índices já existem antes de criar para evitar duplicação, especialmente email que pode já ter unique constraint.",
+            "status": "pending",
+            "testStrategy": "Executar migration e verificar índices criados com 'SHOW INDEXES FROM users'. Testar rollback com 'migrate:rollback --step=1' e confirmar remoção dos índices. Executar queries de teste como 'SELECT * FROM users WHERE email = \"test@test.com\"' e verificar uso de índice com EXPLAIN.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Testar rollback completo de todas migrations e documentar índices criados",
+            "description": "Realizar backup completo do banco de dados, executar testes de rollback de todas migrations modificadas/criadas, validar integridade dos dados após rollback/migrate, e atualizar documentação em database_schema.md com seção detalhada de todos índices otimizados.",
             "dependencies": [
               1,
               2,
-              3
+              3,
+              4,
+              5
             ],
-            "details": "Criar StatsOverviewWidget com cards: total de credenciais (icon: heroicon-o-document-text), credenciais expirando em 30 dias (icon warning), credenciais já expiradas (icon danger). Desenvolver CredentialsBySecrecyChart usando ChartWidget tipo pie com dados agrupados por grau de sigilo. Criar LatestCredentialsWidget (TableWidget) mostrando últimas 10 credenciais criadas com links para edição. Implementar Command CheckExpiringCredentials que roda diariamente via Kernel schedule, verifica credenciais expirando em 30/7 dias e cria DatabaseNotifications. Configurar DatabaseNotification no painel Filament com título, corpo e ações (view credential). Adicionar badge no ícone de notificações mostrando contagem de não lidas. Criar migration para adicionar índices em validity para performance.",
-            "status": "done",
-            "testStrategy": "Acessar /admin e verificar todos os widgets renderizando com dados corretos. Executar php artisan app:check-expiring-credentials manualmente e verificar notificações sendo criadas. Verificar que notificações duplicadas não são geradas em execuções subsequentes. Testar clicando em notificação e sendo redirecionado para credencial. Verificar badge de contagem atualizando ao marcar como lida. Testar performance do command com 1000+ credenciais.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T01:25:05.489Z"
+            "details": "Criar backup com 'docker-compose exec laravel.test mysqldump -u sail -psail cred_crud > backup_before_rollback_$(date +%Y%m%d_%H%M%S).sql'. Executar 'vendor/bin/sail artisan migrate:rollback --step=5' para testar todas novas migrations, verificar sem erros, e re-executar 'vendor/bin/sail artisan migrate'. Atualizar .taskmaster/docs/database_schema.md adicionando seção '## Índices Otimizados' documentando todos índices de credentials (fscs unique, validity, created_at, user_id+validity composite, secrecy) e users (email, created_at) com seus nomes e propósitos.",
+            "status": "pending",
+            "testStrategy": "Verificar que backup foi criado e tem tamanho válido (> 0 bytes). Executar rollback completo sem erros SQL. Confirmar que 'git diff .taskmaster/docs/database_schema.md' mostra nova seção de índices. Executar suite de testes com 'vendor/bin/sail artisan test' para garantir que aplicação funciona corretamente após ciclo completo de migrate/rollback/migrate.",
+            "parentId": "undefined"
           }
-        ],
-        "updatedAt": "2025-11-19T01:25:05.489Z"
+        ]
       },
       {
-        "id": "12",
-        "title": "Painel de Administração de Usuários com Sistema de Perfis e Permissões",
-        "description": "Implementar Resource do Filament 4 para gerenciamento completo de usuários com integração ao Spatie Permission, incluindo ajuste da estrutura do banco para relacionamento users-credentials e criação de roles/permissions específicos para militares da aeronáutica.",
-        "details": "1. **Ajuste de Estrutura do Banco de Dados**:\n   ```bash\n   php artisan make:migration add_user_id_to_credentials_table\n   ```\n   ```php\n   // Migration\n   public function up() {\n       Schema::table('credentials', function (Blueprint $table) {\n           $table->foreignId('user_id')->nullable()->after('id')->constrained('users')->nullOnDelete();\n           $table->index('user_id');\n       });\n   }\n   ```\n   - Atualizar Model Credential com relacionamento:\n   ```php\n   public function user() {\n       return $this->belongsTo(User::class);\n   }\n   ```\n   - Atualizar Model User:\n   ```php\n   public function credentials() {\n       return $this->hasMany(Credential::class);\n   }\n   ```\n\n2. **Configuração de Roles e Permissions com Spatie**:\n   - Criar Seeder RolesAndPermissionsSeeder:\n   ```php\n   // database/seeders/RolesAndPermissionsSeeder.php\n   use Spatie\\Permission\\Models\\Role;\n   use Spatie\\Permission\\Models\\Permission;\n   \n   public function run() {\n       app()[\\Spatie\\Permission\\PermissionRegistrar::class]->forgetCachedPermissions();\n       \n       // Criar permissions\n       $permissions = [\n           'view_users', 'create_users', 'edit_users', 'delete_users',\n           'view_credentials', 'create_credentials', 'edit_credentials', 'delete_credentials',\n           'view_audit_logs', 'export_reports', 'manage_permissions'\n       ];\n       \n       foreach ($permissions as $permission) {\n           Permission::create(['name' => $permission]);\n       }\n       \n       // Criar roles\n       $superAdmin = Role::create(['name' => 'Super Admin']);\n       $superAdmin->givePermissionTo(Permission::all());\n       \n       $admin = Role::create(['name' => 'Administrador']);\n       $admin->givePermissionTo([\n           'view_users', 'create_users', 'edit_users',\n           'view_credentials', 'create_credentials', 'edit_credentials', 'delete_credentials',\n           'view_audit_logs', 'export_reports'\n       ]);\n       \n       $operador = Role::create(['name' => 'Operador']);\n       $operador->givePermissionTo([\n           'view_credentials', 'create_credentials', 'edit_credentials',\n           'view_audit_logs'\n       ]);\n       \n       $consulta = Role::create(['name' => 'Consulta']);\n       $consulta->givePermissionTo(['view_credentials', 'view_audit_logs']);\n   }\n   ```\n\n3. **Implementação do UserResource no Filament 4**:\n   ```bash\n   php artisan make:filament-resource User --generate\n   ```\n   ```php\n   // app/Filament/Resources/UserResource.php\n   use Filament\\Forms\\Components\\{TextInput, Select, CheckboxList};\n   use Filament\\Tables\\Columns\\{TextColumn, BadgeColumn};\n   use Spatie\\Permission\\Models\\Role;\n   \n   public static function form(Form $form): Form {\n       return $form->schema([\n           TextInput::make('name')\n               ->required()\n               ->maxLength(255)\n               ->label('Nome Completo'),\n           \n           TextInput::make('email')\n               ->email()\n               ->required()\n               ->unique(ignoreRecord: true)\n               ->label('E-mail'),\n           \n           TextInput::make('password')\n               ->password()\n               ->required(fn ($livewire) => $livewire instanceof CreateRecord)\n               ->dehydrateStateUsing(fn ($state) => Hash::make($state))\n               ->dehydrated(fn ($state) => filled($state))\n               ->label('Senha'),\n           \n           Select::make('roles')\n               ->relationship('roles', 'name')\n               ->multiple()\n               ->preload()\n               ->searchable()\n               ->label('Perfis')\n               ->helperText('Selecione um ou mais perfis para o usuário'),\n           \n           CheckboxList::make('permissions')\n               ->relationship('permissions', 'name')\n               ->columns(3)\n               ->label('Permissões Adicionais')\n               ->helperText('Permissões específicas além das do perfil')\n       ]);\n   }\n   \n   public static function table(Table $table): Table {\n       return $table\n           ->columns([\n               TextColumn::make('name')\n                   ->searchable()\n                   ->sortable()\n                   ->label('Nome'),\n               \n               TextColumn::make('email')\n                   ->searchable()\n                   ->sortable()\n                   ->label('E-mail'),\n               \n               BadgeColumn::make('roles.name')\n                   ->label('Perfis')\n                   ->colors([\n                       'danger' => 'Super Admin',\n                       'warning' => 'Administrador',\n                       'success' => 'Operador',\n                       'primary' => 'Consulta',\n                   ]),\n               \n               TextColumn::make('credentials_count')\n                   ->counts('credentials')\n                   ->label('Credenciais'),\n               \n               TextColumn::make('created_at')\n                   ->dateTime('d/m/Y H:i')\n                   ->sortable()\n                   ->label('Criado em')\n           ])\n           ->filters([\n               SelectFilter::make('roles')\n                   ->relationship('roles', 'name')\n                   ->label('Filtrar por Perfil'),\n               \n               Filter::make('has_credentials')\n                   ->query(fn (Builder $query) => $query->has('credentials'))\n                   ->label('Com Credenciais')\n           ])\n           ->actions([\n               Tables\\Actions\\EditAction::make(),\n               Tables\\Actions\\DeleteAction::make()\n           ])\n           ->bulkActions([\n               Tables\\Actions\\DeleteBulkAction::make()\n           ]);\n   }\n   ```\n\n4. **Implementação de Policies para UserResource**:\n   ```bash\n   php artisan make:policy UserPolicy --model=User\n   ```\n   ```php\n   // app/Policies/UserPolicy.php\n   public function viewAny(User $user): bool {\n       return $user->can('view_users');\n   }\n   \n   public function create(User $user): bool {\n       return $user->can('create_users');\n   }\n   \n   public function update(User $user, User $model): bool {\n       return $user->can('edit_users');\n   }\n   \n   public function delete(User $user, User $model): bool {\n       return $user->can('delete_users') && $model->id !== $user->id;\n   }\n   ```\n   - Registrar policy em AuthServiceProvider:\n   ```php\n   protected $policies = [\n       User::class => UserPolicy::class,\n   ];\n   ```\n\n5. **Configuração do Filament Shield Plugin**:\n   ```bash\n   composer require bezhansalleh/filament-shield\n   php artisan vendor:publish --tag=filament-shield-config\n   php artisan shield:install\n   ```\n   - Adicionar plugin ao AdminPanelProvider:\n   ```php\n   use BezhanSalleh\\FilamentShield\\FilamentShieldPlugin;\n   \n   public function panel(Panel $panel): Panel {\n       return $panel\n           ->plugin(FilamentShieldPlugin::make());\n   }\n   ```\n\n6. **Widget de Auditoria de Usuários no Dashboard**:\n   ```bash\n   php artisan make:filament-widget UserActivityWidget\n   ```\n   ```php\n   // app/Filament/Widgets/UserActivityWidget.php\n   use Filament\\Widgets\\StatsOverviewWidget;\n   \n   protected function getStats(): array {\n       return [\n           Stat::make('Total de Usuários', User::count()),\n           Stat::make('Administradores', User::role('Administrador')->count()),\n           Stat::make('Operadores', User::role('Operador')->count()),\n           Stat::make('Usuários Ativos (30 dias)', User::where('last_login_at', '>=', now()->subDays(30))->count()),\n       ];\n   }\n   ```\n\n7. **Integração com CredentialResource**:\n   - Atualizar CredentialResource para incluir filtro por usuário:\n   ```php\n   SelectFilter::make('user')\n       ->relationship('user', 'name')\n       ->searchable()\n       ->preload()\n       ->label('Filtrar por Usuário'),\n   ```\n   - Adicionar coluna na tabela:\n   ```php\n   TextColumn::make('user.name')\n       ->searchable()\n       ->sortable()\n       ->label('Usuário Responsável'),\n   ```\n\n8. **Tradução e Localização**:\n   - Publicar traduções do Filament Shield:\n   ```bash\n   php artisan vendor:publish --tag=filament-shield-translations\n   ```\n   - Customizar lang/pt_BR/filament-shield.php com termos militares",
-        "testStrategy": "1. **Testes de Migração e Relacionamentos**:\n   - Executar migrations e verificar estrutura: php artisan migrate:fresh --seed\n   - Teste unitário verificando relacionamento User->credentials retorna Collection\n   - Teste que credentials->user retorna instância de User\n   - Verificar constraint de foreign key e comportamento nullOnDelete\n\n2. **Testes de Seeder de Roles/Permissions**:\n   - Executar php artisan db:seed --class=RolesAndPermissionsSeeder\n   - Verificar que 4 roles foram criadas (Super Admin, Administrador, Operador, Consulta)\n   - Verificar que 11 permissions foram criadas\n   - Teste que Super Admin possui todas permissions\n   - Teste que Consulta possui apenas view_credentials e view_audit_logs\n\n3. **Testes Funcionais do UserResource no Filament**:\n   - Acessar /admin/users como Super Admin e verificar listagem\n   - Criar novo usuário com perfil 'Operador' via painel\n   - Editar usuário e adicionar permission adicional 'export_reports'\n   - Verificar filtro por perfil retorna usuários corretos\n   - Teste que usuário não pode deletar a si mesmo\n\n4. **Testes de Policy e Autorização**:\n   - Login como usuário 'Consulta' e verificar que /admin/users retorna 403\n   - Login como 'Administrador' e verificar acesso a create/edit users\n   - Teste que 'Operador' não vê menu de usuários\n   - Verificar que Super Admin bypassa todas policies\n\n5. **Testes de Integração User-Credential**:\n   - Criar credencial e verificar que user_id é preenchido automaticamente\n   - Filtrar credenciais por usuário no painel\n   - Verificar contador 'credentials_count' na listagem de usuários\n   - Teste que ao deletar usuário, suas credenciais ficam com user_id = null\n\n6. **Testes de Performance e UI**:\n   - Criar 100 usuários via factory e verificar performance da listagem\n   - Teste de busca por nome/email com dataset grande\n   - Verificar responsividade do formulário em mobile\n   - Teste de badges de roles renderizando cores corretas\n\n7. **Testes de Auditoria**:\n   - Verificar que criação de usuário gera log de auditoria (se Task 3 implementada)\n   - Teste que mudança de role é registrada no audit log\n   - Verificar IP e user_agent capturados corretamente",
-        "status": "done",
+        "id": "4",
+        "title": "FASE 4: Filament 4 Modernização - Centralizar Lógica de Badges",
+        "description": "Criar app/Enums/BadgeColor.php com enum para centralizar lógica de cores de badges, implementando métodos forRole() e forSecrecy() para eliminar código duplicado entre CredentialsTable e UsersTable.",
+        "details": "1. **Criar Enum BadgeColor para Centralizar Lógica de Cores**:\n   ```bash\n   mkdir -p app/Enums\n   ```\n   \n   Criar `app/Enums/BadgeColor.php`:\n   ```php\n   <?php\n   namespace App\\Enums;\n\n   enum BadgeColor: string\n   {\n       case SUCCESS = 'success';\n       case WARNING = 'warning';\n       case DANGER = 'danger';\n       case INFO = 'info';\n       case PRIMARY = 'primary';\n       case SECONDARY = 'secondary';\n\n       /**\n        * Retorna a cor apropriada para uma role\n        * \n        * @param string|null $roleName\n        * @return self\n        */\n       public static function forRole(?string $roleName): self\n       {\n           return match($roleName) {\n               'super_admin' => self::DANGER,\n               'admin' => self::WARNING,\n               'operador' => self::INFO,\n               'consulta' => self::SUCCESS,\n               default => self::SECONDARY,\n           };\n       }\n\n       /**\n        * Retorna a cor apropriada para secrecy level\n        * \n        * @param string|null $secrecy\n        * @return self\n        */\n       public static function forSecrecy(?string $secrecy): self\n       {\n           return match($secrecy) {\n               'S' => self::DANGER,  // Secreto = vermelho\n               'R' => self::WARNING, // Reservado = amarelo\n               default => self::SECONDARY,\n           };\n       }\n\n       /**\n        * Retorna a cor para status de validade\n        * \n        * @param \\Carbon\\Carbon|null $validityDate\n        * @return self\n        */\n       public static function forValidity(?\\Carbon\\Carbon $validityDate): self\n       {\n           if (!$validityDate) {\n               return self::SECONDARY;\n           }\n\n           if ($validityDate->isPast()) {\n               return self::DANGER; // Expirado\n           }\n\n           if ($validityDate->diffInDays(now()) <= 30) {\n               return self::WARNING; // Expirando em breve\n           }\n\n           return self::SUCCESS; // Válido\n       }\n   }\n   ```\n\n2. **Refatorar CredentialsTable para Usar BadgeColor Enum**:\n\n   Editar `app/Filament/Resources/Credentials/Tables/CredentialsTable.php`:\n   ```php\n   use App\\Enums\\BadgeColor;\n   use Filament\\Tables\\Columns\\TextColumn;\n\n   public static function table(Table $table): Table\n   {\n       return $table\n           ->columns([\n               TextColumn::make('fscs')\n                   ->label('FSCS')\n                   ->searchable()\n                   ->sortable(),\n               \n               TextColumn::make('name')\n                   ->label('Nome')\n                   ->searchable()\n                   ->sortable(),\n               \n               TextColumn::make('secrecy')\n                   ->label('Sigilo')\n                   ->badge()\n                   ->color(fn ($record) => BadgeColor::forSecrecy($record->secrecy)->value)\n                   ->formatStateUsing(fn ($state) => $state === 'S' ? 'Secreto' : 'Reservado'),\n               \n               TextColumn::make('validity')\n                   ->label('Validade')\n                   ->date('d/m/Y')\n                   ->badge()\n                   ->color(fn ($record) => BadgeColor::forValidity($record->validity)->value)\n                   ->sortable(),\n               \n               TextColumn::make('user.name')\n                   ->label('Responsável')\n                   ->searchable()\n                   ->sortable(),\n           ]);\n   }\n   ```\n\n3. **Refatorar UsersTable para Usar BadgeColor Enum**:\n\n   Editar `app/Filament/Resources/UserResource/Tables/UsersTable.php`:\n   ```php\n   use App\\Enums\\BadgeColor;\n\n   TextColumn::make('roles.name')\n       ->label('Roles')\n       ->badge()\n       ->color(fn ($state) => BadgeColor::forRole($state)->value)\n       ->formatStateUsing(fn ($state) => ucfirst($state)),\n   ```\n\n4. **Adicionar Testes Unitários para BadgeColor Enum**:\n\n   Criar `tests/Unit/BadgeColorEnumTest.php`:\n   ```php\n   <?php\n   use App\\Enums\\BadgeColor;\n\n   it('retorna cor correta para super_admin role', function () {\n       expect(BadgeColor::forRole('super_admin'))->toBe(BadgeColor::DANGER);\n   });\n\n   it('retorna cor correta para secrecy S', function () {\n       expect(BadgeColor::forSecrecy('S'))->toBe(BadgeColor::DANGER);\n   });\n\n   it('retorna cor correta para secrecy R', function () {\n       expect(BadgeColor::forSecrecy('R'))->toBe(BadgeColor::WARNING);\n   });\n\n   it('retorna cor correta para credencial expirada', function () {\n       $expired = now()->subDays(10);\n       expect(BadgeColor::forValidity($expired))->toBe(BadgeColor::DANGER);\n   });\n\n   it('retorna cor correta para credencial expirando em breve', function () {\n       $expiring = now()->addDays(15);\n       expect(BadgeColor::forValidity($expiring))->toBe(BadgeColor::WARNING);\n   });\n\n   it('retorna cor correta para credencial válida', function () {\n       $valid = now()->addYear();\n       expect(BadgeColor::forValidity($valid))->toBe(BadgeColor::SUCCESS);\n   });\n   ```\n\n5. **Documentar Enum no CLAUDE.md**:\n   Adicionar seção:\n   ```markdown\n   ### Badge Color Centralization\n   \n   Use `App\\Enums\\BadgeColor` para cores de badges:\n   ```php\n   BadgeColor::forRole('super_admin') // DANGER\n   BadgeColor::forSecrecy('S')        // DANGER\n   BadgeColor::forValidity($date)     // SUCCESS/WARNING/DANGER\n   ```\n   ```",
+        "testStrategy": "1. **Testes de Criação do Enum**:\n   ```bash\n   vendor/bin/sail artisan tinker --execute=\"echo class_exists('\\\\App\\\\Enums\\\\BadgeColor') ? 'OK' : 'ERRO';\"\n   ```\n   - Verificar que enum foi criado corretamente\n   - Testar métodos estáticos:\n   ```php\n   use App\\Enums\\BadgeColor;\n   echo BadgeColor::forRole('super_admin')->value; // 'danger'\n   ```\n\n2. **Testes Unitários do Enum**:\n   ```bash\n   vendor/bin/sail artisan test tests/Unit/BadgeColorEnumTest.php\n   ```\n   - Todos os testes devem passar\n   - Cobertura de 100% dos métodos do enum\n\n3. **Teste Visual no Painel Filament**:\n   - Acessar `/admin/credentials`\n   - Verificar badges de secrecy:\n     - 'S' (Secreto) = vermelho\n     - 'R' (Reservado) = amarelo\n   - Verificar badges de validity:\n     - Expiradas = vermelho\n     - Expirando (< 30 dias) = amarelo\n     - Válidas = verde\n   - Acessar `/admin/users`\n   - Verificar badges de roles com cores corretas\n\n4. **Teste de Refatoração (Code Search)**:\n   ```bash\n   # Não deve haver código duplicado de cores\n   grep -r \"'danger'\" app/Filament/Resources/ --include=\"*.php\"\n   grep -r \"'warning'\" app/Filament/Resources/ --include=\"*.php\"\n   ```\n   - Verificar que apenas referencia BadgeColor enum\n\n5. **Teste de Consistência**:\n   ```bash\n   vendor/bin/sail artisan tinker\n   ```\n   ```php\n   use App\\Enums\\BadgeColor;\n   use App\\Models\\Credential;\n   \n   $cred = Credential::factory()->secret()->expired()->create();\n   echo BadgeColor::forSecrecy($cred->secrecy)->value; // 'danger'\n   echo BadgeColor::forValidity($cred->validity)->value; // 'danger'\n   ```",
+        "priority": "low",
         "dependencies": [
-          "11",
-          "2",
-          "4"
+          "1",
+          "2"
         ],
-        "priority": "medium",
+        "status": "pending",
+        "complexity": 3,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Separar em: (1) Criar enum BadgeColor com cases e métodos estáticos (forRole, forSecrecy, forValidity); (2) Refatorar CredentialsTable para usar BadgeColor::forSecrecy e BadgeColor::forValidity; (3) Refatorar UsersTable para usar BadgeColor::forRole; (4) Criar tests/Unit/BadgeColorEnumTest.php com cobertura completa; (5) Documentar uso do enum no CLAUDE.md.",
+        "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
             "id": 1,
-            "title": "Ajustar estrutura do banco de dados para relacionamento users-credentials",
-            "description": "Criar migration para adicionar coluna user_id na tabela credentials e atualizar os Models User e Credential com relacionamentos hasMany e belongsTo",
+            "title": "Criar enum BadgeColor com cases e métodos estáticos",
+            "description": "Criar arquivo app/Enums/BadgeColor.php com enum backed string contendo cases (SUCCESS, WARNING, DANGER, INFO, PRIMARY, SECONDARY) e métodos estáticos forRole(), forSecrecy() e forValidity() para centralizar lógica de cores de badges.",
             "dependencies": [],
-            "details": "Executar `php artisan make:migration add_user_id_to_credentials_table` e implementar a migration adicionando `$table->foreignId('user_id')->nullable()->after('id')->constrained('users')->nullOnDelete()` com índice. Atualizar Model Credential adicionando método `user()` retornando `$this->belongsTo(User::class)`. Atualizar Model User adicionando método `credentials()` retornando `$this->hasMany(Credential::class)`. Executar migration com `php artisan migrate`.",
-            "status": "done",
-            "testStrategy": "Executar migration e verificar estrutura da tabela credentials com `php artisan migrate`. Testar relacionamento criando um usuário e associando credenciais, verificando que `$user->credentials` retorna Collection e `$credential->user` retorna instância de User. Verificar que a constraint nullOnDelete funciona corretamente deletando um usuário.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T19:49:06.452Z"
+            "details": "Criar diretório app/Enums e implementar enum BadgeColor: string com 6 cases de cores. Implementar método forRole() usando match para mapear roles (super_admin->DANGER, admin->WARNING, operador->INFO, consulta->SUCCESS, default->SECONDARY). Implementar método forSecrecy() para mapear S->DANGER e R->WARNING. Implementar método forValidity() recebendo Carbon date, verificando se é passado (DANGER), expirando em 30 dias (WARNING) ou válido (SUCCESS). Adicionar DocBlocks em todos os métodos.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan tinker --execute=\"echo class_exists('\\\\App\\\\Enums\\\\BadgeColor') ? 'OK' : 'ERRO';\" para verificar se enum foi criado. Testar métodos estáticos manualmente no tinker verificando retornos corretos para cada caso.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
-            "title": "Configurar sistema de roles e permissions com Spatie Permission",
-            "description": "Criar seeder RolesAndPermissionsSeeder implementando roles (Super Admin, Administrador, Operador, Consulta) e permissions específicas para gerenciamento de usuários e credenciais no contexto militar",
-            "dependencies": [],
-            "details": "Criar arquivo `database/seeders/RolesAndPermissionsSeeder.php` implementando método `run()` que: 1) limpa cache de permissions com `app()[PermissionRegistrar::class]->forgetCachedPermissions()`, 2) cria permissions (view_users, create_users, edit_users, delete_users, view_credentials, create_credentials, edit_credentials, delete_credentials, view_audit_logs, export_reports, manage_permissions), 3) cria roles e atribui permissions específicas para cada perfil conforme hierarquia militar. Registrar seeder no DatabaseSeeder e executar com `php artisan db:seed --class=RolesAndPermissionsSeeder`.",
-            "status": "done",
-            "testStrategy": "Executar seeder com `php artisan db:seed --class=RolesAndPermissionsSeeder` e verificar criação de 4 roles e 11 permissions no banco de dados. Testar atribuição de permissions verificando que Super Admin possui todas as permissions, Administrador possui permissions de gerenciamento exceto delete_users e manage_permissions, Operador possui permissions limitadas de CRUD de credenciais, e Consulta possui apenas view.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T19:50:53.035Z"
+            "title": "Refatorar CredentialsTable para usar BadgeColor enum",
+            "description": "Modificar app/Filament/Resources/Credentials/Tables/CredentialsTable.php para substituir lógica inline de cores por chamadas aos métodos BadgeColor::forSecrecy() e BadgeColor::forValidity().",
+            "dependencies": [
+              1
+            ],
+            "details": "Adicionar use App\\Enums\\BadgeColor no topo do arquivo. Na coluna secrecy, modificar o método color() para usar fn ($record) => BadgeColor::forSecrecy($record->secrecy)->value. Na coluna validity, modificar o método color() para usar fn ($record) => BadgeColor::forValidity($record->validity)->value. Remover qualquer lógica inline de match ou condicionais para cores que estava anteriormente no arquivo. Manter formatStateUsing e demais configurações intactas.",
+            "status": "pending",
+            "testStrategy": "Acessar http://localhost/admin/credentials e verificar visualmente que os badges de Sigilo e Validade mantêm as mesmas cores de antes da refatoração. Testar com diferentes registros (S vs R, expirados vs válidos vs expirando).",
+            "parentId": "undefined"
           },
           {
             "id": 3,
-            "title": "Implementar UserResource no Filament 4 com formulários e tabelas",
-            "description": "Criar Resource completo do Filament para gerenciamento de usuários incluindo form com campos de perfis e permissions, table com colunas e filtros, e integração com Spatie Permission",
+            "title": "Refatorar UsersTable para usar BadgeColor enum",
+            "description": "Modificar app/Filament/Resources/UserResource/Tables/UsersTable.php para substituir lógica de cores de roles por BadgeColor::forRole().",
             "dependencies": [
-              2
+              1
             ],
-            "details": "Executar `php artisan make:filament-resource User --generate` e customizar app/Filament/Resources/UserResource.php implementando: 1) método `form()` com TextInput para name e email, password com hash e dehydration condicional, Select multiple para roles com relationship, CheckboxList para permissions adicionais, 2) método `table()` com TextColumn para name e email searchable/sortable, BadgeColumn para roles.name com cores específicas, credentials_count, created_at formatado, 3) filters com SelectFilter para roles e Filter para has_credentials, 4) actions de Edit e Delete, 5) bulkActions com DeleteBulkAction.",
-            "status": "done",
-            "testStrategy": "Acessar painel Filament e verificar que UserResource aparece no menu. Testar criação de novo usuário preenchendo todos os campos e atribuindo roles/permissions. Verificar que senha é hashada corretamente. Testar edição mantendo senha existente quando campo vazio. Verificar que filtros funcionam corretamente e badges de roles exibem cores apropriadas. Testar ordenação e busca nas colunas.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T19:58:37.150Z"
+            "details": "Adicionar use App\\Enums\\BadgeColor no início do arquivo UsersTable.php. Localizar a coluna TextColumn::make('roles.name') e modificar o método color() para usar fn ($state) => BadgeColor::forRole($state)->value. Remover qualquer lógica inline anterior de cores baseada em roles. Verificar que o formatStateUsing está preservado para manter a formatação uppercase das roles.",
+            "status": "pending",
+            "testStrategy": "Acessar http://localhost/admin/users e verificar visualmente que os badges de roles mantêm cores consistentes (super_admin vermelho, admin amarelo, operador azul, consulta verde). Testar com usuários de diferentes roles para validar todas as variações.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
-            "title": "Criar e registrar UserPolicy para controle de acesso baseado em permissions",
-            "description": "Implementar Policy class para User com métodos viewAny, create, update e delete verificando permissions do Spatie, incluindo proteção contra auto-exclusão, e registrar no AuthServiceProvider",
+            "title": "Criar tests/Unit/BadgeColorEnumTest.php com cobertura completa",
+            "description": "Implementar suite completa de testes unitários Pest para validar todos os métodos do enum BadgeColor, cobrindo todos os cases de forRole(), forSecrecy() e forValidity().",
             "dependencies": [
-              2
+              1
             ],
-            "details": "Executar `php artisan make:policy UserPolicy --model=User` e implementar métodos: `viewAny()` retornando `$user->can('view_users')`, `create()` retornando `$user->can('create_users')`, `update()` retornando `$user->can('edit_users')`, `delete()` retornando `$user->can('delete_users') && $model->id !== $user->id` para evitar auto-exclusão. Registrar policy em `app/Providers/AuthServiceProvider.php` adicionando `User::class => UserPolicy::class` no array `$policies`.",
-            "status": "done",
-            "testStrategy": "Criar usuários com diferentes roles e testar acesso ao UserResource verificando que apenas usuários com permissions adequadas conseguem visualizar, criar, editar e deletar. Testar especificamente que usuário não consegue deletar a si próprio. Verificar que usuários sem permission view_users não conseguem acessar o resource. Testar que Super Admin tem acesso total.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T19:58:38.694Z"
+            "details": "Criar arquivo tests/Unit/BadgeColorEnumTest.php usando sintaxe Pest. Implementar 6+ testes: (1) forRole retorna DANGER para super_admin, (2) forRole retorna WARNING para admin, (3) forSecrecy retorna DANGER para S, (4) forSecrecy retorna WARNING para R, (5) forValidity retorna DANGER para data passada, (6) forValidity retorna WARNING para data em 15 dias, (7) forValidity retorna SUCCESS para data em 1 ano. Usar Carbon para manipular datas nos testes. Adicionar testes de edge cases como null values.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Unit/BadgeColorEnumTest.php e verificar que todos os testes passam. Validar cobertura de 100% dos métodos públicos do enum. Confirmar que testes falham quando lógica é alterada propositalmente.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
-            "title": "Integrar CredentialResource com sistema de usuários e adicionar widget de auditoria",
-            "description": "Atualizar CredentialResource adicionando relacionamento com User (filtro e coluna), criar UserActivityWidget para dashboard mostrando estatísticas de usuários por role, e configurar traduções pt_BR",
+            "title": "Documentar uso do enum BadgeColor no CLAUDE.md",
+            "description": "Adicionar seção de documentação no arquivo CLAUDE.md explicando o uso do enum BadgeColor, com exemplos práticos de cada método estático e padrões de uso recomendados.",
             "dependencies": [
               1,
+              2,
+              3,
+              4
+            ],
+            "details": "Adicionar nova seção '### Badge Color Centralization' no CLAUDE.md após a seção de Filament 4 Specific Patterns. Documentar os 3 métodos estáticos com exemplos de código: BadgeColor::forRole('super_admin'), BadgeColor::forSecrecy('S'), BadgeColor::forValidity($date). Incluir tabela de mapeamento role->cor e secrecy->cor. Adicionar nota sobre quando usar .value para obter string. Incluir exemplo de uso em TextColumn do Filament. Mencionar localização do arquivo de testes para referência.",
+            "status": "pending",
+            "testStrategy": "Revisar CLAUDE.md para confirmar que a documentação está clara, completa e com exemplos funcionais. Validar que os code snippets estão corretos e podem ser copiados diretamente. Pedir feedback de outro desenvolvedor sobre clareza da documentação.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "title": "FASE 5: Suite Completa de Testes com Pest e Cobertura Filament",
+        "description": "Refatorar testes existentes para usar factories, remover testes obsoletos, criar suite completa de testes Livewire para recursos Filament (Credentials e Users), implementar testes unitários de Policies e testes de integração para ActivityLog Observer, relacionamentos e soft deletes.",
+        "details": "1. **Refatorar RoleAuthorizationTest para Usar Factories**:\n   ```php\n   // tests/Feature/RoleAuthorizationTest.php\n   use App\\Models\\User;\n   \n   it('super_admin pode acessar painel', function () {\n       $user = User::factory()->create();\n       $user->assignRole('super_admin');\n       \n       $this->actingAs($user)\n           ->get('/admin')\n           ->assertStatus(200);\n   });\n   ```\n\n2. **Deletar Teste Obsoleto**:\n   ```bash\n   rm tests/Feature/CredentialValidationTest.php\n   ```\n\n3. **Criar CredentialResourceTest Completo**:\n   ```bash\n   vendor/bin/sail artisan make:test Feature/Filament/CredentialResourceTest --pest\n   ```\n   ```php\n   use function Pest\\Livewire\\livewire;\n   \n   it('pode listar credenciais', function () {\n       $credentials = Credential::factory()->count(5)->create();\n       \n       livewire(ListCredentials::class)\n           ->assertCanSeeTableRecords($credentials);\n   });\n   \n   it('pode criar credencial', function () {\n       livewire(CreateCredential::class)\n           ->fillForm([\n               'fscs' => 'TEST-001',\n               'name' => 'Teste',\n               'secrecy' => 'R',\n               'validity' => now()->addYear()->format('Y-m-d'),\n           ])\n           ->call('create')\n           ->assertHasNoFormErrors();\n   });\n   \n   it('pode filtrar por secrecy', function () {\n       Credential::factory()->count(3)->create(['secrecy' => 'R']);\n       \n       livewire(ListCredentials::class)\n           ->filterTable('secrecy', 'R')\n           ->assertCountTableRecords(3);\n   });\n   ```\n\n4. **Criar UserResourceTest**:\n   ```php\n   it('pode criar usuário com role', function () {\n       livewire(CreateUser::class)\n           ->fillForm([\n               'name' => 'Novo',\n               'email' => 'novo@test.com',\n               'password' => 'password',\n               'roles' => ['admin'],\n           ])\n           ->call('create');\n       \n       expect(User::where('email', 'novo@test.com')->first())\n           ->hasRole('admin')->toBeTrue();\n   });\n   ```\n\n5. **Criar PolicyTest**:\n   ```php\n   it('super_admin pode tudo', function () {\n       $admin = User::factory()->create();\n       $admin->assignRole('super_admin');\n       $credential = Credential::factory()->create();\n       \n       $policy = new CredentialPolicy();\n       expect($policy->view($admin, $credential))->toBeTrue();\n       expect($policy->create($admin))->toBeTrue();\n   });\n   ```\n\n6. **Criar ActivityLogObserverTest**:\n   ```php\n   it('registra criação no log', function () {\n       $user = User::factory()->create();\n       Auth::login($user);\n       \n       Credential::factory()->create(['fscs' => 'LOG-001']);\n       \n       $this->assertDatabaseHas('activity_logs', [\n           'action' => 'created',\n           'user_id' => $user->id,\n       ]);\n   });\n   ```\n\n7. **Criar RelationshipsTest**:\n   ```php\n   it('user hasMany credentials', function () {\n       $user = User::factory()->create();\n       Credential::factory()->count(3)->create(['user_id' => $user->id]);\n       \n       expect($user->credentials)->toHaveCount(3);\n   });\n   \n   it('soft delete preserva credencial', function () {\n       $credential = Credential::factory()->create();\n       $credential->delete();\n       \n       $this->assertSoftDeleted('credentials', ['id' => $credential->id]);\n   });\n   ```",
+        "testStrategy": "1. **Validar Refatoração**:\n   ```bash\n   vendor/bin/sail artisan test tests/Feature/RoleAuthorizationTest.php\n   ```\n\n2. **Confirmar Remoção**:\n   ```bash\n   ls tests/Feature/CredentialValidationTest.php # Deve falhar\n   ```\n\n3. **Suite Completa Filament**:\n   ```bash\n   vendor/bin/sail artisan test tests/Feature/Filament/ --coverage\n   ```\n   - Cobertura mínima 90%\n\n4. **Testes Unitários**:\n   ```bash\n   vendor/bin/sail artisan test tests/Unit/PolicyTest.php\n   ```\n\n5. **Cobertura Total**:\n   ```bash\n   vendor/bin/sail artisan test --coverage --min=80\n   ```\n\n6. **Teste Manual Painel**:\n   - Criar credencial via /admin/credentials\n   - Verificar activity_logs\n   - Deletar e confirmar soft delete\n\n7. **Execução Paralela**:\n   ```bash\n   vendor/bin/sail artisan test --parallel\n   ```",
+        "priority": "high",
+        "dependencies": [
+          "2",
+          "4"
+        ],
+        "status": "pending",
+        "complexity": 8,
+        "recommendedSubtasks": 10,
+        "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories em vez de dados hardcoded; (2) Remover CredentialValidationTest obsoleto; (3) Criar CredentialResourceTest com testes de listagem e filtros; (4) Adicionar testes de criação/edição em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de roles; (6) Criar PolicyTest para testar CredentialPolicy e autorização por roles; (7) Criar ActivityLogObserverTest para validar logging de ações; (8) Criar RelationshipsTest para User->Credentials e soft deletes; (9) Executar suite completa com coverage mínimo 80%; (10) Documentar estratégias de teste.",
+        "updatedAt": "2025-11-20T00:00:00.000Z",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refatorar RoleAuthorizationTest para usar factories",
+            "description": "Modificar tests/Feature/RoleAuthorizationTest.php para substituir criação manual de usuários por User::factory(), garantindo que todos os testes usem factories do Laravel e Spatie Permission para atribuição de roles.",
+            "dependencies": [],
+            "details": "Abrir tests/Feature/RoleAuthorizationTest.php e substituir todas as instâncias de User::create() por User::factory()->create(). Manter a estrutura de testes existente (super_admin, admin, consulta) mas usar factories. Exemplo: $user = User::factory()->create(); $user->assignRole('super_admin'); $this->actingAs($user)->get('/admin')->assertStatus(200). Garantir que todos os testes passem após refatoração.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/RoleAuthorizationTest.php e confirmar que todos os testes passam. Verificar que não há criação manual de usuários no arquivo.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Remover CredentialValidationTest obsoleto",
+            "description": "Deletar o arquivo tests/Feature/CredentialValidationTest.php que contém testes obsoletos ou redundantes, confirmando que nenhuma funcionalidade crítica será perdida.",
+            "dependencies": [],
+            "details": "Antes de deletar, revisar o conteúdo de tests/Feature/CredentialValidationTest.php para garantir que os testes não são mais necessários ou foram substituídos por testes melhores. Executar rm tests/Feature/CredentialValidationTest.php ou deletar via IDE. Confirmar que o arquivo não existe mais com ls tests/Feature/CredentialValidationTest.php (deve retornar erro).",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test para garantir que a suite completa ainda passa sem este arquivo. Verificar que ls tests/Feature/CredentialValidationTest.php retorna erro 'No such file or directory'.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Criar CredentialResourceTest com testes de listagem e filtros",
+            "description": "Criar tests/Feature/Filament/CredentialResourceTest.php usando Pest para testar componente Livewire ListCredentials, incluindo listagem de registros, paginação e filtros por secrecy.",
+            "dependencies": [],
+            "details": "Executar vendor/bin/sail artisan make:test Feature/Filament/CredentialResourceTest --pest. Implementar testes: (1) 'pode listar credenciais' usando livewire(ListCredentials::class)->assertCanSeeTableRecords($credentials); (2) 'pode filtrar por secrecy' criando 3 credenciais com secrecy='R' e testando ->filterTable('secrecy', 'R')->assertCountTableRecords(3); (3) 'pode ordenar por validity' testando ->sortTable('validity'). Usar Credential::factory() para criar dados de teste.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/Filament/CredentialResourceTest.php --filter='pode listar credenciais'. Verificar que todos os testes de listagem e filtros passam sem erros.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Adicionar testes de criação e edição em CredentialResourceTest",
+            "description": "Expandir CredentialResourceTest com testes de criação e edição de credenciais através dos componentes Filament CreateCredential e EditCredential, incluindo validação de formulários.",
+            "dependencies": [
               3
             ],
-            "details": "Atualizar `app/Filament/Resources/CredentialResource.php` adicionando: 1) SelectFilter para user com `->relationship('user', 'name')->searchable()->preload()`, 2) TextColumn `user.name` na table. Executar `php artisan make:filament-widget UserActivityWidget` e implementar `getStats()` retornando array com Stat::make para total de usuários, count por role (Administrador, Operador), e usuários ativos nos últimos 30 dias. Publicar traduções do Spatie com `php artisan vendor:publish --tag=filament-shield-translations` e customizar lang/pt_BR/filament-shield.php.",
-            "status": "done",
-            "testStrategy": "Acessar CredentialResource e verificar que coluna de usuário responsável aparece e é searchable/sortable. Testar filtro por usuário verificando que apenas credentials do usuário selecionado são exibidas. Acessar dashboard e verificar que UserActivityWidget exibe estatísticas corretas. Criar, editar e deletar usuários verificando que contadores atualizam. Verificar que todas as labels estão em português brasileiro.",
-            "parentId": "undefined",
-            "updatedAt": "2025-11-19T20:03:25.492Z"
+            "details": "No arquivo tests/Feature/Filament/CredentialResourceTest.php, adicionar: (1) 'pode criar credencial' usando livewire(CreateCredential::class)->fillForm(['fscs' => 'TEST-001', 'name' => 'Teste', 'secrecy' => 'R', 'validity' => now()->addYear()->format('Y-m-d')])->call('create')->assertHasNoFormErrors(); (2) 'pode editar credencial' carregando record existente e testando fillForm + call('save'); (3) 'valida fscs único' tentando criar credencial com FSCS duplicado e esperando erro; (4) 'valida validity futura' testando data passada.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/Filament/CredentialResourceTest.php --filter='pode criar credencial'. Verificar que credencial foi criada no banco com assertDatabaseHas. Testar cenários de validação com assertHasFormErrors.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Criar UserResourceTest com testes de CRUD e atribuição de roles",
+            "description": "Criar tests/Feature/Filament/UserResourceTest.php para testar componentes Livewire de gerenciamento de usuários, incluindo criação, edição, listagem e atribuição de roles via Spatie Permission.",
+            "dependencies": [],
+            "details": "Executar vendor/bin/sail artisan make:test Feature/Filament/UserResourceTest --pest. Implementar: (1) 'pode listar usuários' com livewire(ListUsers::class)->assertCanSeeTableRecords(); (2) 'pode criar usuário com role' preenchendo formulário com name, email, password, roles=['admin'] e verificando hasRole('admin'); (3) 'pode editar usuário e trocar role' modificando role existente; (4) 'valida email único' tentando criar com email duplicado; (5) 'super_admin pode acessar recurso' testando canAccess().",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/Filament/UserResourceTest.php. Verificar que User::where('email', 'novo@test.com')->first()->hasRole('admin') retorna true. Confirmar validações com assertHasFormErrors.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Criar PolicyTest para testar CredentialPolicy e autorização",
+            "description": "Criar tests/Unit/Policies/CredentialPolicyTest.php usando Pest para testar todos os métodos de autorização da CredentialPolicy, verificando permissões por role (super_admin, admin, consulta).",
+            "dependencies": [],
+            "details": "Criar tests/Unit/Policies/CredentialPolicyTest.php. Implementar: (1) 'super_admin pode tudo' testando viewAny, view, create, update, delete retornam true; (2) 'admin pode gerenciar credenciais' testando mesmas permissões; (3) 'consulta só pode visualizar' testando view=true mas create/update/delete=false; (4) 'usuário sem role não tem acesso' testando todas as permissões retornam false. Usar User::factory() com assignRole() e Credential::factory(). Instanciar CredentialPolicy diretamente para testar métodos.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Unit/Policies/CredentialPolicyTest.php. Confirmar que expect($policy->view($admin, $credential))->toBeTrue() passa para super_admin e admin, mas create retorna false para role consulta.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Criar ActivityLogObserverTest para validar logging de ações",
+            "description": "Criar tests/Feature/ActivityLogObserverTest.php para testar o Observer que registra ações de criação, atualização e exclusão de credenciais na tabela activity_logs, incluindo user_id correto.",
+            "dependencies": [],
+            "details": "Executar vendor/bin/sail artisan make:test Feature/ActivityLogObserverTest --pest. Implementar: (1) 'registra criação no log' criando credencial autenticado como usuário e verificando assertDatabaseHas('activity_logs', ['action' => 'created', 'user_id' => $user->id]); (2) 'registra atualização' testando update e action='updated'; (3) 'registra exclusão' testando delete e action='deleted'; (4) 'armazena dados relevantes' verificando que model_type e model_id estão corretos. Usar Auth::login($user) antes das operações.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/ActivityLogObserverTest.php. Confirmar que após Credential::factory()->create() existe registro em activity_logs com $this->assertDatabaseHas(). Verificar user_id corresponde ao usuário autenticado.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 8,
+            "title": "Criar RelationshipsTest para User-Credentials e soft deletes",
+            "description": "Criar tests/Unit/Models/RelationshipsTest.php usando Pest para testar relacionamentos Eloquent entre User e Credential, comportamento de soft delete e integridade referencial com SET NULL.",
+            "dependencies": [],
+            "details": "Criar tests/Unit/Models/RelationshipsTest.php. Implementar: (1) 'user hasMany credentials' criando 3 credenciais vinculadas a user e testando $user->credentials->toHaveCount(3); (2) 'credential belongsTo user' testando $credential->user->is($expectedUser); (3) 'soft delete preserva credencial' deletando credencial e testando assertSoftDeleted('credentials', ['id' => $credential->id]); (4) 'deletar user seta credential.user_id como NULL' deletando user e verificando que credential existe mas user_id é null (SET NULL constraint); (5) 'withTrashed recupera soft deleted'.",
+            "status": "pending",
+            "testStrategy": "Executar vendor/bin/sail artisan test tests/Unit/Models/RelationshipsTest.php. Verificar que $user->credentials carrega coleção correta. Confirmar que após $credential->delete(), Credential::withTrashed()->find($id) retorna o registro.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 9,
+            "title": "Executar suite completa de testes com coverage mínimo 80%",
+            "description": "Executar toda a suite de testes do projeto usando Pest, gerar relatório de cobertura de código com PHPUnit/PCOV, analisar resultados e identificar gaps de cobertura para atingir mínimo de 80%.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "details": "Executar vendor/bin/sail artisan test --coverage --min=80. Analisar relatório de cobertura gerado. Se cobertura < 80%, identificar arquivos com baixa cobertura (Models, Policies, Resources, Observers) e adicionar testes faltantes. Focar em: (1) Models (User, Credential) - testar getters, scopes, relationships; (2) Policies não cobertas; (3) Observers edge cases; (4) Resource actions customizadas. Repetir até atingir 80%+. Gerar relatório HTML com --coverage-html coverage_report se disponível.",
+            "status": "pending",
+            "testStrategy": "Comando vendor/bin/sail artisan test --coverage deve passar com Lines >= 80%. Revisar output do terminal ou arquivo coverage_report/index.html. Confirmar que arquivos críticos (User.php, Credential.php, CredentialPolicy.php) têm >80% de cobertura individualmente.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 10,
+            "title": "Documentar estratégias de teste em best-practices",
+            "description": "Criar ou atualizar documento .taskmaster/docs/testing-strategies.md com padrões de teste do projeto, exemplos de uso de Pest com Filament, factories, Livewire testing e guidelines de cobertura para futuros desenvolvedores.",
+            "dependencies": [
+              9
+            ],
+            "details": "Criar .taskmaster/docs/testing-strategies.md documentando: (1) Estrutura de testes (Feature vs Unit, quando usar cada); (2) Padrões Pest específicos do projeto (it(), beforeEach(), datasets); (3) Testing Filament/Livewire com livewire()->fillForm()->call()->assert*; (4) Uso de factories para User e Credential; (5) Testing Policies diretamente vs Gates; (6) Testing Observers com Auth mock; (7) Comandos úteis (test --filter, --coverage, --parallel); (8) Exemplo completo de teste de Resource Filament; (9) Troubleshooting comum. Referenciar este doc em CLAUDE.md seção 'Testing Requirements'.",
+            "status": "pending",
+            "testStrategy": "Revisar documento criado manualmente. Confirmar que contém exemplos de código executáveis. Testar um dos exemplos copiando código e executando para validar que documentação está correta e atualizada.",
+            "parentId": "undefined"
           }
+        ]
+      },
+      {
+        "id": "6",
+        "title": "FASE 6: Deploy e Performance - CI/CD, Cache e Queue",
+        "description": "Configurar pipeline de CI/CD com GitHub Actions, implementar estratégias de cache (config, routes, views), configurar Laravel Queue para jobs assíncronos, otimizar queries N+1 com eager loading e preparar ambiente de produção.",
+        "details": "1. **Configurar GitHub Actions para CI/CD**:\n\n   Criar `.github/workflows/laravel.yml`:\n   ```yaml\n   name: Laravel CI\n   \n   on:\n     push:\n       branches: [ main ]\n     pull_request:\n       branches: [ main ]\n   \n   jobs:\n     tests:\n       runs-on: ubuntu-latest\n       \n       services:\n         mysql:\n           image: mysql:8.0\n           env:\n             MYSQL_ROOT_PASSWORD: password\n             MYSQL_DATABASE: testing\n           ports:\n             - 3306:3306\n       \n       steps:\n         - uses: actions/checkout@v3\n         \n         - name: Setup PHP\n           uses: shivammathur/setup-php@v2\n           with:\n             php-version: '8.3'\n             extensions: mbstring, pdo_mysql\n         \n         - name: Install Dependencies\n           run: composer install --no-interaction\n         \n         - name: Copy .env\n           run: cp .env.example .env\n         \n         - name: Generate Key\n           run: php artisan key:generate\n         \n         - name: Run Migrations\n           run: php artisan migrate --force\n         \n         - name: Run Tests\n           run: php artisan test --coverage\n         \n         - name: Run Pint\n           run: ./vendor/bin/pint --test\n   ```\n\n2. **Implementar Estratégias de Cache**:\n\n   Criar comando de deploy `deploy.sh`:\n   ```bash\n   #!/bin/bash\n   echo \"Deploying application...\"\n   \n   # Pull latest code\n   git pull origin main\n   \n   # Install dependencies\n   composer install --optimize-autoloader --no-dev\n   \n   # Cache configurations\n   php artisan config:cache\n   php artisan route:cache\n   php artisan view:cache\n   \n   # Run migrations\n   php artisan migrate --force\n   \n   # Clear old caches\n   php artisan cache:clear\n   \n   # Restart queue workers\n   php artisan queue:restart\n   \n   echo \"Deployment complete!\"\n   ```\n\n3. **Configurar Laravel Queue**:\n\n   Criar job para notificações:\n   ```bash\n   vendor/bin/sail artisan make:job NotifyExpiringCredentials\n   ```\n   ```php\n   <?php\n   namespace App\\Jobs;\n   \n   use App\\Models\\Credential;\n   use Illuminate\\Bus\\Queueable;\n   use Illuminate\\Contracts\\Queue\\ShouldQueue;\n   use Illuminate\\Foundation\\Bus\\Dispatchable;\n   \n   class NotifyExpiringCredentials implements ShouldQueue\n   {\n       use Dispatchable, Queueable;\n       \n       public function handle(): void\n       {\n           $expiringCredentials = Credential::whereBetween('validity', [\n               now(),\n               now()->addDays(30),\n           ])->get();\n           \n           // Enviar notificações\n           foreach ($expiringCredentials as $credential) {\n               // Log ou enviar email\n               \\Log::warning(\"Credential {$credential->fscs} expiring soon\");\n           }\n       }\n   }\n   ```\n\n   Configurar Horizon para monitoramento (opcional):\n   ```bash\n   composer require laravel/horizon\n   php artisan horizon:install\n   ```\n\n4. **Otimizar Queries N+1**:\n\n   Atualizar Resources para usar eager loading:\n   ```php\n   // CredentialResource.php\n   public static function getEloquentQuery(): Builder\n   {\n       return parent::getEloquentQuery()\n           ->with(['user']); // Eager load user\n   }\n   ```\n\n   Habilitar detecção de N+1 em desenvolvimento:\n   ```php\n   // AppServiceProvider.php\n   public function boot(): void\n   {\n       if (app()->environment('local')) {\n           DB::listen(function ($query) {\n               if ($query->time > 100) {\n                   \\Log::warning('Slow query detected', [\n                       'sql' => $query->sql,\n                       'time' => $query->time,\n                   ]);\n               }\n           });\n       }\n   }\n   ```\n\n5. **Configurar Ambiente de Produção**:\n\n   Criar `.env.production.example`:\n   ```env\n   APP_ENV=production\n   APP_DEBUG=false\n   APP_URL=https://yourdomain.com\n   \n   DB_CONNECTION=mysql\n   DB_HOST=your-production-host\n   DB_PORT=3306\n   DB_DATABASE=cred_crud_prod\n   DB_USERNAME=prod_user\n   DB_PASSWORD=secure_password\n   \n   CACHE_DRIVER=redis\n   QUEUE_CONNECTION=redis\n   SESSION_DRIVER=redis\n   \n   REDIS_HOST=redis\n   REDIS_PASSWORD=null\n   REDIS_PORT=6379\n   ```\n\n6. **Implementar Health Check Endpoint**:\n   ```php\n   // routes/web.php\n   Route::get('/health', function () {\n       return response()->json([\n           'status' => 'ok',\n           'database' => DB::connection()->getDatabaseName(),\n           'cache' => Cache::has('health_check'),\n       ]);\n   });\n   ```",
+        "testStrategy": "1. **Teste de CI/CD Pipeline**:\n   - Push para branch e verificar GitHub Actions\n   - Confirmar que todos os jobs passam\n   - Verificar cobertura de testes\n\n2. **Teste de Cache**:\n   ```bash\n   vendor/bin/sail artisan config:cache\n   vendor/bin/sail artisan route:cache\n   # Verificar que aplicação funciona normalmente\n   vendor/bin/sail artisan optimize:clear\n   ```\n\n3. **Teste de Queue Jobs**:\n   ```bash\n   vendor/bin/sail artisan queue:work &\n   vendor/bin/sail artisan tinker --execute=\"\\App\\Jobs\\NotifyExpiringCredentials::dispatch();\"\n   # Verificar logs\n   ```\n\n4. **Teste de N+1 Queries**:\n   ```bash\n   vendor/bin/sail artisan tinker\n   ```\n   ```php\n   DB::enableQueryLog();\n   $credentials = Credential::with('user')->get();\n   dd(count(DB::getQueryLog())); // Deve ser 1 query\n   ```\n\n5. **Teste de Health Check**:\n   ```bash\n   curl http://localhost/health\n   ```\n   - Deve retornar JSON com status: ok\n\n6. **Performance Benchmark**:\n   ```bash\n   ab -n 1000 -c 10 http://localhost/admin\n   ```\n   - Verificar tempo de resposta médio",
+        "priority": "medium",
+        "dependencies": [
+          "3",
+          "5"
         ],
-        "updatedAt": "2025-11-19T20:03:25.492Z"
+        "status": "pending",
+        "complexity": 7,
+        "recommendedSubtasks": 9,
+        "expansionPrompt": "Decompor em: (1) Criar .github/workflows/laravel.yml com jobs de teste, lint e coverage; (2) Configurar MySQL service container no GitHub Actions; (3) Criar script deploy.sh com comandos de cache e otimização; (4) Criar job NotifyExpiringCredentials para queue; (5) Configurar queue driver e testar dispatching; (6) Adicionar eager loading em CredentialResource::getEloquentQuery(); (7) Implementar detecção de N+1 queries no AppServiceProvider; (8) Criar .env.production.example com configurações otimizadas; (9) Implementar health check endpoint e testar pipeline completo.",
+        "updatedAt": "2025-11-20T00:00:00.000Z",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar Workflow do GitHub Actions para CI/CD",
+            "description": "Desenvolver o arquivo `.github/workflows/laravel.yml` para automatizar testes, linting (Pint) e verificação de cobertura de testes a cada push ou pull request na branch `main`.",
+            "dependencies": [],
+            "details": "O workflow deve incluir steps para checkout do código, setup do PHP, instalação de dependências com Composer, configuração do ambiente `.env`, geração da chave da aplicação, execução de migrations, testes (com coverage) e verificação de estilo de código com Pint.",
+            "status": "pending",
+            "testStrategy": "Fazer um push para uma branch de teste que tenha um pull request aberto para a `main`. Verificar se a action é acionada e se todos os jobs (tests, pint) são executados com sucesso.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Configurar Service Container do MySQL no GitHub Actions",
+            "description": "Adicionar a configuração de um service container do MySQL 8.0 ao job de testes no workflow do GitHub Actions para prover um banco de dados para os testes de integração.",
+            "dependencies": [
+              1
+            ],
+            "details": "Dentro do job `tests` no arquivo `laravel.yml`, adicionar a seção `services` para iniciar um container MySQL, definindo as variáveis de ambiente `MYSQL_ROOT_PASSWORD` e `MYSQL_DATABASE` e mapeando a porta 3306.",
+            "status": "pending",
+            "testStrategy": "Verificar se os testes que dependem do banco de dados (por exemplo, os que usam migrations) passam com sucesso durante a execução do workflow no GitHub Actions.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Criar Script de Deploy (`deploy.sh`) com Otimizações",
+            "description": "Desenvolver um script shell (`deploy.sh`) para automatizar o processo de deploy, incluindo pulling do código, instalação de dependências, cache de configuração, rotas e views, e execução de migrations.",
+            "dependencies": [],
+            "details": "O script deve executar `git pull`, `composer install --optimize-autoloader --no-dev`, `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`, `php artisan migrate --force`, e `php artisan queue:restart`.",
+            "status": "pending",
+            "testStrategy": "Executar o script localmente em um ambiente de desenvolvimento limpo para garantir que todos os comandos são executados sem erro e a aplicação continua funcional.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Criar Job Assíncrono `NotifyExpiringCredentials` para Filas",
+            "description": "Gerar e implementar um Laravel Job chamado `NotifyExpiringCredentials` que busca credenciais próximas do vencimento e dispara uma notificação (inicialmente, um log).",
+            "dependencies": [],
+            "details": "Usar o comando `php artisan make:job NotifyExpiringCredentials`. No método `handle()`, implementar a lógica para buscar credenciais que expiram nos próximos 30 dias e registrar um aviso no log para cada uma.",
+            "status": "pending",
+            "testStrategy": "Disparar o job manualmente via `php artisan tinker` (`App\\Jobs\\NotifyExpiringCredentials::dispatch()`) com o driver de fila `sync` e verificar se os logs de aviso são gerados corretamente no arquivo `laravel.log`.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Configurar Driver de Fila para Redis e Testar o Dispatching",
+            "description": "Configurar o Laravel para usar Redis como driver de fila no ambiente de produção e testar o envio de jobs para a fila. Opcionalmente, instalar e configurar o Laravel Horizon para monitoramento.",
+            "dependencies": [
+              4
+            ],
+            "details": "Alterar a variável `QUEUE_CONNECTION` para `redis` no arquivo `.env`. Instalar o `laravel/horizon` (opcional). Despachar o job `NotifyExpiringCredentials` e verificar se ele é processado pelo worker da fila.",
+            "status": "pending",
+            "testStrategy": "Iniciar o worker da fila (`php artisan queue:work`). Despachar o job e verificar se o log correspondente é gerado, confirmando que o job foi processado de forma assíncrona. Se o Horizon estiver instalado, verificar o dashboard do Horizon.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Adicionar Eager Loading no `CredentialResource` para Evitar N+1",
+            "description": "Otimizar a consulta de credenciais no Filament Resource, implementando eager loading para a relação `user` para prevenir o problema de queries N+1.",
+            "dependencies": [],
+            "details": "Sobrescrever o método `getEloquentQuery()` na classe `app/Filament/Resources/CredentialResource.php` e adicionar `->with(['user'])` à query para carregar a relação `user` antecipadamente.",
+            "status": "pending",
+            "testStrategy": "Usar uma ferramenta como Laravel Telescope ou Laravel Debugbar para monitorar as queries executadas na página de listagem de `CredentialResource` e confirmar que o número de queries ao banco de dados foi reduzido para um valor constante.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Implementar Detecção Automática de Queries N+1 e Lentas",
+            "description": "Adicionar um listener de queries no `AppServiceProvider` que, em ambiente local, detecta e loga queries lentas (> 100ms) para ajudar na identificação de gargalos de performance.",
+            "dependencies": [],
+            "details": "No método `boot()` de `app/Providers/AppServiceProvider.php`, adicionar um `DB::listen()` que verifica a duração de cada query. Se `app()->environment('local')` for verdadeiro e a query demorar mais de 100ms, registrar um aviso no log.",
+            "status": "pending",
+            "testStrategy": "Criar uma query artificialmente lenta (ex: com `sleep()`) em uma rota de teste. Acessar a rota em ambiente local e verificar se o aviso de 'Slow query detected' é registrado no arquivo `laravel.log`.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 8,
+            "title": "Criar Arquivo de Exemplo para Ambiente de Produção (`.env.production.example`)",
+            "description": "Preparar um arquivo `.env.production.example` com configurações seguras e otimizadas para um ambiente de produção, incluindo desativar debug e usar Redis para cache, filas e sessões.",
+            "dependencies": [
+              5
+            ],
+            "details": "Criar o arquivo `.env.production.example` e definir `APP_ENV=production`, `APP_DEBUG=false`, placeholders para o banco de dados de produção, e configurar `CACHE_DRIVER`, `QUEUE_CONNECTION`, e `SESSION_DRIVER` para `redis`.",
+            "status": "pending",
+            "testStrategy": "Copiar `.env.production.example` para `.env` em um ambiente de teste, preencher os placeholders e verificar se a aplicação inicia corretamente com as configurações de produção.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 9,
+            "title": "Implementar Endpoint de Health Check e Realizar Teste E2E do Pipeline",
+            "description": "Criar uma rota `/health` que verifica o status da aplicação, incluindo a conexão com o banco de dados e o cache. Realizar um teste completo do pipeline de CI/CD para garantir a integração.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              5,
+              8
+            ],
+            "details": "Adicionar a rota `GET /health` no arquivo `routes/web.php` que retorna um JSON com o status da aplicação, do banco de dados e do cache. Após configurar tudo, fazer um PR para a `main` para acionar o pipeline completo.",
+            "status": "pending",
+            "testStrategy": "Acessar o endpoint `/health` e verificar se a resposta é um JSON com `status: ok`. Verificar se o pipeline completo do GitHub Actions passa com sucesso, incluindo testes e linting.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "title": "FASE 7: Manutenção e Monitoramento - Logs, Metrics e Backup",
+        "description": "Implementar sistema de logging estruturado, configurar monitoramento de métricas (response time, queries), criar rotina automatizada de backup do banco de dados e implementar alertas para credenciais expirando.",
+        "details": "1. **Configurar Logging Estruturado**:\n\n   Atualizar `config/logging.php`:\n   ```php\n   'channels' => [\n       'daily' => [\n           'driver' => 'daily',\n           'path' => storage_path('logs/laravel.log'),\n           'level' => env('LOG_LEVEL', 'debug'),\n           'days' => 14,\n       ],\n       \n       'security' => [\n           'driver' => 'daily',\n           'path' => storage_path('logs/security.log'),\n           'level' => 'warning',\n           'days' => 90, // Manter logs de segurança por mais tempo\n       ],\n       \n       'audit' => [\n           'driver' => 'daily',\n           'path' => storage_path('logs/audit.log'),\n           'level' => 'info',\n           'days' => 365, // Auditoria por 1 ano\n       ],\n   ];\n   ```\n\n   Criar Middleware de Auditoria:\n   ```php\n   <?php\n   namespace App\\Http\\Middleware;\n   \n   use Closure;\n   use Illuminate\\Support\\Facades\\Log;\n   \n   class AuditMiddleware\n   {\n       public function handle($request, Closure $next)\n       {\n           $response = $next($request);\n           \n           if ($request->user()) {\n               Log::channel('audit')->info('User action', [\n                   'user_id' => $request->user()->id,\n                   'email' => $request->user()->email,\n                   'action' => $request->method(),\n                   'url' => $request->fullUrl(),\n                   'ip' => $request->ip(),\n               ]);\n           }\n           \n           return $response;\n       }\n   }\n   ```\n\n2. **Implementar Monitoramento de Métricas**:\n\n   Criar comando para coletar métricas:\n   ```bash\n   vendor/bin/sail artisan make:command CollectMetrics\n   ```\n   ```php\n   <?php\n   namespace App\\Console\\Commands;\n   \n   use App\\Models\\Credential;\n   use App\\Models\\User;\n   use Illuminate\\Console\\Command;\n   use Illuminate\\Support\\Facades\\DB;\n   \n   class CollectMetrics extends Command\n   {\n       protected $signature = 'metrics:collect';\n       protected $description = 'Coleta métricas do sistema';\n       \n       public function handle()\n       {\n           $metrics = [\n               'timestamp' => now()->toIso8601String(),\n               'credentials' => [\n                   'total' => Credential::count(),\n                   'expired' => Credential::where('validity', '<', now())->count(),\n                   'expiring_soon' => Credential::whereBetween('validity', [\n                       now(),\n                       now()->addDays(30),\n                   ])->count(),\n               ],\n               'users' => [\n                   'total' => User::count(),\n                   'active_today' => DB::table('activity_logs')\n                       ->whereDate('created_at', today())\n                       ->distinct('user_id')\n                       ->count(),\n               ],\n               'database' => [\n                   'size_mb' => DB::select(\n                       \"SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) as size \n                       FROM information_schema.tables \n                       WHERE table_schema = ?\",\n                       [config('database.connections.mysql.database')]\n                   )[0]->size ?? 0,\n               ],\n           ];\n           \n           // Salvar em arquivo JSON\n           $metricsPath = storage_path('metrics');\n           if (!file_exists($metricsPath)) {\n               mkdir($metricsPath, 0755, true);\n           }\n           \n           file_put_contents(\n               $metricsPath . '/metrics_' . now()->format('Y-m-d') . '.json',\n               json_encode($metrics, JSON_PRETTY_PRINT)\n           );\n           \n           $this->info('Métricas coletadas com sucesso!');\n       }\n   }\n   ```\n\n3. **Criar Rotina de Backup Automatizado**:\n\n   Criar comando de backup:\n   ```bash\n   vendor/bin/sail artisan make:command BackupDatabase\n   ```\n   ```php\n   <?php\n   namespace App\\Console\\Commands;\n   \n   use Illuminate\\Console\\Command;\n   use Illuminate\\Support\\Facades\\Storage;\n   \n   class BackupDatabase extends Command\n   {\n       protected $signature = 'db:backup {--keep=7}';\n       protected $description = 'Cria backup do banco de dados';\n       \n       public function handle()\n       {\n           $filename = 'backup_' . now()->format('Y-m-d_H-i-s') . '.sql';\n           $path = storage_path('app/backups');\n           \n           if (!file_exists($path)) {\n               mkdir($path, 0755, true);\n           }\n           \n           $database = config('database.connections.mysql.database');\n           $username = config('database.connections.mysql.username');\n           $password = config('database.connections.mysql.password');\n           $host = config('database.connections.mysql.host');\n           \n           $command = sprintf(\n               'mysqldump -h%s -u%s -p%s %s > %s',\n               escapeshellarg($host),\n               escapeshellarg($username),\n               escapeshellarg($password),\n               escapeshellarg($database),\n               escapeshellarg($path . '/' . $filename)\n           );\n           \n           exec($command, $output, $returnVar);\n           \n           if ($returnVar === 0) {\n               $this->info(\"Backup criado: {$filename}\");\n               $this->cleanOldBackups($path, $this->option('keep'));\n           } else {\n               $this->error('Erro ao criar backup!');\n           }\n       }\n       \n       private function cleanOldBackups(string $path, int $keep): void\n       {\n           $files = glob($path . '/backup_*.sql');\n           usort($files, fn($a, $b) => filemtime($b) - filemtime($a));\n           \n           $toDelete = array_slice($files, $keep);\n           foreach ($toDelete as $file) {\n               unlink($file);\n               $this->info(\"Backup antigo removido: \" . basename($file));\n           }\n       }\n   }\n   ```\n\n4. **Implementar Alertas de Credenciais Expirando**:\n\n   Criar comando de notificação:\n   ```bash\n   vendor/bin/sail artisan make:command NotifyExpiringCredentials\n   ```\n   ```php\n   <?php\n   namespace App\\Console\\Commands;\n   \n   use App\\Models\\Credential;\n   use Illuminate\\Console\\Command;\n   use Illuminate\\Support\\Facades\\Log;\n   \n   class NotifyExpiringCredentials extends Command\n   {\n       protected $signature = 'credentials:notify-expiring';\n       protected $description = 'Notifica sobre credenciais expirando';\n       \n       public function handle()\n       {\n           $expiring = Credential::whereBetween('validity', [\n               now(),\n               now()->addDays(30),\n           ])->with('user')->get();\n           \n           if ($expiring->isEmpty()) {\n               $this->info('Nenhuma credencial expirando nos próximos 30 dias.');\n               return;\n           }\n           \n           $this->warn(\"⚠️  {$expiring->count()} credenciais expirando:\");\n           \n           foreach ($expiring as $credential) {\n               $daysLeft = now()->diffInDays($credential->validity);\n               $message = \"- {$credential->fscs}: {$credential->name} (expira em {$daysLeft} dias)\";\n               \n               $this->line($message);\n               \n               Log::channel('security')->warning('Credencial expirando', [\n                   'fscs' => $credential->fscs,\n                   'name' => $credential->name,\n                   'validity' => $credential->validity,\n                   'days_left' => $daysLeft,\n                   'user' => $credential->user?->name,\n               ]);\n           }\n       }\n   }\n   ```\n\n5. **Agendar Comandos no Scheduler**:\n\n   Atualizar `app/Console/Kernel.php`:\n   ```php\n   protected function schedule(Schedule $schedule): void\n   {\n       // Backup diário às 2h da manhã\n       $schedule->command('db:backup --keep=30')\n           ->dailyAt('02:00')\n           ->onFailure(function () {\n               Log::channel('security')->error('Falha no backup automático');\n           });\n       \n       // Coletar métricas a cada hora\n       $schedule->command('metrics:collect')\n           ->hourly();\n       \n       // Notificar credenciais expirando (diariamente às 9h)\n       $schedule->command('credentials:notify-expiring')\n           ->dailyAt('09:00');\n   }\n   ```\n\n6. **Criar Dashboard de Métricas (Opcional)**:\n\n   Criar página Filament para visualizar métricas:\n   ```bash\n   vendor/bin/sail artisan make:filament-page MetricsDashboard\n   ```",
+        "testStrategy": "1. **Teste de Logging**:\n   ```bash\n   vendor/bin/sail artisan tinker\n   ```\n   ```php\n   Log::channel('security')->warning('Teste de segurança');\n   Log::channel('audit')->info('Teste de auditoria');\n   ```\n   - Verificar arquivos criados:\n   ```bash\n   ls -la storage/logs/\n   ```\n\n2. **Teste de Coleta de Métricas**:\n   ```bash\n   vendor/bin/sail artisan metrics:collect\n   cat storage/metrics/metrics_$(date +%Y-%m-%d).json\n   ```\n   - Verificar JSON com dados corretos\n\n3. **Teste de Backup**:\n   ```bash\n   vendor/bin/sail artisan db:backup\n   ls -la storage/app/backups/\n   ```\n   - Verificar que arquivo .sql foi criado\n   - Testar restauração:\n   ```bash\n   mysql -u sail -p cred_crud < storage/app/backups/backup_*.sql\n   ```\n\n4. **Teste de Alertas**:\n   ```bash\n   # Criar credencial expirando\n   vendor/bin/sail artisan tinker --execute=\"Credential::factory()->expiringSoon()->create();\"\n   vendor/bin/sail artisan credentials:notify-expiring\n   ```\n   - Verificar output no terminal\n   - Verificar log em storage/logs/security.log\n\n5. **Teste de Scheduler**:\n   ```bash\n   vendor/bin/sail artisan schedule:list\n   ```\n   - Confirmar que comandos estão agendados\n   ```bash\n   vendor/bin/sail artisan schedule:test\n   ```\n\n6. **Teste de Limpeza de Backups Antigos**:\n   ```bash\n   # Criar múltiplos backups\n   for i in {1..10}; do vendor/bin/sail artisan db:backup; sleep 1; done\n   vendor/bin/sail artisan db:backup --keep=3\n   ls -la storage/app/backups/ | wc -l # Deve ser 3\n   ```\n\n7. **Monitoramento Contínuo**:\n   - Configurar cron para executar scheduler:\n   ```bash\n   * * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1\n   ```",
+        "priority": "medium",
+        "dependencies": [
+          "5",
+          "6"
+        ],
+        "status": "pending",
+        "complexity": 6,
+        "recommendedSubtasks": 8,
+        "expansionPrompt": "Dividir em: (1) Configurar canais de logging estruturado (daily, security, audit) no config/logging.php; (2) Criar AuditMiddleware para logging de ações de usuários; (3) Criar comando CollectMetrics para coletar métricas do sistema; (4) Criar comando BackupDatabase com limpeza automática de backups antigos; (5) Criar comando NotifyExpiringCredentials para alertas; (6) Agendar todos os comandos no Console/Kernel.php com Schedule; (7) Testar execução de todos os comandos e verificar logs/outputs; (8) Documentar rotinas de manutenção e monitoramento.",
+        "updatedAt": "2025-11-20T00:00:00.000Z",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configurar Canais de Logging Estruturado (daily, security, audit)",
+            "description": "Atualizar o arquivo `config/logging.php` para incluir três canais de log distintos: 'daily' para logs gerais, 'security' para avisos de segurança e 'audit' para trilhas de auditoria, cada um com sua própria política de retenção.",
+            "dependencies": [],
+            "details": "Adicionar as configurações dos canais 'daily', 'security', e 'audit' no array `channels` dentro de `config/logging.php`, conforme o código fornecido na tarefa pai, ajustando os dias de retenção para cada um.",
+            "status": "pending",
+            "testStrategy": "Verificar a criação dos arquivos de log em `storage/logs/` após disparar eventos de log para cada canal usando `php artisan tinker`. Exemplo: `Log::channel('security')->warning('Teste de segurança');` e `Log::channel('audit')->info('Teste de auditoria');`",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Criar e Registrar o Middleware de Auditoria de Ações do Usuário",
+            "description": "Desenvolver um middleware (`AuditMiddleware`) que registra as ações dos usuários autenticados no canal de log 'audit'. O middleware deve ser aplicado às rotas relevantes para capturar a atividade do usuário.",
+            "dependencies": [
+              1
+            ],
+            "details": "Criar o arquivo `app/Http/Middleware/AuditMiddleware.php` com a lógica para registrar `user_id`, `email`, `action`, `url` e `ip`. Registrar o middleware no `app/Http/Kernel.php` para ser aplicado globalmente ou em grupos de rotas específicos.",
+            "status": "pending",
+            "testStrategy": "Após aplicar o middleware, navegar por páginas protegidas por autenticação, realizar algumas ações (visualizar, criar, editar) e verificar se as ações são registradas corretamente com todos os detalhes no arquivo `storage/logs/audit.log`.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implementar o Comando Artisan `metrics:collect`",
+            "description": "Criar um comando Artisan que coleta métricas chave do sistema, como contagem de usuários, contagem de credenciais (total, expiradas, expirando em breve) e o tamanho do banco de dados. As métricas devem ser salvas em um arquivo JSON diário.",
+            "dependencies": [],
+            "details": "Gerar o comando `CollectMetrics` usando `artisan make:command`. Implementar a lógica para buscar dados dos models `User` e `Credential` e consultar o `information_schema` para o tamanho do banco. Salvar a saída em `storage/metrics/metrics_YYYY-MM-DD.json`.",
+            "status": "pending",
+            "testStrategy": "Executar o comando `php artisan metrics:collect` e verificar se o arquivo JSON é criado em `storage/metrics/` com a estrutura e os dados corretos e consistentes com o estado atual do banco de dados.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implementar o Comando Artisan `db:backup` para Backup do Banco de Dados",
+            "description": "Desenvolver um comando Artisan que realiza um backup completo do banco de dados MySQL usando `mysqldump`. O comando deve também incluir uma funcionalidade para limpar backups antigos, mantendo um número configurável de cópias.",
+            "dependencies": [],
+            "details": "Gerar o comando `BackupDatabase` com a opção `--keep`. A lógica deve construir e executar o comando `mysqldump` com as credenciais do banco de dados. Implementar a função `cleanOldBackups` para gerenciar a rotação dos arquivos de backup em `storage/app/backups/`.",
+            "status": "pending",
+            "testStrategy": "Executar `php artisan db:backup --keep=3`. Verificar se o arquivo de backup `.sql` foi criado em `storage/app/backups/`. Executar o comando quatro vezes para garantir que o backup mais antigo é removido corretamente.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Implementar o Comando Artisan `credentials:notify-expiring`",
+            "description": "Criar um comando Artisan que verifica o banco de dados por credenciais que estão prestes a expirar (nos próximos 30 dias) e gera um log de aviso no canal 'security' para cada uma, além de exibir um resumo no console.",
+            "dependencies": [
+              1
+            ],
+            "details": "Gerar o comando `NotifyExpiringCredentials`. Implementar a query que busca credenciais com a data de `validity` entre `now()` e `now()->addDays(30)`. Para cada credencial encontrada, registrar um `Log::channel('security')->warning(...)` com os detalhes.",
+            "status": "pending",
+            "testStrategy": "Criar no banco de dados algumas credenciais de teste que expiram em 5, 15 e 29 dias. Executar `php artisan credentials:notify-expiring` e verificar tanto o output no console quanto as entradas de log detalhadas no arquivo `storage/logs/security.log`.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Agendar a Execução dos Comandos de Manutenção no `Console/Kernel.php`",
+            "description": "Configurar o Agendador de Tarefas (Scheduler) do Laravel para executar automaticamente os comandos `db:backup`, `metrics:collect`, e `credentials:notify-expiring` em intervalos definidos (diário, de hora em hora, etc.).",
+            "dependencies": [
+              3,
+              4,
+              5
+            ],
+            "details": "Editar o método `schedule` em `app/Console/Kernel.php`. Adicionar agendamentos para: `db:backup --keep=30` (diário às 02:00), `metrics:collect` (de hora em hora), e `credentials:notify-expiring` (diário às 09:00). Incluir tratamento de falha para o backup.",
+            "status": "pending",
+            "testStrategy": "Para testar, pode-se alterar temporariamente as frequências para `everyMinute()`. Executar `php artisan schedule:run` e verificar (usando `tail -f storage/logs/laravel.log`) se os comandos são disparados e se os logs/arquivos correspondentes são gerados conforme o esperado.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Testar a Execução e Integração de Todos os Novos Comandos e Fluxos",
+            "description": "Realizar um teste ponta-a-ponta para garantir que todos os comandos funcionam como esperado, que os logs são gerados corretamente, os backups são criados e rotacionados, as métricas são coletadas e as notificações são disparadas.",
+            "dependencies": [
+              2,
+              6
+            ],
+            "details": "Executar cada comando manualmente (`db:backup`, `metrics:collect`, `credentials:notify-expiring`) e verificar os artefatos gerados. Simular uma ação de usuário para testar o `AuditMiddleware`. Executar `schedule:run` para testar o agendamento em conjunto.",
+            "status": "pending",
+            "testStrategy": "Seguir um roteiro de teste: 1. Fazer login e navegar para gerar logs de auditoria. 2. Executar `metrics:collect` e inspecionar o JSON. 3. Executar `db:backup` e verificar o arquivo SQL. 4. Executar `credentials:notify-expiring` e verificar o log de segurança. 5. Verificar se `schedule:run` aciona os comandos.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 8,
+            "title": "Documentar as Novas Rotinas de Manutenção e Monitoramento",
+            "description": "Criar uma documentação no `README.md` ou em um wiki do projeto detalhando os novos comandos, o que eles fazem, como são agendados, a estrutura dos logs e onde encontrar os backups e métricas.",
+            "dependencies": [
+              7
+            ],
+            "details": "Descrever a finalidade de cada canal de log, a estrutura dos logs de auditoria e segurança. Explicar como executar manualmente os comandos (`db:backup`, `metrics:collect`) e como restaurar um backup. Listar a programação das tarefas configurada no Scheduler.",
+            "status": "pending",
+            "testStrategy": "Revisão por pares da documentação para garantir que ela seja clara, completa e útil para um novo desenvolvedor que se junte ao projeto ou para a equipe de operações responsável pela manutenção do sistema.",
+            "parentId": "undefined"
+          }
+        ]
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-19T20:03:25.493Z",
-      "taskCount": 12,
-      "completedCount": 3,
+      "lastModified": "2025-11-21T02:43:29.470Z",
+      "taskCount": 7,
+      "completedCount": 2,
       "tags": [
         "master"
       ]

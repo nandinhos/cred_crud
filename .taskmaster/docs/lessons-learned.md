@@ -180,6 +180,20 @@ docker-compose exec laravel.test php artisan db:seed --class=AdminUserSeeder
 
 ---
 
+### ❌ ERRO: Falha de Conexão do MCP com Banco Docker
+**Problema:** Ferramenta MCP `database-schema` falha ao conectar com host `mysql`.
+
+**Causa:** O servidor MCP roda fora da rede Docker e não consegue resolver o hostname do container.
+
+**✅ SOLUÇÃO:**
+- Usar `vendor/bin/sail artisan schema:dump` para gerar arquivo SQL.
+- Ler o arquivo `database/schema/mysql-schema.sql` diretamente.
+- Para queries diretas, usar `vendor/bin/sail artisan tinker`.
+
+**Lição:** Em ambientes Dockerizados, preferir ferramentas que operam via CLI do container (Sail) ou leitura de arquivos gerados.
+
+---
+
 ## 🔄 Migrações e Atualizações
 
 ### Laravel 10 → Laravel 12

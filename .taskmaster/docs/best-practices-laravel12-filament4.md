@@ -74,13 +74,31 @@ class User extends Authenticatable implements FilamentUser
     
     public function canAccessPanel(Panel $panel): bool
     {
-        // Sempre verificar admin principal primeiro
+        // 1. Acesso Global ao Painel
         if ($this->email === 'admin@admin.com') {
             return true;
         }
         
-        return $this->hasRole('super_admin') || $this->hasRole('admin');
+        return $this->hasRole(['super_admin', 'admin', 'consulta']);
     }
+}
+```
+
+### Authorization Patterns (Policy vs canAccess)
+- **canAccessPanel (User Model)**: Controla quem pode *logar* no painel admin.
+- **Policies (App\Policies)**: Controla *o que* o usuário pode fazer com cada Resource (view, create, update, delete).
+- **Spatie Permissions**: Usado dentro das Policies para verificar roles/permissions.
+
+**Exemplo de Policy:**
+```php
+public function viewAny(User $user): bool
+{
+    return $user->hasPermissionTo('view_any_credential');
+}
+
+public function create(User $user): bool
+{
+    return $user->hasPermissionTo('create_credential');
 }
 ```
 
@@ -298,10 +316,55 @@ php artisan route:cache
 ## 🧪 Testes e Deployment
 
 ### Testes Essenciais
-```bash
-# Verificar se sistema está funcional
-php artisan route:list --name=filament
-php artisan tinker --execute="echo 'Laravel: ' . app()->version();"
+### Testes com Pest PHP
+**Estrutura Básica:**
+```php
+// tests/Feature/CredentialTest.php
+
+use App\Models\User;
+use App\Filament\Resources\CredentialResource;
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
+
+it('can render credential list page', function () {
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    actingAs($user)
+        ->get(CredentialResource::getUrl('index'))
+        ->assertSuccessful();
+});
+
+it('cannot access credentials without permission', function () {
+    $user = User::factory()->create();
+    // Sem role atribuída
+
+    actingAs($user)
+        ->get(CredentialResource::getUrl('index'))
+        ->assertForbidden();
+});
+```
+
+### Factories e Seeders
+**Factory Pattern:**
+```php
+// database/factories/CredentialFactory.php
+public function definition(): array
+{
+    return [
+        'fscs' => $this->faker->unique()->bothify('??###'),
+        'name' => $this->faker->company(),
+        'secrecy' => $this->faker->randomElement(['R', 'S']),
+        'validity' => $this->faker->dateTimeBetween('now', '+1 year'),
+    ];
+}
+```
+
+**Uso em Testes:**
+```php
+$credential = Credential::factory()->create([
+    'secrecy' => 'S'
+]);
 ```
 
 ### Backup antes de Alterações

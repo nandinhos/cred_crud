@@ -6,6 +6,7 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -16,16 +17,20 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $name
  * @property string $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
- * @property mixed $password
+ * @property string $password
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Credential> $credentials
  * @property-read int|null $credentials_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Role> $roles
+ * @property-read int|null $roles_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property-read int|null $permissions_count
  */
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -49,31 +54,31 @@ class User extends Authenticatable implements FilamentUser
     ];
 
     /**
-     * The attributes that should be cast.
+     * Get the attributes that should be cast.
      *
-     * @var array<string, string>
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {
         // Permitir acesso ao admin principal sempre
-        if ($this->email === 'admin@admin.com') {
+        if ($this->email === config('auth.super_admin_email')) {
             return true;
         }
-        
-        // Verificar se o usuário tem qualquer um dos roles autorizados
-        return $this->hasRole('super_admin') || $this->hasRole('admin') || $this->hasRole('consulta');
-    }
 
+        // Verificar se o usuário tem qualquer um dos roles autorizados
+        return $this->hasRole(['super_admin', 'admin', 'consulta']);
+    }
 
     /**
      * Verificar se o usuário é administrador
-     * 
-     * @return bool
      */
     public function isAdmin(): bool
     {
@@ -82,19 +87,19 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Verificar se o usuário tem apenas permissão de consulta
-     * 
-     * @return bool
      */
     public function isConsulta(): bool
     {
-        return $this->hasRole('consulta') && !$this->isAdmin();
+        return $this->hasRole('consulta') && ! $this->isAdmin();
     }
 
     /**
      * Relacionamento com Credential
      * Um usuário pode ter muitas credenciais
+     *
+     * @return HasMany<Credential>
      */
-    public function credentials(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function credentials(): HasMany
     {
         return $this->hasMany(Credential::class);
     }

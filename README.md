@@ -8,6 +8,7 @@
     <img src="https://img.shields.io/badge/Laravel-12.39.0-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel">
     <img src="https://img.shields.io/badge/Filament-4.2.2-F59E0B?style=for-the-badge&logo=livewire&logoColor=white" alt="Filament">
     <img src="https://img.shields.io/badge/PHP-8.3+-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP">
+    <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL">
     <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
 </p>
 
@@ -43,6 +44,22 @@ cd cred_crud
 # 2. Executar setup automático
 chmod +x setup.sh
 ./setup.sh
+```
+
+### 🛠️ Instalação Manual (Via Sail)
+```bash
+# 1. Configurar ambiente
+cp .env.example .env
+
+# 2. Iniciar containers
+./vendor/bin/sail up -d
+
+# 3. Instalar dependências
+./vendor/bin/sail composer install
+./vendor/bin/sail npm install && ./vendor/bin/sail npm run build
+
+# 4. Banco de dados
+./vendor/bin/sail artisan migrate --seed
 ```
 
 ### 🌐 Acesso ao Sistema
@@ -162,6 +179,11 @@ docker-compose down && docker-compose up -d --build
 ```bash
 docker-compose exec laravel.test npm run build
 ```
+
+**Erro 403 Forbidden em /admin:**
+- Verifique se o usuário possui a role correta.
+- Tente acessar `/login-admin` diretamente.
+- Verifique o método `canAccessPanel` no User model.
 
 **Erro de permissões:**
 ```bash

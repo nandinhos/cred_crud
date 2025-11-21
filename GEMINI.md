@@ -1,0 +1,18 @@
+- Todos os commits devem ser em português.
+- Para toda e qualquer atividade ou ação que envolva a gestão de tarefas do projeto, utilize o Task Master.
+- Todas as intruções de como utilizar o Task Master estão disponíveis no arquivo .taskmaster/docs/taskmaster-commands.md.
+- Sempre que for iniciar uma nova tarefa, busque qual tarefa fazer utilizando o comando task-master next.
+- Sempre que iniciar, atualizar ou finalizar qualquer tarefa (ou sub-tarefa), utilize o comando task-master set-status --id=<id> --status=done.
+- Sempre verifique a estrutura do banco de dados no arquivo .taskmaster/docs/database_schema.md para que seja feita a implementação de forma correta.
+- O Status de uma tarefa Pai sempre deve refletir o Status de todas as suas sub-tarefas.
+- A cada alteração de status de tarefa ou subtarefa, realize testes unitários, verifique se está totalmente funcional e sendo positivo, faça o commit utilizando o padrão conventional commits.
+- Sistema é um projeto para funcionar em ambiente com laravel 12 e filament 4. Atente-se para as versões de cada framework e suas dependências.
+- Sempre que terminar uma tarefa, faça teste para ver se a pagina está funcionando corretamente.
+- Atente-se para manusear o banco de dados de forma correta, evitando modificar ou deletar dados importantes. 
+- Sempre que for realizar qualquer alteração no banco de dados, crie um backup antes de fazer qualquer modificação.
+- Para acessar o banco de dados, utilize sempre a documentação que versa sobre o tema (verifique as credenciais, o container em que ele está rodando, portas, database correto). Faça uma análise dos campos de cada tabela para mapear e ter assetividade no momento de trazer ou inserir dados.
+- Utilize sempre o MCP do Context 7 para manter a documentação atualizada.
+- Sempre que for criar uma nova task, faça o fluxo de  verificar a complexidade da tarefa e depois expandir a tarefa em sub-tarefas.
+- Sempre que tivermos falhas, após as verificações de como foram corrigidas, insira as informações no arquivo de lições aprendidas.
+- Sempre que tivermos falhas, consulte nas lições aprendidas se há algum problema similar para executar a correção já implementada anteriormente (visando totalmente produtividade e economia de uso de tokens)
+- sempre utilize as melhores praticas de programação verificando a documentação do laravel e filament através do MCP do Context 7.
