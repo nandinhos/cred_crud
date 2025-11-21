@@ -901,9 +901,10 @@
             "description": "Garantir que a propriedade `$fillable` no modelo `Credential` inclua todos os campos necessários para mass assignment e que a relação `belongsTo` com o modelo `User` esteja corretamente implementada.",
             "dependencies": [],
             "details": "Abra o arquivo `app/Models/Credential.php`. Verifique e atualize a propriedade `$fillable` para ser `['fscs', 'name', 'secrecy', 'credential', 'concession', 'validity', 'user_id']`. Adicione ou confirme que o método da relação `public function user() { return $this->belongsTo(User::class); }` existe e está correto.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Execute `php artisan tinker` e tente criar uma nova credencial usando `App\\Models\\Credential::create([...])` com todos os campos para confirmar que o mass assignment funciona sem lançar uma exceção.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:52:24.213Z"
           },
           {
             "id": 2,
@@ -913,9 +914,10 @@
               1
             ],
             "details": "Substitua o conteúdo do método `public static function form(Form $form): Form` pelo código-exemplo fornecido na tarefa. Isso irá adicionar componentes como `TextInput`, `Select` com opções, `DatePicker` e um `Select` de relacionamento para o usuário.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navegue até a página de criação/edição de uma credencial no painel Filament e verifique se todos os campos aparecem corretamente, com seus respectivos tipos (texto, senha, seletor, data) e validações, como o campo de senha ser obrigatório apenas na criação.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:52:26.512Z"
           },
           {
             "id": 3,
@@ -925,9 +927,10 @@
               1
             ],
             "details": "Substitua o conteúdo do método `public static function table(Table $table): Table` pelo código-exemplo da tarefa. Isso irá configurar colunas para `id`, `fscs`, `name`, `secrecy` (usando `BadgeColumn`), `concession`, `validity`, `user.name` e `created_at`, com funcionalidades de ordenação, busca e alternância de visibilidade.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Acesse a página de listagem de credenciais. Verifique se todas as colunas configuradas são exibidas e se a formatação (data, badge) está correta. Teste as funcionalidades de busca por nome e fscs, e a ordenação por diferentes colunas.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:52:28.574Z"
           },
           {
             "id": 4,
@@ -938,9 +941,10 @@
               3
             ],
             "details": "Acesse a funcionalidade 'Nova Credencial' no painel. Preencha todos os campos do formulário, incluindo os opcionais `concession` e `validity`. Submeta o formulário e verifique se o novo registro aparece na tabela de listagem com os dados corretos.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Após criar o registro pela UI, conecte-se ao banco de dados (via Tinker ou um cliente SQL) e inspecione o último registro na tabela `credentials` para confirmar que todos os valores foram persistidos exatamente como foram inseridos.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:52:30.832Z"
           },
           {
             "id": 5,
@@ -950,9 +954,10 @@
               4
             ],
             "details": "Na listagem de credenciais, clique para editar o registro criado no passo anterior. Altere valores em campos como `name`, `secrecy` e `validity`. Salve o formulário e confirme que as alterações são refletidas na tabela. Teste salvar sem preencher o campo `credential` para garantir que a senha não seja alterada.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verifique na interface e no banco de dados que os campos foram atualizados. Realize uma edição sem fornecer uma nova senha e tente fazer login (se aplicável) ou verifique o hash no banco para garantir que a senha antiga foi mantida.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:52:33.076Z"
           },
           {
             "id": 6,
@@ -962,12 +967,13 @@
               5
             ],
             "details": "Na listagem de credenciais, utilize a ação de exclusão em um registro de teste. Confirme que o registro é removido da interface. Verifique se a coluna 'Usuário' na tabela e o campo 'Usuário Associado' no formulário exibem corretamente o nome do usuário, testando a relação Eloquent.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirme que a exclusão funciona e o registro desaparece da lista. Verifique se a busca pelo nome do usuário na listagem de credenciais filtra os resultados corretamente, validando a configuração `searchable()` na coluna do relacionamento.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:52:35.388Z"
           }
         ],
-        "updatedAt": "2025-11-21T03:36:18.986Z"
+        "updatedAt": "2025-11-21T06:52:35.388Z"
       },
       {
         "id": "10",
@@ -1351,7 +1357,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-21T06:09:12.449Z",
+      "lastModified": "2025-11-21T06:52:35.390Z",
       "taskCount": 13,
       "completedCount": 9,
       "tags": [
