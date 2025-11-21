@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\BadgeColor;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -172,13 +173,7 @@ class UserResource extends Resource
                 TextColumn::make('roles.name')
                     ->label('Perfis')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'super_admin' => 'danger',
-                        'admin' => 'warning',
-                        'operador' => 'success',
-                        'consulta' => 'primary',
-                        default => 'gray',
-                    })
+                    ->color(fn (string $state): string => BadgeColor::forRole($state))
                     ->separator(', '),
 
                 TextColumn::make('credentials_count')

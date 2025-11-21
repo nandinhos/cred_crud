@@ -37,12 +37,13 @@ enum BadgeColor: string
     /**
      * Retorna cor para nível de sigilo
      *
-     * @param  string  $secrecy  Nível de sigilo (R ou S)
+     * @param  string  $secrecy  Nível de sigilo (AR, R ou S)
      * @return string Cor do badge
      */
     public static function forSecrecy(string $secrecy): string
     {
         return match ($secrecy) {
+            'AR' => self::Info->value,
             'R' => self::Success->value,
             'S' => self::Danger->value,
             default => self::Gray->value,

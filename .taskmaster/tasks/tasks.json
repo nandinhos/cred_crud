@@ -300,11 +300,11 @@
           "1",
           "2"
         ],
-        "status": "pending",
+        "status": "done",
         "complexity": 3,
         "recommendedSubtasks": 5,
         "expansionPrompt": "Separar em: (1) Criar o enum BadgeColor com todos os cases e métodos estáticos (forRole, forSecrecy, forValidity); (2) Refatorar a classe CredentialsTable para usar os métodos do enum BadgeColor; (3) Refatorar a classe UsersTable para usar o método forRole do enum; (4) Implementar a suite de testes unitários para o enum BadgeColor, garantindo 100% de cobertura de seus métodos; (5) Adicionar a documentação de uso do enum no arquivo CLAUDE.md.",
-        "updatedAt": "2025-11-20T00:00:00.000Z",
+        "updatedAt": "2025-11-21T19:55:15.526Z",
         "subtasks": [
           {
             "id": 1,
@@ -312,9 +312,10 @@
             "description": "Criar arquivo app/Enums/BadgeColor.php com enum backed string contendo cases (SUCCESS, WARNING, DANGER, INFO, PRIMARY, SECONDARY) e métodos estáticos forRole(), forSecrecy() e forValidity() para centralizar lógica de cores de badges.",
             "dependencies": [],
             "details": "Criar diretório app/Enums e implementar enum BadgeColor: string com 6 cases de cores. Implementar método forRole() usando match para mapear roles (super_admin->DANGER, admin->WARNING, operador->INFO, consulta->SUCCESS, default->SECONDARY). Implementar método forSecrecy() para mapear S->DANGER e R->WARNING. Implementar método forValidity() recebendo Carbon date, verificando se é passado (DANGER), expirando em 30 dias (WARNING) ou válido (SUCCESS). Adicionar DocBlocks em todos os métodos.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan tinker --execute=\"echo class_exists('\\\\App\\\\Enums\\\\BadgeColor') ? 'OK' : 'ERRO';\" para verificar se enum foi criado. Testar métodos estáticos manualmente no tinker verificando retornos corretos para cada caso.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T19:42:36.142Z"
           },
           {
             "id": 2,
@@ -324,9 +325,10 @@
               1
             ],
             "details": "Adicionar use App\\Enums\\BadgeColor no topo do arquivo. Na coluna secrecy, modificar o método color() para usar fn ($record) => BadgeColor::forSecrecy($record->secrecy)->value. Na coluna validity, modificar o método color() para usar fn ($record) => BadgeColor::forValidity($record->validity)->value. Remover qualquer lógica inline de match ou condicionais para cores que estava anteriormente no arquivo. Manter formatStateUsing e demais configurações intactas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Acessar http://localhost/admin/credentials e verificar visualmente que os badges de Sigilo e Validade mantêm as mesmas cores de antes da refatoração. Testar com diferentes registros (S vs R, expirados vs válidos vs expirando).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T19:43:10.866Z"
           },
           {
             "id": 3,
@@ -336,9 +338,10 @@
               1
             ],
             "details": "Adicionar use App\\Enums\\BadgeColor no início do arquivo UsersTable.php. Localizar a coluna TextColumn::make('roles.name') e modificar o método color() para usar fn ($state) => BadgeColor::forRole($state)->value. Remover qualquer lógica inline anterior de cores baseada em roles. Verificar que o formatStateUsing está preservado para manter a formatação uppercase das roles.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Acessar http://localhost/admin/users e verificar visualmente que os badges de roles mantêm cores consistentes (super_admin vermelho, admin amarelo, operador azul, consulta verde). Testar com usuários de diferentes roles para validar todas as variações.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T19:43:31.998Z"
           },
           {
             "id": 4,
@@ -348,9 +351,10 @@
               1
             ],
             "details": "Criar arquivo tests/Unit/BadgeColorEnumTest.php usando sintaxe Pest. Implementar 6+ testes: (1) forRole retorna DANGER para super_admin, (2) forRole retorna WARNING para admin, (3) forSecrecy retorna DANGER para S, (4) forSecrecy retorna WARNING para R, (5) forValidity retorna DANGER para data passada, (6) forValidity retorna WARNING para data em 15 dias, (7) forValidity retorna SUCCESS para data em 1 ano. Usar Carbon para manipular datas nos testes. Adicionar testes de edge cases como null values.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Unit/BadgeColorEnumTest.php e verificar que todos os testes passam. Validar cobertura de 100% dos métodos públicos do enum. Confirmar que testes falham quando lógica é alterada propositalmente.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T19:53:56.732Z"
           },
           {
             "id": 5,
@@ -363,9 +367,10 @@
               4
             ],
             "details": "Adicionar nova seção '### Badge Color Centralization' no CLAUDE.md após a seção de Filament 4 Specific Patterns. Documentar os 3 métodos estáticos com exemplos de código: BadgeColor::forRole('super_admin'), BadgeColor::forSecrecy('S'), BadgeColor::forValidity($date). Incluir tabela de mapeamento role->cor e secrecy->cor. Adicionar nota sobre quando usar .value para obter string. Incluir exemplo de uso em TextColumn do Filament. Mencionar localização do arquivo de testes para referência.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Revisar CLAUDE.md para confirmar que a documentação está clara, completa e com exemplos funcionais. Validar que os code snippets estão corretos e podem ser copiados diretamente. Pedir feedback de outro desenvolvedor sobre clareza da documentação.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T19:55:15.526Z"
           }
         ]
       },
@@ -1357,9 +1362,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-21T06:52:35.390Z",
+      "lastModified": "2025-11-21T19:55:15.527Z",
       "taskCount": 13,
-      "completedCount": 9,
+      "completedCount": 10,
       "tags": [
         "master"
       ]

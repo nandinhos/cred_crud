@@ -100,13 +100,34 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Relacionamento com Credential
-     * Um usuário pode ter muitas credenciais
+     * Um usuário pode ter muitas credenciais (incluindo histórico)
      *
      * @return HasMany<Credential>
      */
     public function credentials(): HasMany
     {
         return $this->hasMany(Credential::class);
+    }
+
+    /**
+     * Retorna apenas a credencial ativa (não deletada) do usuário
+     * Cada usuário deve ter apenas UMA credencial ativa por vez
+     *
+     * @return HasMany<Credential>
+     */
+    public function activeCredential(): HasMany
+    {
+        return $this->hasMany(Credential::class)->whereNull('deleted_at');
+    }
+
+    /**
+     * Retorna o histórico de credenciais (incluindo deletadas)
+     *
+     * @return HasMany<Credential>
+     */
+    public function credentialHistory(): HasMany
+    {
+        return $this->hasMany(Credential::class)->withTrashed()->orderBy('created_at', 'desc');
     }
 
     /**

@@ -17,6 +17,10 @@ test('forType retorna gray para tipo desconhecido', function () {
     expect(BadgeColor::forType('UNKNOWN'))->toBe('gray');
 });
 
+test('forSecrecy retorna cor correta para Acesso Restrito', function () {
+    expect(BadgeColor::forSecrecy('AR'))->toBe('info');
+});
+
 test('forSecrecy retorna cor correta para Reservado', function () {
     expect(BadgeColor::forSecrecy('R'))->toBe('success');
 });

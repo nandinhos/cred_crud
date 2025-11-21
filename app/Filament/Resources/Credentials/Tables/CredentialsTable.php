@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Credentials\Tables;
 
+use App\Enums\BadgeColor;
 use App\Filament\Resources\Credentials\Pages;
 use App\Models\Credential;
 use Filament\Actions\Action;
@@ -36,11 +37,7 @@ class CredentialsTable
                 Tables\Columns\TextColumn::make('type')
                     ->label('Tipo')
                     ->badge()
-                    ->color(fn ($state): string => match ($state->value ?? $state) {
-                        'CRED' => 'info',
-                        'TCMS' => 'warning',
-                        default => 'gray'
-                    })
+                    ->color(fn ($state): string => BadgeColor::forType($state->value ?? $state))
                     ->formatStateUsing(function ($state) {
                         return is_object($state) ? $state->value : $state;
                     })
@@ -58,11 +55,7 @@ class CredentialsTable
                 Tables\Columns\TextColumn::make('secrecy')
                     ->label('Sigilo')
                     ->badge()
-                    ->color(fn ($state): string => match ($state->value ?? $state) {
-                        'R' => 'success',
-                        'S' => 'danger',
-                        default => 'gray'
-                    })
+                    ->color(fn ($state): string => BadgeColor::forSecrecy($state->value ?? $state))
                     ->formatStateUsing(function ($state) {
                         if (is_object($state) && method_exists($state, 'label')) {
                             return $state->label();
@@ -101,21 +94,7 @@ class CredentialsTable
                     ->label('Validade')
                     ->date('d/m/Y')
                     ->sortable()
-                    ->color(function ($state) {
-                        if (! $state) {
-                            return 'gray';
-                        }
-                        $validity = \Carbon\Carbon::parse($state);
-                        $now = now();
-
-                        if ($validity->isPast()) {
-                            return 'danger';
-                        } elseif ($validity->diffInDays($now) <= 30) {
-                            return 'warning';
-                        }
-
-                        return 'success';
-                    })
+                    ->color(fn ($state) => BadgeColor::forValidity($state ? \Carbon\Carbon::parse($state) : null))
                     ->icon(function ($state) {
                         if (! $state) {
                             return null;
