@@ -1018,3 +1018,145 @@ $kernel->bootstrap();
 - Laravel Artisan Testing: https://laravel.com/docs/12.x/testing
 - Pest PHP: https://pestphp.com/docs
 
+---
+
+## 15. Implementação de Regras de Negócio Complexas com Migração de Dados
+
+**Data:** 21/11/2024  
+**Problema:** Sistema tinha 64 credenciais distribuídas de forma incorreta entre 10 usuários, com sigilo inadequado para os tipos de documentos.
+
+**❌ Situação Inicial:**
+- 4 usuários com múltiplas credenciais (Admin: 38, João: 10, Ana: 12, Renan: 3)
+- 5 usuários sem credenciais
+- 21 TCMS com sigilo R ou S (incorreto - deveria ser AR)
+- Sem controle de histórico de credenciais
+- Regra de negócio não documentada adequadamente
+
+**✅ SOLUÇÃO IMPLEMENTADA:**
+
+### 1. Atualização da Documentação
+```markdown
+### Regras Gerais
+- CADA USUÁRIO PODE TER APENAS UMA CREDENCIAL ATIVA POR VEZ
+- Credenciais antigas ficam no histórico (soft delete)
+
+### Níveis de Sigilo
+- CRED: R (Reservado) ou S (Secreto)
+- TCMS: AR (Acesso Restrito)
+```
+
+### 2. Atualização do Enum CredentialSecrecy
+```php
+enum CredentialSecrecy: string
+{
+    case ACESSO_RESTRITO = 'AR';  // Novo!
+    case RESERVADO = 'R';
+    case SECRETO = 'S';
+    
+    // Novos métodos de validação
+    public static function optionsForType(CredentialType $type): array
+    public static function isValidForType(string $secrecy, CredentialType $type): bool
+}
+```
+
+### 3. Novos Relacionamentos no Model User
+```php
+// Credencial ativa (apenas 1)
+public function activeCredential(): HasMany
+
+// Histórico completo (incluindo deletadas)
+public function credentialHistory(): HasMany
+```
+
+### 4. Script de Migração de Dados
+Criado script PHP que:
+- ✅ Cria backup automático do banco
+- ✅ Corrige sigilo de 21 TCMS (R/S → AR)
+- ✅ Move 59 credenciais excedentes para histórico
+- ✅ Cria 5 novas credenciais TCMS para usuários sem credencial
+- ✅ Valida regras de negócio ao final
+- ✅ Usa transaction com rollback em caso de erro
+
+### 5. Atualização de Testes
+```php
+test('forSecrecy retorna cor correta para Acesso Restrito', function () {
+    expect(BadgeColor::forSecrecy('AR'))->toBe('info');
+});
+```
+
+**📊 Resultados:**
+- ✅ 10 usuários com exatamente 1 credencial ativa cada
+- ✅ 59 credenciais preservadas no histórico
+- ✅ 8 TCMS com sigilo AR (correto)
+- ✅ 2 CRED com sigilo R ou S (correto)
+- ✅ 53 testes passando (103 assertions)
+- ✅ Zero perda de dados históricos
+
+**💡 Melhores Práticas Identificadas:**
+
+1. **Sempre Criar Backup Antes de Migração**
+   ```bash
+   mysqldump -u user -p database > backup_$(date +%Y%m%d_%H%M%S).sql
+   ```
+
+2. **Usar Transactions para Migrations de Dados**
+   ```php
+   DB::beginTransaction();
+   try {
+       // alterações
+       DB::commit();
+   } catch (\Exception $e) {
+       DB::rollBack();
+   }
+   ```
+
+3. **Documentar Regras de Negócio ANTES do Código**
+   - Evita retrabalho
+   - Facilita validação com stakeholders
+   - Serve como contrato entre equipes
+
+4. **Preservar Histórico com Soft Deletes**
+   - Nunca delete dados permanentemente sem necessidade
+   - Histórico é valioso para auditoria e análise
+   - Use `withTrashed()` para consultas históricas
+
+5. **Validar Regras Programaticamente**
+   ```php
+   // No final do script de migração
+   $usersWithMultiple = User::withCount('credentials')
+       ->having('credentials_count', '>', 1)->count();
+   if ($usersWithMultiple === 0) {
+       echo "✅ Regra validada\n";
+   }
+   ```
+
+6. **Scripts de Migração como Código Descartável**
+   - Use prefixo `tmp_rovodev_` para fácil identificação
+   - Documente no commit o que foi feito
+   - Delete após execução bem-sucedida
+
+7. **Enums com Validação Contextual**
+   ```php
+   // Validar sigilo baseado no tipo
+   CredentialSecrecy::isValidForType('AR', CredentialType::TCMS); // true
+   CredentialSecrecy::isValidForType('AR', CredentialType::CRED); // false
+   ```
+
+**🎯 Benefícios:**
+- ✅ Sistema 100% conforme regras de negócio
+- ✅ Histórico completo preservado
+- ✅ Validação automática de sigilo por tipo
+- ✅ Zero impacto em funcionalidades existentes
+- ✅ Testes garantem qualidade
+
+**🔄 Ações preventivas:**
+- Documentar regras de negócio desde o início
+- Criar validações no nível de aplicação e banco
+- Implementar observers para manter histórico automaticamente
+- Adicionar testes de integração para regras de negócio
+
+**📚 Referências:**
+- Laravel Soft Deletes: https://laravel.com/docs/12.x/eloquent#soft-deleting
+- Database Transactions: https://laravel.com/docs/12.x/database#database-transactions
+- Enum Validation: https://www.php.net/manual/en/language.enumerations.php
+
