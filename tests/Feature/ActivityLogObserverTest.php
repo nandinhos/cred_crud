@@ -25,7 +25,7 @@ it('logs update', function () {
     Auth::login($user);
 
     $credential = Credential::factory()->create();
-    $credential->update(['name' => 'Updated Name']);
+    $credential->update(['observation' => 'Updated Observation']);
 
     $this->assertDatabaseHas('activity_logs', [
         'log_name' => 'credentials',
@@ -36,7 +36,7 @@ it('logs update', function () {
     ]);
 
     $log = DB::table('activity_logs')->where('description', 'updated')->first();
-    expect($log->properties)->toContain('Updated Name');
+    expect($log->properties)->toContain('Updated Observation');
 });
 
 it('logs deletion', function () {

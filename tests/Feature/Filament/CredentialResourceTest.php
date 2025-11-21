@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\CredentialSecrecy;
+use App\Enums\CredentialType;
 use App\Filament\Resources\Credentials\Pages\CreateCredential;
 use App\Filament\Resources\Credentials\Pages\EditCredential;
 use App\Filament\Resources\Credentials\Pages\ListCredentials;
@@ -32,11 +34,10 @@ it('can create credential', function () {
     Livewire::test(CreateCredential::class)
         ->fillForm([
             'fscs' => 'FSCS-NEW',
-            'name' => 'New Credential',
-            'secrecy' => 'R',
-            'credential' => 'secret123',
+            'type' => CredentialType::CRED->value,
+            'secrecy' => CredentialSecrecy::RESERVADO->value,
+            'credential' => 'CRED-1234',
             'concession' => now()->format('Y-m-d'),
-            'validity' => now()->addYear()->format('Y-m-d'),
             'user_id' => $user->id,
         ])
         ->call('create')
@@ -44,7 +45,7 @@ it('can create credential', function () {
 
     $this->assertDatabaseHas('credentials', [
         'fscs' => 'FSCS-NEW',
-        'name' => 'New Credential',
+        'type' => 'CRED',
     ]);
 });
 
@@ -56,21 +57,19 @@ it('can create credential with optional dates', function () {
     Livewire::test(CreateCredential::class)
         ->fillForm([
             'fscs' => 'FSCS-TEST',
-            'name' => 'Test Credential',
-            'secrecy' => 'O',
+            'type' => CredentialType::CRED->value,
+            'secrecy' => CredentialSecrecy::SECRETO->value,
             'credential' => 'CRED-1234-5678',
             'user_id' => $user->id,
             'concession' => null, // Data opcional
-            'validity' => null,   // Data opcional
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas('credentials', [
         'fscs' => 'FSCS-TEST',
-        'name' => 'Test Credential',
+        'type' => 'CRED',
         'concession' => null,
-        'validity' => null,
     ]);
 });
 
@@ -83,7 +82,10 @@ it('validates unique fscs', function () {
     Livewire::test(CreateCredential::class)
         ->fillForm([
             'fscs' => 'FSCS-EXISTING',
-            'name' => 'Duplicate FSCS',
+            'type' => CredentialType::CRED->value,
+            'secrecy' => CredentialSecrecy::RESERVADO->value,
+            'credential' => 'CRED-9999',
+            'user_id' => $user->id,
         ])
         ->call('create')
         ->assertHasFormErrors(['fscs']);
@@ -97,10 +99,10 @@ it('can edit credential', function () {
 
     Livewire::test(EditCredential::class, ['record' => $credential->getRouteKey()])
         ->fillForm([
-            'name' => 'Updated Name',
+            'observation' => 'Updated Observation',
         ])
         ->call('save')
         ->assertHasNoFormErrors();
 
-    expect($credential->refresh()->name)->toBe('Updated Name');
+    expect($credential->refresh()->observation)->toBe('Updated Observation');
 });

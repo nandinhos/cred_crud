@@ -33,32 +33,42 @@ class CredentialsTable
                     ->copyMessage('FSCS copiado!')
                     ->copyMessageDuration(1500),
 
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Nome')
-                    ->searchable()
-                    ->sortable()
-                    ->limit(50)
-                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
-                        $state = $column->getState();
-                        if (strlen($state) <= 50) {
-                            return null;
-                        }
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Tipo')
+                    ->badge()
+                    ->color(fn ($state): string => match ($state->value ?? $state) {
+                        'CRED' => 'info',
+                        'TCMS' => 'warning',
+                        default => 'gray'
+                    })
+                    ->formatStateUsing(function ($state) {
+                        return is_object($state) ? $state->value : $state;
+                    })
+                    ->sortable(),
 
-                        return $state;
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn ($record): string => $record->status_color)
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        // Ordenação customizada por status
+                        return $query->orderBy('validity', $direction);
                     }),
 
                 Tables\Columns\TextColumn::make('secrecy')
                     ->label('Sigilo')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'O' => 'info',
+                    ->color(fn ($state): string => match ($state->value ?? $state) {
                         'R' => 'success',
                         'S' => 'danger',
                         default => 'gray'
                     })
                     ->formatStateUsing(function ($state) {
+                        if (is_object($state) && method_exists($state, 'label')) {
+                            return $state->label();
+                        }
+
                         return match ($state) {
-                            'O' => 'Ostensivo',
                             'R' => 'Reservado',
                             'S' => 'Secreto',
                             default => 'N/A'
@@ -131,39 +141,47 @@ class CredentialsTable
             ->filters([
                 TrashedFilter::make(),
 
+                SelectFilter::make('type')
+                    ->label('Tipo de Documento')
+                    ->options([
+                        'CRED' => 'CRED - Credencial de Segurança',
+                        'TCMS' => 'TCMS - Termo de Compromisso',
+                    ]),
+
                 SelectFilter::make('secrecy')
                     ->label('Nível de Sigilo')
                     ->options([
-                        'O' => 'Ostensivo',
                         'R' => 'Reservado',
                         'S' => 'Secreto',
                     ]),
 
-                Filter::make('validity_status')
-                    ->label('Status de Validade')
+                Filter::make('status')
+                    ->label('Status da Credencial')
                     ->form([
-                        Forms\Components\Select::make('status')
+                        Forms\Components\Select::make('status_filter')
+                            ->label('Status')
                             ->options([
-                                'valid' => 'Válidas',
-                                'expiring' => 'Expirando em 30 dias',
-                                'expired' => 'Expiradas',
+                                'negada' => 'Negada',
+                                'vencida' => 'Vencida',
+                                'em_processamento' => 'Em Processamento',
+                                'pendente' => 'Pendente',
+                                'ativa' => 'Ativa',
                             ])
                             ->placeholder('Todos os status'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['status'] === 'valid',
-                                fn (Builder $query, $date): Builder => $query->where('validity', '>', now()->addDays(30)),
-                            )
-                            ->when(
-                                $data['status'] === 'expiring',
-                                fn (Builder $query, $date): Builder => $query->whereBetween('validity', [now(), now()->addDays(30)]),
-                            )
-                            ->when(
-                                $data['status'] === 'expired',
-                                fn (Builder $query, $date): Builder => $query->where('validity', '<', now()),
-                            );
+                        if (! isset($data['status_filter'])) {
+                            return $query;
+                        }
+
+                        return match ($data['status_filter']) {
+                            'negada' => $query->where('fscs', '00000'),
+                            'vencida' => $query->where('validity', '<', now()),
+                            'em_processamento' => $query->where('type', 'TCMS')->whereNotNull('fscs'),
+                            'pendente' => $query->where('type', 'CRED')->whereNotNull('fscs')->whereNull('concession'),
+                            'ativa' => $query->where('type', 'CRED')->whereNotNull('fscs')->whereNotNull('concession')->where('validity', '>=', now()),
+                            default => $query,
+                        };
                     }),
             ])
             ->actions([

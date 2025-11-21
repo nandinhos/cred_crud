@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\CredentialSecrecy;
+use App\Enums\CredentialType;
 use App\Models\Credential;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,14 +22,19 @@ class CredentialFactory extends Factory
      */
     public function definition(): array
     {
+        $type = $this->faker->randomElement([CredentialType::CRED, CredentialType::TCMS]);
+        $concession = $this->faker->optional(0.7)->dateTimeBetween('-2 years', 'now');
+
         return [
             'user_id' => User::factory(),
             'fscs' => 'FSCS-'.$this->faker->unique()->numberBetween(1000, 9999),
-            'name' => $this->faker->company(),
-            'secrecy' => $this->faker->randomElement(['R', 'S', 'O']),
-            'credential' => $this->faker->numerify('CRED-####-####'), // String não criptografada
-            'concession' => $this->faker->optional(0.7)->date(), // 70% chance de ter data
-            'validity' => $this->faker->optional(0.8)->dateTimeBetween('+1 month', '+2 years'), // 80% chance de ter data
+            'type' => $type,
+            'observation' => $this->faker->optional(0.3)->sentence(),
+            'secrecy' => $this->faker->randomElement([CredentialSecrecy::RESERVADO, CredentialSecrecy::SECRETO]),
+            'credential' => $this->faker->numerify('CRED-####-####'),
+            'concession' => $concession,
+            // validity será calculado automaticamente pelo Observer se houver concessão
+            'validity' => null,
         ];
     }
 
@@ -48,14 +55,57 @@ class CredentialFactory extends Factory
     public function reserved(): static
     {
         return $this->state(fn (array $attributes) => [
-            'secrecy' => 'R',
+            'secrecy' => CredentialSecrecy::RESERVADO,
         ]);
     }
 
     public function secret(): static
     {
         return $this->state(fn (array $attributes) => [
-            'secrecy' => 'S',
+            'secrecy' => CredentialSecrecy::SECRETO,
+        ]);
+    }
+
+    public function cred(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => CredentialType::CRED,
+        ]);
+    }
+
+    public function tcms(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => CredentialType::TCMS,
+        ]);
+    }
+
+    public function denied(): static
+    {
+        return $this->state(function (array $attributes) {
+            static $counter = 0;
+            $counter++;
+
+            return [
+                'fscs' => $counter === 1 ? '00000' : '00000-'.$counter,
+            ];
+        });
+    }
+
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => CredentialType::CRED,
+            'concession' => null,
+            'validity' => null,
+        ]);
+    }
+
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => CredentialType::CRED,
+            'concession' => now()->subMonths(6),
         ]);
     }
 }

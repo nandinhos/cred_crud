@@ -1,69 +1,53 @@
 {
 	"meta": {
-		"generatedAt": "2025-11-20T22:18:03.581Z",
-		"tasksAnalyzed": 7,
-		"totalTasks": 7,
-		"analysisCount": 7,
+		"generatedAt": "2025-11-21T05:42:21.440Z",
+		"tasksAnalyzed": 5,
+		"totalTasks": 12,
+		"analysisCount": 5,
 		"thresholdScore": 5,
 		"projectName": "Taskmaster",
-		"usedResearch": false
+		"usedResearch": true
 	},
 	"complexityAnalysis": [
-		{
-			"taskId": 1,
-			"taskTitle": "FASE 1: Documentação Centralizada e Completa",
-			"complexityScore": 2,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Dividir a tarefa de documentação em subtasks específicas: (1) Atualizar README.md com badges, stack tecnológico e Quick Start; (2) Revisar CLAUDE.md com padrões Filament 4 e namespaces corretos; (3) Gerar database_schema.md atualizado com diagrama ER; (4) Consolidar best-practices-laravel12-filament4.md; (5) Documentar lessons learned com problemas e soluções encontradas.",
-			"reasoning": "Baixa complexidade técnica - é principalmente trabalho de documentação. Não requer mudanças de código, apenas consolidação e atualização de arquivos markdown. As subtasks são bem definidas e independentes. O único comando técnico é 'artisan schema:dump'. Pode ser completado rapidamente por envolver principalmente escrita e organização de informação já existente no projeto."
-		},
-		{
-			"taskId": 2,
-			"taskTitle": "FASE 2: Models e Eloquent - Type Safety e Factories Completas",
-			"complexityScore": 6,
-			"recommendedSubtasks": 8,
-			"expansionPrompt": "Decompor em subtasks: (1) Adicionar type hints e PHPDoc em User model; (2) Adicionar type hints e método casts() em Credential model; (3) Criar states avançados em CredentialFactory (expired, expiringSoon, reserved, secret); (4) Criar states de roles em UserFactory (superAdmin, admin, consulta); (5) Criar CredentialObserver para activity logging; (6) Registrar Observer no AppServiceProvider; (7) Externalizar email hardcoded para config/auth.php; (8) Atualizar .env.example e testar configuração.",
-			"reasoning": "Complexidade média-alta. Envolve múltiplas camadas: models com tipagem estrita, factories com states complexos, implementação de Observer pattern, e configuração externalizada. Requer conhecimento de Eloquent relationships, PHPDoc annotations, Observer pattern, e Laravel configuration system. A migration de activity_logs já existe. Necessita testes cuidadosos para garantir que Observer funciona corretamente e que factories geram dados válidos. Impacto médio no código existente."
-		},
-		{
-			"taskId": 3,
-			"taskTitle": "FASE 3: Otimização de Database com Índices e Completar Migrations",
-			"complexityScore": 5,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Dividir em: (1) Criar migration add_indexes_to_credentials_table com índices estratégicos (fscs, validity, created_at, composite user_id+validity, secrecy); (2) Implementar método down() completo para rollback de índices; (3) Analisar e completar down() da migration 2023_07_25_200512_alter_credentials2_table; (4) Completar down() da migration add_deleted_at_to_credentials; (5) Criar migration add_indexes_to_users_table se necessário; (6) Testar rollback completo e documentar índices criados.",
-			"reasoning": "Complexidade média. Requer análise cuidadosa das migrations existentes para determinar o que deve ser revertido nos métodos down(). Criação de índices é relativamente simples, mas índices compostos e verificação de existência requerem atenção. É necessário garantir que rollbacks funcionem corretamente sem quebrar o banco. Testes de performance com EXPLAIN queries são importantes. Risco médio de impactar dados existentes se não testado adequadamente."
-		},
 		{
 			"taskId": 4,
 			"taskTitle": "FASE 4: Filament 4 Modernização - Centralizar Lógica de Badges",
 			"complexityScore": 3,
 			"recommendedSubtasks": 5,
 			"expansionPrompt": "Separar em: (1) Criar enum BadgeColor com cases e métodos estáticos (forRole, forSecrecy, forValidity); (2) Refatorar CredentialsTable para usar BadgeColor::forSecrecy e BadgeColor::forValidity; (3) Refatorar UsersTable para usar BadgeColor::forRole; (4) Criar tests/Unit/BadgeColorEnumTest.php com cobertura completa; (5) Documentar uso do enum no CLAUDE.md.",
-			"reasoning": "Baixa-média complexidade. É principalmente refatoração para eliminar código duplicado. PHP enums são simples de implementar e os métodos match() são diretos. A refatoração das Tables é mecânica - substituir lógica inline por chamadas ao enum. Os testes unitários são simples pois testam lógica pura sem dependências. Baixo risco de quebrar funcionalidade existente pois é apenas centralização de lógica já funcionando. Benefício imediato em manutenibilidade."
+			"reasoning": "A tarefa é uma refatoração de baixo risco e baixo esforço. A criação de um Enum é uma prática padrão e moderna em PHP, e as alterações nos arquivos do Filament são pontuais e bem definidas. A complexidade reside na necessidade de garantir que a refatoração seja aplicada consistentemente e que os novos testes unitários para o Enum sejam abrangentes."
 		},
 		{
 			"taskId": 5,
 			"taskTitle": "FASE 5: Suite Completa de Testes com Pest e Cobertura Filament",
 			"complexityScore": 8,
 			"recommendedSubtasks": 10,
-			"expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories em vez de dados hardcoded; (2) Remover CredentialValidationTest obsoleto; (3) Criar CredentialResourceTest com testes de listagem e filtros; (4) Adicionar testes de criação/edição em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de roles; (6) Criar PolicyTest para testar CredentialPolicy e autorização por roles; (7) Criar ActivityLogObserverTest para validar logging de ações; (8) Criar RelationshipsTest para User->Credentials e soft deletes; (9) Executar suite completa com coverage mínimo 80%; (10) Documentar estratégias de teste.",
-			"reasoning": "Alta complexidade. Envolve testes Livewire/Filament que requerem conhecimento específico do framework. Testes de Policies, Observers e relacionamentos Eloquent precisam mockar autenticação e contextos complexos. A integração com Pest requer sintaxe específica. Cobertura de 80%+ exige testes abrangentes de happy paths, edge cases e failure scenarios. Testes de componentes Filament (ListCredentials, CreateCredential) são mais complexos que testes tradicionais. Requer setup cuidadoso de dados de teste com factories. Alto valor mas trabalhoso."
+			"expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover CredentialValidationTest obsoleto; (3) Criar CredentialResourceTest com testes de listagem e filtros; (4) Adicionar testes de criação/edição em CredentialResourceTest; (5) Criar UserResourceTest com CRUD e roles; (6) Criar PolicyTest para CredentialPolicy; (7) Criar ActivityLogObserverTest; (8) Criar RelationshipsTest para modelos e soft deletes; (9) Executar suite com coverage e atingir meta; (10) Documentar estratégias de teste.",
+			"reasoning": "A complexidade é alta devido à amplitude e profundidade do trabalho. A tarefa exige não apenas a escrita de um grande volume de testes, mas também o domínio de técnicas avançadas de teste com Pest e Livewire para cobrir recursos interativos do Filament. Atingir uma meta de cobertura de 80% em uma aplicação existente e garantir que os testes rodem em paralelo adiciona desafios técnicos significativos."
 		},
 		{
 			"taskId": 6,
 			"taskTitle": "FASE 6: Deploy e Performance - CI/CD, Cache e Queue",
 			"complexityScore": 7,
 			"recommendedSubtasks": 9,
-			"expansionPrompt": "Decompor em: (1) Criar .github/workflows/laravel.yml com jobs de teste, lint e coverage; (2) Configurar MySQL service container no GitHub Actions; (3) Criar script deploy.sh com comandos de cache e otimização; (4) Criar job NotifyExpiringCredentials para queue; (5) Configurar queue driver e testar dispatching; (6) Adicionar eager loading em CredentialResource::getEloquentQuery(); (7) Implementar detecção de N+1 queries no AppServiceProvider; (8) Criar .env.production.example com configurações otimizadas; (9) Implementar health check endpoint e testar pipeline completo.",
-			"reasoning": "Alta complexidade. Envolve múltiplas tecnologias: GitHub Actions (CI/CD), Laravel Queue system, Redis configuration, performance optimization. Configurar CI/CD corretamente com services MySQL e caching é complexo. Otimização de queries N+1 requer análise cuidadosa de todos os Resources. Configuração de produção com Redis para cache/queue/session requer conhecimento de infraestrutura. Script de deploy precisa ser idempotente e seguro. Health checks e monitoring são críticos. Alto impacto em produção - requer testes extensivos."
+			"expansionPrompt": "Decompor em: (1) Criar .github/workflows/laravel.yml com jobs de teste, lint e coverage; (2) Configurar MySQL service no GitHub Actions; (3) Criar script deploy.sh com otimizações; (4) Criar job NotifyExpiringCredentials; (5) Configurar queue driver (Redis) e testar dispatching; (6) Adicionar eager loading para evitar N+1; (7) Implementar detecção de queries lentas; (8) Criar .env.production.example; (9) Implementar health check endpoint.",
+			"reasoning": "Esta tarefa tem uma complexidade elevada por abranger múltiplas áreas de infraestrutura e otimização. A configuração de um pipeline de CI/CD com serviços de banco de dados, a implementação de um sistema de filas com workers e a otimização de performance (cache, N+1) exigem conhecimento que vai além do desenvolvimento de aplicação, tocando em DevOps e administração de sistemas. A integração de todas essas peças aumenta a complexidade."
 		},
 		{
 			"taskId": 7,
 			"taskTitle": "FASE 7: Manutenção e Monitoramento - Logs, Metrics e Backup",
 			"complexityScore": 6,
 			"recommendedSubtasks": 8,
-			"expansionPrompt": "Dividir em: (1) Configurar canais de logging estruturado (daily, security, audit) no config/logging.php; (2) Criar AuditMiddleware para logging de ações de usuários; (3) Criar comando CollectMetrics para coletar métricas do sistema; (4) Criar comando BackupDatabase com limpeza automática de backups antigos; (5) Criar comando NotifyExpiringCredentials para alertas; (6) Agendar todos os comandos no Console/Kernel.php com Schedule; (7) Testar execução de todos os comandos e verificar logs/outputs; (8) Documentar rotinas de manutenção e monitoramento.",
-			"reasoning": "Complexidade média-alta. Envolve múltiplos comandos Artisan customizados com lógica de negócio específica. Configuração de logging multicanal e AuditMiddleware requerem conhecimento de Laravel logging system. Comando de backup precisa executar mysqldump e gerenciar arquivos com segurança. Coleta de métricas envolve queries complexas no information_schema. Laravel Scheduler precisa ser configurado corretamente com cron. Testes precisam validar que arquivos são criados, logs escritos e comandos executados. Crítico para produção mas requer configuração cuidadosa."
+			"expansionPrompt": "Dividir em: (1) Configurar canais de logging (daily, security, audit); (2) Criar AuditMiddleware para log de ações; (3) Criar comando CollectMetrics; (4) Criar comando BackupDatabase com limpeza automática; (5) Criar comando NotifyExpiringCredentials; (6) Agendar todos os comandos no Console/Kernel; (7) Testar execução e outputs de todos os comandos; (8) Documentar rotinas de manutenção.",
+			"reasoning": "A complexidade é moderada. Embora envolva a criação de vários comandos Artisan e a configuração de logging e agendamento, cada componente é relativamente autocontido. A maior complexidade está no comando de backup, que interage com o sistema operacional (`mysqldump`) e requer manipulação de arquivos. A coordenação de todas as tarefas agendadas também adiciona um nível de complexidade à manutenção."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Refatoração Abrangente do Sistema de Credenciais com Novas Regras de Negócio",
+			"complexityScore": 9,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Decompor em: (1) Criar migration para alterar schema de `credentials` (renomear, adicionar colunas, constraints); (2) Criar Enums para `CredentialType` e `CredentialSecrecy`; (3) Implementar `CredentialObserver` para calcular `validity`; (4) Atualizar model `Credential` com casts e accessor `status`; (5) Atualizar `CredentialFactory`; (6) Atualizar formulário do `CredentialResource` (Selects, Textarea, required); (7) Atualizar tabela do `CredentialResource` (BadgeColumn para status); (8) Adicionar `SelectFilter` para o novo status; (9) Atualizar todos os testes quebrados e criar novos para as novas lógicas.",
+			"reasoning": "A complexidade é muito alta devido ao impacto sistêmico da refatoração. Alterar o schema de uma entidade central como 'Credential' gera um efeito cascata que afeta o modelo, observers, factories, seeders, a interface do usuário (Formulário e Tabela do Filament) e, crucialmente, toda a suíte de testes existente. A introdução de novas regras de negócio complexas no Observer e no accessor de status exige uma implementação e testes meticulosos para evitar regressões e garantir a correção dos múltiplos estados da entidade."
 		}
 	]
 }

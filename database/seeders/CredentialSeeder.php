@@ -18,49 +18,48 @@ class CredentialSeeder extends Seeder
         $consulta = User::role('consulta')->first();
         $users = User::all();
 
-        // Credenciais ATIVAS (validade futura ou sem validade)
-        $this->command->info('🟢 Criando credenciais ATIVAS...');
+        // Credenciais ATIVAS tipo CRED (com concessão)
+        $this->command->info('🟢 Criando credenciais ATIVAS (CRED)...');
 
-        // 10 credenciais ativas com validade futura
         Credential::factory()
-            ->count(10)
+            ->cred()
+            ->active()
+            ->count(15)
             ->create([
                 'user_id' => $users->random()->id,
-                'validity' => now()->addMonths(rand(6, 24)),
-                'concession' => now()->subMonths(rand(1, 12)),
             ]);
 
-        // 5 credenciais ativas SEM data de validade (permanentes)
-        Credential::factory()
-            ->count(5)
-            ->create([
-                'user_id' => $users->random()->id,
-                'validity' => null,
-                'concession' => now()->subMonths(rand(1, 12)),
-            ]);
+        // CREDENCIAIS PENDENTES tipo CRED (sem concessão)
+        $this->command->info('🟡 Criando credenciais PENDENTES (CRED)...');
 
-        // CREDENCIAIS EXPIRANDO EM 30 DIAS (críticas)
-        $this->command->info('🟡 Criando credenciais EXPIRANDO em 30 dias...');
-
-        // 8 credenciais expirando nos próximos 30 dias
         Credential::factory()
+            ->cred()
+            ->pending()
             ->count(8)
             ->create([
                 'user_id' => $users->random()->id,
-                'validity' => now()->addDays(rand(1, 30)),
-                'concession' => now()->subMonths(rand(6, 18)),
             ]);
 
-        // CREDENCIAIS EXPIRADAS
-        $this->command->info('🔴 Criando credenciais EXPIRADAS...');
+        // CREDENCIAIS EM PROCESSAMENTO tipo TCMS
+        $this->command->info('🔵 Criando credenciais EM PROCESSAMENTO (TCMS)...');
 
-        // 12 credenciais já expiradas
         Credential::factory()
+            ->tcms()
+            ->count(10)
+            ->create([
+                'user_id' => $users->random()->id,
+                'concession' => now()->subMonths(rand(1, 6)),
+            ]);
+
+        // CREDENCIAIS VENCIDAS
+        $this->command->info('🔴 Criando credenciais VENCIDAS...');
+
+        Credential::factory()
+            ->cred()
+            ->expired()
             ->count(12)
             ->create([
                 'user_id' => $users->random()->id,
-                'validity' => now()->subDays(rand(1, 365)),
-                'concession' => now()->subMonths(rand(12, 36)),
             ]);
 
         // Credenciais específicas por nível de sigilo
@@ -75,44 +74,44 @@ class CredentialSeeder extends Seeder
                 'validity' => now()->addMonths(rand(6, 12)),
             ]);
 
-        // 7 credenciais RESERVADAS (R)
+        // 10 credenciais RESERVADAS (R)
         Credential::factory()
             ->reserved()
-            ->count(7)
+            ->count(10)
             ->create([
                 'user_id' => $admin->id,
-                'validity' => now()->addMonths(rand(3, 18)),
             ]);
 
-        // 5 credenciais OSTENSIVAS (O)
-        Credential::factory()
-            ->count(5)
-            ->create([
-                'user_id' => $consulta->id,
-                'secrecy' => 'O',
-                'validity' => now()->addMonths(rand(12, 24)),
-            ]);
-
-        // Credenciais SEM DATAS (para testar campos opcionais)
-        $this->command->info('📝 Criando credenciais SEM datas...');
+        // CREDENCIAIS NEGADAS
+        $this->command->info('⚫ Criando credenciais NEGADAS...');
 
         Credential::factory()
             ->count(3)
+            ->sequence(
+                ['fscs' => '00000'],
+                ['fscs' => '00001'],
+                ['fscs' => '00002'],
+            )
             ->create([
                 'user_id' => $users->random()->id,
-                'concession' => null,
-                'validity' => null,
             ]);
 
         // Estatísticas finais
         $this->command->info('');
         $this->command->info('✅ Credenciais criadas com sucesso!');
         $this->command->info('📊 Total de credenciais: '.Credential::count());
-        $this->command->info('🟢 Ativas: '.Credential::where('validity', '>', now())->orWhereNull('validity')->count());
-        $this->command->info('🟡 Expirando em 30 dias: '.Credential::whereBetween('validity', [now(), now()->addDays(30)])->count());
-        $this->command->info('🔴 Expiradas: '.Credential::where('validity', '<', now())->count());
+        $this->command->info('📄 CRED: '.Credential::where('type', 'CRED')->count());
+        $this->command->info('📋 TCMS: '.Credential::where('type', 'TCMS')->count());
         $this->command->info('🔐 Secretas (S): '.Credential::where('secrecy', 'S')->count());
         $this->command->info('🛡️  Reservadas (R): '.Credential::where('secrecy', 'R')->count());
-        $this->command->info('📢 Ostensivas (O): '.Credential::where('secrecy', 'O')->count());
+        $this->command->info('');
+        $this->command->info('Por Status:');
+        // Contar por status usando o accessor
+        $all = Credential::all();
+        $this->command->info('🟢 Ativas: '.$all->where('status', 'Ativa')->count());
+        $this->command->info('🟡 Pendentes: '.$all->where('status', 'Pendente')->count());
+        $this->command->info('🔵 Em Processamento: '.$all->where('status', 'Em Processamento')->count());
+        $this->command->info('🔴 Vencidas: '.$all->where('status', 'Vencida')->count());
+        $this->command->info('⚫ Negadas: '.$all->where('status', 'Negada')->count());
     }
 }

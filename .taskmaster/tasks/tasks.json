@@ -383,7 +383,7 @@
         "status": "pending",
         "complexity": 8,
         "recommendedSubtasks": 10,
-        "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories em vez de dados hardcoded; (2) Remover CredentialValidationTest obsoleto; (3) Criar CredentialResourceTest com testes de listagem e filtros; (4) Adicionar testes de criação/edição em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de roles; (6) Criar PolicyTest para testar CredentialPolicy e autorização por roles; (7) Criar ActivityLogObserverTest para validar logging de ações; (8) Criar RelationshipsTest para User->Credentials e soft deletes; (9) Executar suite completa com coverage mínimo 80%; (10) Documentar estratégias de teste.",
+        "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover CredentialValidationTest obsoleto; (3) Criar CredentialResourceTest com testes de listagem e filtros; (4) Adicionar testes de criação/edição em CredentialResourceTest; (5) Criar UserResourceTest com CRUD e roles; (6) Criar PolicyTest para CredentialPolicy; (7) Criar ActivityLogObserverTest; (8) Criar RelationshipsTest para modelos e soft deletes; (9) Executar suite com coverage e atingir meta; (10) Documentar estratégias de teste.",
         "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
@@ -515,7 +515,7 @@
         "status": "pending",
         "complexity": 7,
         "recommendedSubtasks": 9,
-        "expansionPrompt": "Decompor em: (1) Criar .github/workflows/laravel.yml com jobs de teste, lint e coverage; (2) Configurar MySQL service container no GitHub Actions; (3) Criar script deploy.sh com comandos de cache e otimização; (4) Criar job NotifyExpiringCredentials para queue; (5) Configurar queue driver e testar dispatching; (6) Adicionar eager loading em CredentialResource::getEloquentQuery(); (7) Implementar detecção de N+1 queries no AppServiceProvider; (8) Criar .env.production.example com configurações otimizadas; (9) Implementar health check endpoint e testar pipeline completo.",
+        "expansionPrompt": "Decompor em: (1) Criar .github/workflows/laravel.yml com jobs de teste, lint e coverage; (2) Configurar MySQL service no GitHub Actions; (3) Criar script deploy.sh com otimizações; (4) Criar job NotifyExpiringCredentials; (5) Configurar queue driver (Redis) e testar dispatching; (6) Adicionar eager loading para evitar N+1; (7) Implementar detecção de queries lentas; (8) Criar .env.production.example; (9) Implementar health check endpoint.",
         "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
@@ -636,7 +636,7 @@
         "status": "pending",
         "complexity": 6,
         "recommendedSubtasks": 8,
-        "expansionPrompt": "Dividir em: (1) Configurar canais de logging estruturado (daily, security, audit) no config/logging.php; (2) Criar AuditMiddleware para logging de ações de usuários; (3) Criar comando CollectMetrics para coletar métricas do sistema; (4) Criar comando BackupDatabase com limpeza automática de backups antigos; (5) Criar comando NotifyExpiringCredentials para alertas; (6) Agendar todos os comandos no Console/Kernel.php com Schedule; (7) Testar execução de todos os comandos e verificar logs/outputs; (8) Documentar rotinas de manutenção e monitoramento.",
+        "expansionPrompt": "Dividir em: (1) Configurar canais de logging (daily, security, audit); (2) Criar AuditMiddleware para log de ações; (3) Criar comando CollectMetrics; (4) Criar comando BackupDatabase com limpeza automática; (5) Criar comando NotifyExpiringCredentials; (6) Agendar todos os comandos no Console/Kernel; (7) Testar execução e outputs de todos os comandos; (8) Documentar rotinas de manutenção.",
         "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
@@ -1136,13 +1136,155 @@
         "priority": "high",
         "subtasks": [],
         "updatedAt": "2025-11-21T05:15:03.335Z"
+      },
+      {
+        "id": "12",
+        "title": "Refatoração Abrangente do Sistema de Credenciais com Novas Regras de Negócio",
+        "description": "Refatorar a entidade Credential, ajustando o schema do banco de dados, implementando novas regras de negócio para tipo e validade, e atualizando a interface Filament, validadores e testes para refletir as mudanças.",
+        "details": "Esta tarefa envolve uma refatoração completa do módulo de credenciais, desde o banco de dados até a interface do usuário, para alinhar com as novas regras de negócio. As mudanças impactam o schema, a lógica de modelo, o recurso Filament e os testes.\n\n1. **Criar Nova Migration para Alterações no Schema**:\n   - Crie uma nova migration para modificar a tabela `credentials`.\n   ```bash\n   vendor/bin/sail artisan make:migration refactor_credentials_table --table=credentials\n   ```\n   - No método `up` da migration, aplique as seguintes alterações:\n   ```php\n   Schema::table('credentials', function (Blueprint $table) {\n       $table->renameColumn('name', 'type');\n       $table->text('observation')->nullable()->after('credential');\n       $table->string('secrecy')->comment('Valores permitidos: R, S')->change();\n   });\n   Schema::table('credentials', function (Blueprint $table) {\n       $table->foreignId('user_id')->nullable(false)->change();\n       $table->string('type')->nullable(false)->change();\n       $table->string('secrecy')->nullable(false)->change();\n   });\n   ```\n\n2. **Atualizar Model e Lógica de Negócio (`app/Models/Credential.php`)**:\n   - Crie Enums para `type` e `secrecy` para maior robustez:\n     `app/Enums/CredentialType.php` (com casos CRED e TCMS)\n     `app/Enums/CredentialSecrecy.php` (com casos R e S)\n   - Atualize os `$casts` no modelo:\n     `'type' => CredentialType::class,`\n     `'secrecy' => CredentialSecrecy::class,`\n   - Implemente um `CredentialObserver` para calcular a validade automaticamente. Registre-o no `AppServiceProvider`.\n   ```php\n   // app/Observers/CredentialObserver.php\n   public function saving(Credential $credential): void\n   {\n       if ($credential->isDirty('concession') && $credential->concession) {\n           if ($credential->type === CredentialType::CRED) {\n               $credential->validity = $credential->concession->addYears(2);\n           } elseif ($credential->type === CredentialType::TCMS) {\n               $credential->validity = $credential->concession->endOfYear();\n           }\n       }\n   }\n   ```\n   - Implemente o accessor `getStatusAttribute`:\n   ```php\n   // app/Models/Credential.php\n   use Illuminate\\Database\\Eloquent\\Casts\\Attribute;\n   use Carbon\\Carbon;\n\n   protected function status(): Attribute\n   {\n       return Attribute::make(\n           get: function () {\n               if ($this->fscs === '00000') return 'Negada';\n               if ($this->validity && $this->validity < Carbon::today()) return 'Vencida';\n               if ($this->fscs && $this->type === CredentialType::TCMS) return 'Em Processamento';\n               if ($this->fscs && $this->type === CredentialType::CRED && !$this->concession) return 'Pendente';\n               if ($this->fscs && $this->type === CredentialType::CRED && $this->concession) return 'Ativa';\n               return 'Desconhecido';\n           }\n       );\n   }\n   ```\n\n3. **Atualizar `CredentialResource` do Filament**:\n   - **Formulário (`form()`):**\n     - Substitua `TextInput` para 'name' por `Select` para 'type', usando o Enum `CredentialType` como opções.\n     - Adicione um `Textarea` para o campo `observation`.\n     - Atualize o `Select` de `secrecy` para usar o Enum `CredentialSecrecy` e remova a opção 'O'.\n     - Adicione `->required()` nos campos `type`, `secrecy` e `user_id`.\n   - **Tabela (`table()`):**\n     - Renomeie a coluna 'name' para 'type'.\n     - Adicione uma `BadgeColumn` para o status, utilizando a lógica do accessor e o `BadgeColor` Enum da Tarefa #4.\n     ```php\n     BadgeColumn::make('status')\n         ->colors([\n             'secondary' => 'Negada',\n             'danger' => 'Vencida',\n             'primary' => 'Em Processamento',\n             'warning' => 'Pendente',\n             'success' => 'Ativa',\n         ])->sortable(),\n     ```\n   - **Filtros:** Adicione um `SelectFilter` para o status, permitindo filtrar a tabela pelos valores possíveis do accessor 'status'.\n\n4. **Atualizar `CredentialFactory` e Seeders**:\n   - Modifique `database/factories/CredentialFactory.php` para refletir o novo schema: renomeie `name` para `type`, adicione `observation`, e garanta que os valores padrão para `type` e `secrecy` sejam válidos. Remova a nulabilidade de `user_id`.",
+        "testStrategy": "1. **Teste de Migração e Seeding**:\n   - Execute `vendor/bin/sail artisan migrate:fresh --seed` e verifique se o processo é concluído sem erros. Confirme as alterações no schema do banco de dados (nomes de colunas, tipos, constraints NOT NULL).\n\n2. **Testes Unitários e de Feature**:\n   - Crie um teste para o `CredentialObserver` ou evento de modelo para garantir que o campo `validity` seja calculado corretamente para os tipos 'CRED' e 'TCMS' ao salvar uma credencial com data de concessão.\n   - Crie testes específicos para o accessor `getStatusAttribute()`. Para cada um dos 5 estados (Negada, Vencida, Em Processamento, Pendente, Ativa), crie uma credencial com os atributos necessários no teste, chame o accessor e verifique se a string de status retornada é a correta.\n\n3. **Testes de Interface com Pest/Livewire**:\n   - **Formulário**: Verifique se o formulário de criação/edição de credencial exibe um `Select` para 'Tipo' com as opções 'CRED' e 'TCMS', e que a submissão falha se campos obrigatórios (`type`, `secrecy`, `user_id`) não forem preenchidos.\n   - **Tabela**: Verifique se a listagem de credenciais exibe a coluna 'Status' com o `BadgeColumn` colorido corretamente para diferentes credenciais em cada um dos estados possíveis.\n   - **Filtro**: Teste o novo filtro de 'Status'. Aplique o filtro para 'Ativa', por exemplo, e verifique se a tabela exibe apenas as credenciais ativas.\n\n4. **Revisão de Testes Existentes**:\n   - Procure por testes que possam ter sido quebrados pela renomeação da coluna `name` para `type` e atualize-os conforme necessário.",
+        "status": "done",
+        "dependencies": [
+          "4",
+          "8",
+          "9"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar Migration para Alterar Schema de 'credentials'",
+            "description": "Gerar e implementar uma nova migration para modificar a tabela 'credentials', renomeando a coluna 'name' para 'type', adicionando a coluna 'observation' e ajustando constraints de nulidade e tipo.",
+            "dependencies": [],
+            "details": "Use o comando `vendor/bin/sail artisan make:migration refactor_credentials_table --table=credentials`. No método `up`, aplique as alterações de schema, incluindo a renomeação de `name` para `type` e a adição das constraints `NOT NULL`.",
+            "status": "done",
+            "testStrategy": "Execute `php artisan migrate` em um ambiente de desenvolvimento e inspecione o schema da tabela 'credentials' no banco de dados para confirmar que a coluna foi renomeada, a nova coluna foi adicionada e as constraints de não nulidade foram aplicadas corretamente.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:43:48.645Z"
+          },
+          {
+            "id": 2,
+            "title": "Criar Enums para CredentialType e CredentialSecrecy",
+            "description": "Desenvolver Enums para os campos 'type' e 'secrecy' para garantir type safety e centralizar os valores permitidos (CRED/TCMS para tipo e R/S para sigilo), melhorando a robustez do código.",
+            "dependencies": [],
+            "details": "Crie os arquivos `app/Enums/CredentialType.php` e `app/Enums/CredentialSecrecy.php`. Implemente-os como Backed Enums com os respectivos casos: `CRED = 'CRED'`, `TCMS = 'TCMS'` e `R = 'R'`, `S = 'S'`.",
+            "status": "done",
+            "testStrategy": "Verifique a existência e o conteúdo dos arquivos de Enum. Use o `php artisan tinker` para instanciar os enums e confirmar que os casos e valores (`->value`) estão corretos.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:44:03.085Z"
+          },
+          {
+            "id": 3,
+            "title": "Implementar CredentialObserver para Cálculo Automático da Validade",
+            "description": "Criar um Observer para o modelo Credential que, no evento 'saving', calcula e define automaticamente o campo 'validity' com base no tipo da credencial e na data de concessão, aplicando as novas regras de negócio.",
+            "dependencies": [
+              2
+            ],
+            "details": "Crie `app/Observers/CredentialObserver.php`. No método `saving`, verifique se o campo `concession` foi alterado e aplique a lógica de cálculo da validade (+2 anos para CRED, fim do ano para TCMS). Registre o Observer no `AppServiceProvider`.",
+            "status": "done",
+            "testStrategy": "Crie um teste de feature que salva uma credencial de cada tipo (CRED e TCMS). Verifique se, ao definir uma data de `concession`, o campo `validity` é preenchido automaticamente com o valor correto conforme a regra de negócio.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:44:25.243Z"
+          },
+          {
+            "id": 4,
+            "title": "Atualizar Modelo Credential com Casts e Accessor de Status",
+            "description": "Modificar o modelo `app/Models/Credential.php` para utilizar os novos Enums nos casts dos campos 'type' e 'secrecy' e implementar um accessor 'status' para derivar o estado da credencial (Negada, Vencida, Ativa, etc.).",
+            "dependencies": [
+              2
+            ],
+            "details": "No modelo `Credential`, atualize a propriedade `$casts` para usar `CredentialType::class` e `CredentialSecrecy::class`. Implemente o accessor `status()` usando `Attribute::make()` com a lógica de status detalhada.",
+            "status": "done",
+            "testStrategy": "Crie um teste unitário para o modelo `Credential`. Crie instâncias do modelo com diferentes atributos e verifique se o accessor `status` retorna a string correta para cada cenário (Vencida, Ativa, Pendente, etc.).",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:44:48.035Z"
+          },
+          {
+            "id": 5,
+            "title": "Atualizar CredentialFactory para o Novo Schema",
+            "description": "Ajustar a factory de Credential para refletir as alterações do schema, renomeando 'name' para 'type', adicionando 'observation' e garantindo que os valores gerados sejam válidos e não nulos para os campos requeridos.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Em `database/factories/CredentialFactory.php`, renomeie a chave `name` para `type` e use um valor do Enum `CredentialType`. Adicione um valor para `observation` e garanta que `user_id` seja sempre preenchido.",
+            "status": "done",
+            "testStrategy": "Execute `Credential::factory()->create()` no tinker ou em um teste. Confirme que o registro é criado no banco de dados sem erros e que todos os campos estão populados conforme a nova estrutura.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:45:23.543Z"
+          },
+          {
+            "id": 6,
+            "title": "Atualizar Formulário do CredentialResource no Filament",
+            "description": "Refatorar o formulário no `CredentialResource` para alinhar com o novo schema: substituir o campo 'name' por um seletor 'type', adicionar um campo para 'observation', atualizar o seletor 'secrecy' e adicionar validação de obrigatoriedade.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "No método `form()` do `CredentialResource`, troque `TextInput` para 'name' por `Select` para 'type' usando `CredentialType::class`. Adicione `Textarea` para 'observation' e ajuste o `Select` de `secrecy`. Aplique `->required()` nos campos pertinentes.",
+            "status": "done",
+            "testStrategy": "Navegue até a página de criação/edição de uma credencial na UI. Verifique se os campos do formulário refletem as mudanças: 'Tipo' como um select, 'Observação' como textarea e se a validação de campos obrigatórios funciona ao tentar salvar.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:45:51.036Z"
+          },
+          {
+            "id": 7,
+            "title": "Atualizar Tabela do CredentialResource com Coluna de Status",
+            "description": "Ajustar a listagem de credenciais no `CredentialResource` para renomear a coluna 'name' para 'type' e adicionar uma `BadgeColumn` para exibir o status derivado, com cores distintas para cada estado.",
+            "dependencies": [
+              4
+            ],
+            "details": "No método `table()` do `CredentialResource`, renomeie a coluna `name` para `type`. Adicione uma `BadgeColumn::make('status')` e configure o método `->colors()` com os pares de cor/estado apropriados (ex: 'success' => 'Ativa').",
+            "status": "done",
+            "testStrategy": "Acesse a listagem de credenciais. Verifique se a coluna 'Status' é exibida com badges coloridos que correspondem corretamente ao estado de cada registro na tabela.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:46:21.820Z"
+          },
+          {
+            "id": 8,
+            "title": "Adicionar Filtro de Status na Tabela do CredentialResource",
+            "description": "Implementar um `SelectFilter` na tabela do `CredentialResource` para permitir que os usuários filtrem a lista de credenciais pelo novo campo de status (Ativa, Vencida, Pendente, etc.).",
+            "dependencies": [
+              7
+            ],
+            "details": "No método `table()`, na seção `filters()`, adicione um `SelectFilter::make('status')` com as opções correspondentes aos valores retornados pelo accessor de status do modelo.",
+            "status": "done",
+            "testStrategy": "Na interface de listagem, utilize o novo filtro de status. Selecione cada uma das opções e confirme que a tabela é filtrada para exibir apenas os registros que correspondem ao status selecionado.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:46:40.019Z"
+          },
+          {
+            "id": 9,
+            "title": "Atualizar Testes Quebrados e Criar Novos",
+            "description": "Revisar e corrigir toda a suíte de testes que foi quebrada pelas mudanças no schema e na lógica de negócio. Criar novos testes para cobrir as novas funcionalidades, como o cálculo da validade pelo Observer e os estados de status.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "details": "Execute `vendor/bin/sail test`, identifique todas as falhas e ajuste os testes para o novo schema e lógica. Crie novos testes de feature para o `CredentialObserver` e testes unitários para o accessor `status` do modelo `Credential`.",
+            "status": "done",
+            "testStrategy": "Execute a suíte de testes completa (`vendor/bin/sail test`). O objetivo é alcançar 100% de aprovação. Verifique o relatório de cobertura de código para garantir que a nova lógica de negócio está adequadamente coberta.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T05:50:04.165Z"
+          }
+        ],
+        "complexity": 9,
+        "recommendedSubtasks": 9,
+        "expansionPrompt": "Decompor em: (1) Criar migration para alterar schema de `credentials` (renomear, adicionar colunas, constraints); (2) Criar Enums para `CredentialType` e `CredentialSecrecy`; (3) Implementar `CredentialObserver` para calcular `validity`; (4) Atualizar model `Credential` com casts e accessor `status`; (5) Atualizar `CredentialFactory`; (6) Atualizar formulário do `CredentialResource` (Selects, Textarea, required); (7) Atualizar tabela do `CredentialResource` (BadgeColumn para status); (8) Adicionar `SelectFilter` para o novo status; (9) Atualizar todos os testes quebrados e criar novos para as novas lógicas.",
+        "updatedAt": "2025-11-21T05:50:04.165Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-21T05:15:03.337Z",
-      "taskCount": 11,
-      "completedCount": 7,
+      "lastModified": "2025-11-21T05:50:04.166Z",
+      "taskCount": 12,
+      "completedCount": 8,
       "tags": [
         "master"
       ]

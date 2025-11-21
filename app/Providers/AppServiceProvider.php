@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Credential;
 use App\Observers\CredentialObserver;
+use App\Observers\CredentialValidityObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,5 +23,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Credential::observe(CredentialObserver::class);
+        Credential::observe(CredentialValidityObserver::class);
     }
 }

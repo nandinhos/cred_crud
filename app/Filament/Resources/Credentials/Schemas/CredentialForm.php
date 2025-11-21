@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Credentials\Schemas;
 
+use App\Enums\CredentialSecrecy;
+use App\Enums\CredentialType;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -35,28 +37,33 @@ class CredentialForm
                             })
                             ->helperText('Código único da credencial'),
 
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nome')
+                        Forms\Components\Select::make('type')
+                            ->label('Tipo de Documento')
+                            ->options(CredentialType::options())
                             ->required()
-                            ->maxLength(255)
-                            ->helperText('Nome descritivo da credencial'),
+                            ->native(false)
+                            ->helperText('CRED: Credencial de Segurança | TCMS: Termo de Compromisso'),
 
                         Forms\Components\Select::make('secrecy')
                             ->label('Nível de Sigilo')
-                            ->options([
-                                'O' => 'Ostensivo',
-                                'R' => 'Reservado',
-                                'S' => 'Secreto',
-                            ])
+                            ->options(CredentialSecrecy::options())
                             ->required()
-                            ->default('O')
-                            ->helperText('Selecione o nível de classificação'),
+                            ->native(false)
+                            ->helperText('R: Reservado | S: Secreto'),
 
                         Forms\Components\TextInput::make('credential')
                             ->label('Número da Credencial')
                             ->required()
                             ->maxLength(255)
                             ->helperText('Número ou código identificador da credencial (texto simples)'),
+
+                        Forms\Components\Textarea::make('observation')
+                            ->label('Observações')
+                            ->nullable()
+                            ->maxLength(65535)
+                            ->rows(3)
+                            ->columnSpanFull()
+                            ->helperText('Observações adicionais sobre a credencial'),
                     ])
                     ->columns(2),
 
@@ -68,14 +75,16 @@ class CredentialForm
                             ->nullable()
                             ->native(false)
                             ->displayFormat('d/m/Y')
-                            ->helperText('Data em que a credencial foi concedida'),
+                            ->helperText('Data de concessão. A validade será calculada automaticamente.'),
 
                         Forms\Components\DatePicker::make('validity')
                             ->label('Data de Validade')
                             ->nullable()
                             ->native(false)
                             ->displayFormat('d/m/Y')
-                            ->helperText('Data de expiração da credencial (opcional)'),
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Calculado automaticamente: CRED = 2 anos | TCMS = 31/12 do ano'),
                     ])
                     ->columns(2),
             ]);

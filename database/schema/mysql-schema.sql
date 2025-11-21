@@ -30,11 +30,12 @@ DROP TABLE IF EXISTS `credentials`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `credentials` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint unsigned DEFAULT NULL,
+  `user_id` bigint unsigned NOT NULL,
   `fscs` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `secrecy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `secrecy` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `credential` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `observation` text COLLATE utf8mb4_unicode_ci,
   `concession` date DEFAULT NULL,
   `validity` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -103,8 +104,8 @@ DROP TABLE IF EXISTS `offices`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `offices` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `office` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `office` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -233,3 +234,4 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (2,'2025_11_21_0000
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (3,'2025_11_21_000003_add_rank_fields_to_users_table',2);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (4,'2025_11_21_000004_create_offices_table',3);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (5,'2025_11_21_000005_add_office_id_to_users_table',3);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (6,'2025_11_21_000006_refactor_credentials_table',4);
