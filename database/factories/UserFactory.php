@@ -41,4 +41,26 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function withRole(string $role): static
+    {
+        return $this->afterCreating(function (\App\Models\User $user) use ($role) {
+            $user->assignRole($role);
+        });
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->withRole('super_admin');
+    }
+
+    public function admin(): static
+    {
+        return $this->withRole('admin');
+    }
+
+    public function consulta(): static
+    {
+        return $this->withRole('consulta');
+    }
 }
