@@ -44,7 +44,7 @@ class AdminUserSeeder extends Seeder
 
         // Criar usuário admin
         $user = User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
+            ['email' => config('auth.super_admin_email')],
             [
                 'name' => 'Administrator',
                 'password' => Hash::make('password'),
@@ -56,7 +56,7 @@ class AdminUserSeeder extends Seeder
         $user->assignRole('super_admin');
 
         $this->command->info('Usuário admin criado com sucesso!');
-        $this->command->info('Email: admin@admin.com');
+        $this->command->info('Email: ' . config('auth.super_admin_email'));
         $this->command->info('Senha: password');
     }
 }
