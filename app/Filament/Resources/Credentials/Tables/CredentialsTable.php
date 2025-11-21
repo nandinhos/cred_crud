@@ -51,17 +51,35 @@ class CredentialsTable
                     ->label('Sigilo')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
+                        'O' => 'info',
                         'R' => 'success',
                         'S' => 'danger',
                         default => 'gray'
                     })
                     ->formatStateUsing(function ($state) {
                         return match ($state) {
+                            'O' => 'Ostensivo',
                             'R' => 'Reservado',
                             'S' => 'Secreto',
                             default => 'N/A'
                         };
-                    }),
+                    })
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('credential')
+                    ->label('Número da Credencial')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->copyMessage('Número copiado!')
+                    ->copyMessageDuration(1500)
+                    ->toggleable(isToggledHiddenByDefault: false),
+
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Usuário')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 Tables\Columns\TextColumn::make('concession')
                     ->label('Concessão')
@@ -116,6 +134,7 @@ class CredentialsTable
                 SelectFilter::make('secrecy')
                     ->label('Nível de Sigilo')
                     ->options([
+                        'O' => 'Ostensivo',
                         'R' => 'Reservado',
                         'S' => 'Secreto',
                     ]),

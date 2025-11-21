@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Rank;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -13,9 +14,18 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Pegar alguns ranks para os usuários fixos
+        $generalEx = Rank::where('abbreviation', 'Gen Ex')->first();
+        $coronel = Rank::where('abbreviation', 'Cel')->where('armed_force', 'Exército')->first();
+        $capitao = Rank::where('abbreviation', 'Cap')->where('armed_force', 'Exército')->first();
+        $tenente = Rank::where('abbreviation', '1º Ten')->where('armed_force', 'Exército')->first();
+        $sargento = Rank::where('abbreviation', '1º Sgt')->where('armed_force', 'Exército')->first();
+
         // Super Admin - Acesso total ao sistema
         $superAdmin = User::create([
-            'name' => 'Super Administrador',
+            'name' => 'Admin',
+            'full_name' => 'Super Administrador do Sistema',
+            'rank_id' => $generalEx?->id,
             'email' => 'superadmin@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -24,7 +34,9 @@ class UserSeeder extends Seeder
 
         // Admin 1 - Administrador principal
         $admin1 = User::create([
-            'name' => 'João Silva',
+            'name' => 'João',
+            'full_name' => 'João Silva Santos',
+            'rank_id' => $coronel?->id,
             'email' => 'admin@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -33,7 +45,9 @@ class UserSeeder extends Seeder
 
         // Admin 2 - Administrador secundário
         $admin2 = User::create([
-            'name' => 'Maria Santos',
+            'name' => 'Maria',
+            'full_name' => 'Maria Santos Oliveira',
+            'rank_id' => $capitao?->id,
             'email' => 'admin2@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -42,7 +56,9 @@ class UserSeeder extends Seeder
 
         // Usuário de Consulta 1
         $consulta1 = User::create([
-            'name' => 'Pedro Oliveira',
+            'name' => 'Pedro',
+            'full_name' => 'Pedro Oliveira Costa',
+            'rank_id' => $tenente?->id,
             'email' => 'consulta@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
@@ -51,7 +67,9 @@ class UserSeeder extends Seeder
 
         // Usuário de Consulta 2
         $consulta2 = User::create([
-            'name' => 'Ana Costa',
+            'name' => 'Ana',
+            'full_name' => 'Ana Costa Pereira',
+            'rank_id' => $sargento?->id,
             'email' => 'consulta2@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),

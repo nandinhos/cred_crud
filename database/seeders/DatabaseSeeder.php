@@ -18,8 +18,9 @@ class DatabaseSeeder extends Seeder
         // Executar seeders em ordem correta
         $this->call([
             RolesAndPermissionsSeeder::class, // 1. Criar roles e permissions primeiro
-            UserSeeder::class,                 // 2. Criar usuários com roles
-            CredentialSeeder::class,           // 3. Criar credenciais para os usuários
+            RankSeeder::class,                 // 2. Criar postos e graduações
+            UserSeeder::class,                 // 3. Criar usuários com roles e ranks
+            CredentialSeeder::class,           // 4. Criar credenciais para os usuários
         ]);
 
         $this->command->info('');

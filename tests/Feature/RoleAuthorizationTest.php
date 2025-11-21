@@ -12,7 +12,8 @@ beforeEach(function () {
 
 test('usuário admin pode acessar todas as funcionalidades de credenciais', function () {
     $user = User::create([
-        'name' => 'Admin User',
+        'name' => 'Admin',
+        'full_name' => 'Admin User Test',
         'email' => 'admin.test@example.com',
         'password' => 'password123',
     ]);
@@ -26,7 +27,8 @@ test('usuário admin pode acessar todas as funcionalidades de credenciais', func
 
 test('usuário super_admin pode acessar todas as funcionalidades de credenciais', function () {
     $user = User::create([
-        'name' => 'Super Admin User',
+        'name' => 'SuperAdmin',
+        'full_name' => 'Super Admin User Test',
         'email' => 'superadmin.test@example.com',
         'password' => 'password123',
     ]);
@@ -40,7 +42,8 @@ test('usuário super_admin pode acessar todas as funcionalidades de credenciais'
 
 test('usuário consulta não pode criar, editar ou deletar credenciais', function () {
     $user = User::create([
-        'name' => 'Consulta User',
+        'name' => 'Consulta',
+        'full_name' => 'Consulta User Test',
         'email' => 'consulta.test@example.com',
         'password' => 'password123',
     ]);
@@ -68,7 +71,8 @@ test('roles são criados corretamente pelos seeders', function () {
 test('usuário admin principal tem role super_admin', function () {
     // Criar usuário admin principal
     $adminUser = User::create([
-        'name' => 'Admin Principal',
+        'name' => 'Admin',
+        'full_name' => 'Admin Principal Test',
         'email' => 'admin@admin.com',
         'password' => 'password123',
     ]);
@@ -81,7 +85,8 @@ test('usuário admin principal tem role super_admin', function () {
 
 test('usuário consulta pode acessar painel mas com permissões limitadas', function () {
     $user = User::create([
-        'name' => 'Consulta Panel Test',
+        'name' => 'Consulta',
+        'full_name' => 'Consulta Panel Test',
         'email' => 'consulta.panel@example.com',
         'password' => 'password123',
     ]);
@@ -97,14 +102,16 @@ test('usuário consulta pode acessar painel mas com permissões limitadas', func
 
 test('middleware check role funciona corretamente', function () {
     $adminUser = User::create([
-        'name' => 'Admin Test',
+        'name' => 'Admin',
+        'full_name' => 'Admin Test Middleware',
         'email' => 'admin.middleware@example.com',
         'password' => 'password123',
     ]);
     $adminUser->assignRole('admin');
 
     $consultaUser = User::create([
-        'name' => 'Consulta Test',
+        'name' => 'Consulta',
+        'full_name' => 'Consulta Test Middleware',
         'email' => 'consulta.middleware@example.com',
         'password' => 'password123',
     ]);

@@ -6,7 +6,9 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -30,7 +32,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -39,6 +41,8 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $fillable = [
         'name',
+        'full_name',
+        'rank_id',
         'email',
         'password',
     ];
@@ -102,5 +106,16 @@ class User extends Authenticatable implements FilamentUser
     public function credentials(): HasMany
     {
         return $this->hasMany(Credential::class);
+    }
+
+    /**
+     * Relacionamento com Rank
+     * Um usuário pertence a um posto/graduação
+     *
+     * @return BelongsTo<Rank, User>
+     */
+    public function rank(): BelongsTo
+    {
+        return $this->belongsTo(Rank::class);
     }
 }

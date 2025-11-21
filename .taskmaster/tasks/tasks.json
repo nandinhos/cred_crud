@@ -882,13 +882,251 @@
           }
         ],
         "updatedAt": "2025-11-21T03:19:14.314Z"
+      },
+      {
+        "id": "9",
+        "title": "Alinhamento Completo do CRUD de Credenciais com o Schema do Banco de Dados",
+        "description": "Ajustar o recurso Filament `CredentialResource` para exibir e gerenciar todos os campos da tabela `credentials` (`fscs`, `name`, `secrecy`, `credential`, `concession`, `validity`, `user_id`), garantindo paridade total entre a interface do usuário e o banco de dados.",
+        "details": "O objetivo desta tarefa é sincronizar completamente o `CredentialResource` do Filament com a estrutura da tabela `credentials` definida na Task #8. Isso envolve atualizar tanto o formulário de criação/edição quanto a tabela de listagem.\n\n1. **Atualizar o Formulário (`CredentialResource.php`, método `form`):**\n   - Adicione todos os campos que faltam ao schema do formulário. A estrutura deve ser semelhante a esta:\n   ```php\n   use Filament\\Forms\\Components\\TextInput;\n   use Filament\\Forms\\Components\\Select;\n   use Filament\\Forms\\Components\\DatePicker;\n\n   public static function form(Form $form): Form\n   {\n       return $form\n           ->schema([\n               TextInput::make('fscs')\n                   ->label('FSCS')\n                   ->required()\n                   ->maxLength(255),\n               TextInput::make('name')\n                   ->label('Nome da Credencial')\n                   ->required()\n                   ->maxLength(255),\n               Select::make('secrecy')\n                   ->label('Nível de Sigilo')\n                   ->options([\n                       'public' => 'Público',\n                       'internal' => 'Interno',\n                       'confidential' => 'Confidencial',\n                       'restricted' => 'Restrito'\n                   ])\n                   ->required(),\n               TextInput::make('credential')\n                   ->label('Credencial')\n                   ->password() // Para mascarar a entrada\n                   ->required(fn (string $context): bool => $context === 'create'), // Obrigatório apenas na criação\n               TextInput::make('concession')\n                   ->label('Concessão')\n                   ->nullable()\n                   ->maxLength(255),\n               DatePicker::make('validity')\n                   ->label('Validade')\n                   ->nullable(),\n               Select::make('user_id')\n                   ->label('Usuário Associado')\n                   ->relationship('user', 'name')\n                   ->searchable()\n                   ->required(),\n           ]);\n   }\n   ```\n\n2. **Atualizar a Tabela de Listagem (`CredentialResource.php`, método `table`):**\n   - Exiba todas as colunas relevantes na tabela de listagem, garantindo clareza e completude da informação.\n   - Utilize um `BadgeColumn` para o campo `secrecy`, preparando para usar o `BadgeColor` Enum da Task #4.\n   ```php\n   use Filament\\Tables\\Columns\\TextColumn;\n   use Filament\\Tables\\Columns\\BadgeColumn;\n\n   public static function table(Table $table): Table\n   {\n       return $table\n           ->columns([\n               TextColumn::make('id')->sortable(),\n               TextColumn::make('fscs')->label('FSCS')->searchable()->sortable(),\n               TextColumn::make('name')->label('Nome')->searchable()->sortable(),\n               BadgeColumn::make('secrecy')\n                   ->label('Sigilo')\n                   ->colors([\n                       'primary' => 'public',\n                       'warning' => 'internal',\n                       'success' => 'confidential', // Exemplo, alinhar com Enum da Task 4\n                       'danger' => 'restricted',\n                   ])->sortable(),\n               TextColumn::make('concession')->label('Concessão')->toggleable(isToggledHiddenByDefault: true),\n               TextColumn::make('validity')->label('Validade')->date('d/m/Y')->sortable(),\n               TextColumn::make('user.name')->label('Usuário')->searchable()->sortable(),\n               TextColumn::make('created_at')->label('Criado em')->dateTime('d/m/Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),\n           ])\n           ->filters([/* ... */])\n           ->actions([/* ... */])\n           ->bulkActions([/* ... */]);\n   }\n   ```\n\n3. **Verificar Modelo `Credential.php`:**\n   - Confirme que a propriedade `$fillable` no modelo `App\\Models\\Credential` inclui todos os novos campos para permitir mass assignment: `['fscs', 'name', 'secrecy', 'credential', 'concession', 'validity', 'user_id']`.\n   - Garanta que a relação `user()` está corretamente definida: `public function user() { return $this->belongsTo(User::class); }`.",
+        "testStrategy": "A estratégia de teste deve cobrir o fluxo completo de CRUD para garantir que todos os campos funcionem como esperado.\n\n1. **Teste de Criação:**\n   - Navegue para a página de criação de credenciais.\n   - Preencha todos os campos, incluindo os opcionais `concession` e `validity`.\n   - Salve o formulário e verifique se a credencial foi criada no banco de dados com todos os valores corretos.\n   - Crie uma segunda credencial, desta vez deixando os campos `concession` e `validity` vazios. Verifique se o registro foi salvo com valores `NULL` para esses campos.\n\n2. **Teste de Listagem e Visualização:**\n   - Na página de listagem, verifique se todas as novas colunas (`FSCS`, `Nome`, `Sigilo`, `Validade`, `Usuário`) estão visíveis e exibem os dados corretos para os registros criados.\n   - Utilize a funcionalidade de busca para pesquisar por `fscs`, `name` e `user.name`.\n   - Ordene a tabela por cada uma das novas colunas para garantir que a ordenação está funcionando.\n\n3. **Teste de Edição:**\n   - Abra um registro existente para edição.\n   - Verifique se todos os campos estão preenchidos com os dados corretos (o campo `credential` pode aparecer vazio por segurança, o que é esperado).\n   - Modifique o valor de cada campo, incluindo a alteração do `user_id` e a remoção de uma data de `validity`.\n   - Salve as alterações e confirme no banco de dados e na tela de listagem que os dados foram atualizados corretamente.\n\n4. **Teste de Visualização (se aplicável):**\n   - Se houver uma página de visualização, acesse-a e confirme que todos os campos da credencial são exibidos corretamente.",
+        "status": "done",
+        "dependencies": [
+          "8"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Verificar e Atualizar o Modelo App\\Models\\Credential",
+            "description": "Garantir que a propriedade `$fillable` no modelo `Credential` inclua todos os campos necessários para mass assignment e que a relação `belongsTo` com o modelo `User` esteja corretamente implementada.",
+            "dependencies": [],
+            "details": "Abra o arquivo `app/Models/Credential.php`. Verifique e atualize a propriedade `$fillable` para ser `['fscs', 'name', 'secrecy', 'credential', 'concession', 'validity', 'user_id']`. Adicione ou confirme que o método da relação `public function user() { return $this->belongsTo(User::class); }` existe e está correto.",
+            "status": "pending",
+            "testStrategy": "Execute `php artisan tinker` e tente criar uma nova credencial usando `App\\Models\\Credential::create([...])` com todos os campos para confirmar que o mass assignment funciona sem lançar uma exceção.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implementar Formulário Completo de Credenciais no CredentialResource",
+            "description": "Atualizar o método estático `form` em `app/Filament/Resources/CredentialResource.php` para incluir todos os campos do schema do banco de dados: `fscs`, `name`, `secrecy`, `credential`, `concession`, `validity` e `user_id`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Substitua o conteúdo do método `public static function form(Form $form): Form` pelo código-exemplo fornecido na tarefa. Isso irá adicionar componentes como `TextInput`, `Select` com opções, `DatePicker` e um `Select` de relacionamento para o usuário.",
+            "status": "pending",
+            "testStrategy": "Navegue até a página de criação/edição de uma credencial no painel Filament e verifique se todos os campos aparecem corretamente, com seus respectivos tipos (texto, senha, seletor, data) e validações, como o campo de senha ser obrigatório apenas na criação.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implementar Tabela de Listagem Completa no CredentialResource",
+            "description": "Atualizar o método estático `table` em `app/Filament/Resources/CredentialResource.php` para exibir todas as colunas relevantes da tabela `credentials`, utilizando os componentes de coluna apropriados.",
+            "dependencies": [
+              1
+            ],
+            "details": "Substitua o conteúdo do método `public static function table(Table $table): Table` pelo código-exemplo da tarefa. Isso irá configurar colunas para `id`, `fscs`, `name`, `secrecy` (usando `BadgeColumn`), `concession`, `validity`, `user.name` e `created_at`, com funcionalidades de ordenação, busca e alternância de visibilidade.",
+            "status": "pending",
+            "testStrategy": "Acesse a página de listagem de credenciais. Verifique se todas as colunas configuradas são exibidas e se a formatação (data, badge) está correta. Teste as funcionalidades de busca por nome e fscs, e a ordenação por diferentes colunas.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Testar o Fluxo de Criação de uma Nova Credencial",
+            "description": "Realizar um teste ponta a ponta do fluxo de criação de uma nova credencial através da interface do Filament para validar que todos os campos são salvos corretamente no banco de dados.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Acesse a funcionalidade 'Nova Credencial' no painel. Preencha todos os campos do formulário, incluindo os opcionais `concession` e `validity`. Submeta o formulário e verifique se o novo registro aparece na tabela de listagem com os dados corretos.",
+            "status": "pending",
+            "testStrategy": "Após criar o registro pela UI, conecte-se ao banco de dados (via Tinker ou um cliente SQL) e inspecione o último registro na tabela `credentials` para confirmar que todos os valores foram persistidos exatamente como foram inseridos.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Testar o Fluxo de Edição de uma Credencial Existente",
+            "description": "Verificar se os dados de uma credencial existente são carregados corretamente no formulário de edição e se as modificações, incluindo a atualização opcional da senha, são salvas com sucesso.",
+            "dependencies": [
+              4
+            ],
+            "details": "Na listagem de credenciais, clique para editar o registro criado no passo anterior. Altere valores em campos como `name`, `secrecy` e `validity`. Salve o formulário e confirme que as alterações são refletidas na tabela. Teste salvar sem preencher o campo `credential` para garantir que a senha não seja alterada.",
+            "status": "pending",
+            "testStrategy": "Verifique na interface e no banco de dados que os campos foram atualizados. Realize uma edição sem fornecer uma nova senha e tente fazer login (se aplicável) ou verifique o hash no banco para garantir que a senha antiga foi mantida.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Testar a Exclusão da Credencial e a Visualização de Relacionamentos",
+            "description": "Validar a funcionalidade de exclusão (soft delete ou hard delete) de uma credencial e confirmar que os dados de relacionamentos, como o nome do usuário, são exibidos corretamente na listagem e no formulário.",
+            "dependencies": [
+              5
+            ],
+            "details": "Na listagem de credenciais, utilize a ação de exclusão em um registro de teste. Confirme que o registro é removido da interface. Verifique se a coluna 'Usuário' na tabela e o campo 'Usuário Associado' no formulário exibem corretamente o nome do usuário, testando a relação Eloquent.",
+            "status": "pending",
+            "testStrategy": "Confirme que a exclusão funciona e o registro desaparece da lista. Verifique se a busca pelo nome do usuário na listagem de credenciais filtra os resultados corretamente, validando a configuração `searchable()` na coluna do relacionamento.",
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-11-21T03:36:18.986Z"
+      },
+      {
+        "id": "10",
+        "title": "Implementação do Sistema de Postos e Graduações (Ranks)",
+        "description": "Criar a estrutura de banco de dados e a lógica de aplicação para gerenciar Postos e Graduações, integrando-os ao modelo de Usuário e à interface do Filament.",
+        "details": "Esta tarefa abrange a criação da tabela de postos/graduações, a modificação da tabela de usuários, a criação de modelos, seeders e a atualização da interface do Filament para refletir as mudanças. A base foi estabelecida na Task #8, e esta tarefa expande o modelo de dados do usuário.\n\n1. **Criar Migration e Model para Ranks**:\n   - Gere a migration para a tabela `ranks`.\n   ```bash\n   vendor/bin/sail artisan make:migration create_ranks_table\n   ```\n   - No arquivo da migration, defina o schema:\n   ```php\n   Schema::create('ranks', function (Blueprint $table) {\n       $table->id();\n       $table->string('force'); // Ex: 'Exército', 'Marinha', 'Aeronáutica'\n       $table->string('name'); // Ex: 'Soldado', 'Cabo'\n       $table->string('abbreviation'); // Ex: 'Sd', 'Cb'\n       $table->integer('order')->index(); // Para ordenação hierárquica\n       $table->timestamps();\n   });\n   ```\n\n2. **Alterar Tabela de Usuários**:\n   - Gere uma nova migration para adicionar os campos à tabela `users`.\n   ```bash\n   vendor/bin/sail artisan make:migration add_rank_fields_to_users_table\n   ```\n   - No arquivo da migration, adicione as colunas:\n   ```php\n   Schema::table('users', function (Blueprint $table) {\n       $table->string('full_name')->after('name');\n       $table->foreignId('rank_id')->nullable()->after('full_name')->constrained('ranks')->onDelete('set null');\n       $table->softDeletes();\n   });\n   ```\n\n3. **Criar Model e Relacionamentos**:\n   - Crie o model `Rank`:\n   ```bash\n   vendor/bin/sail artisan make:model Rank\n   ```\n   - Em `app/Models/Rank.php`, adicione o relacionamento:\n   ```php\n   public function users() { return $this->hasMany(User::class); }\n   ```\n   - Em `app/Models/User.php`, adicione o trait `SoftDeletes` e o relacionamento:\n   ```php\n   use Illuminate\\Database\\Eloquent\\SoftDeletes;\n   // ...\n   use SoftDeletes;\n   // ...\n   public function rank() { return $this->belongsTo(Rank::class); }\n   ```\n\n4. **Criar Seeder para Ranks**:\n   - Gere o seeder:\n   ```bash\n   vendor/bin/sail artisan make:seeder RankSeeder\n   ```\n   - Em `database/seeders/RankSeeder.php`, popule a tabela com os dados de `.taskmaster/docs/ranks.md`.\n   - Chame o `RankSeeder` em `database/seeders/DatabaseSeeder.php` ANTES do `UserSeeder`.\n\n5. **Atualizar `UserFactory` e `UserSeeder`**:\n   - Em `database/factories/UserFactory.php`, adicione `full_name` e um `rank_id` aleatório.\n   ```php\n   'full_name' => $this->faker->name(),\n   'rank_id' => \\App\\Models\\Rank::inRandomOrder()->first()->id,\n   ```\n   - Assegure que o `UserSeeder` utilize a factory atualizada.\n\n6. **Ajustar `UserResource` no Filament**:\n   - Em `app/Filament/Resources/UserResource.php`, atualize o formulário e a tabela.\n   - Método `form()`:\n   ```php\n   use Filament\\Forms\\Components\\TextInput;\n   use Filament\\Forms\\Components\\Select;\n   // ...\n   TextInput::make('full_name')->required(),\n   Select::make('rank_id')->relationship('rank', 'name')->searchable()->preload(),\n   ```\n   - Método `table()`:\n   ```php\n   use Filament\\Tables\\Columns\\TextColumn;\n   // ...\n   TextColumn::make('full_name')->searchable()->sortable(),\n   TextColumn::make('rank.name')->label('Posto/Grad')->searchable()->sortable(),\n   ```\n\n7. **Atualizar Documentação**:\n   - Edite o arquivo `database_schema.md` para incluir a estrutura da nova tabela `ranks` e as colunas adicionadas à tabela `users`.",
+        "testStrategy": "1. **Teste de Migração e População**:\n   - Execute o comando para recriar o banco de dados do zero.\n   ```bash\n   vendor/bin/sail artisan migrate:fresh --seed\n   ```\n   - Verifique se o processo é concluído sem erros.\n\n2. **Verificação no Banco de Dados via Tinker**:\n   - Confirme se a tabela `ranks` foi populada: `\\App\\Models\\Rank::count();` (deve ser > 0).\n   - Verifique se os usuários foram associados a um rank: `\\App\\Models\\User::first()->rank->name;` (deve retornar um nome de posto/graduação).\n   - Confirme se `full_name` foi preenchido: `\\App\\Models\\User::first()->full_name;` (deve retornar um nome).\n\n3. **Teste da Interface do Filament (CRUD de Usuário)**:\n   - **Listagem**: Acesse a lista de usuários e verifique se as colunas 'Nome Completo' e 'Posto/Grad' são exibidas corretamente.\n   - **Criação**: Crie um novo usuário. Verifique se o campo de seleção de Posto/Graduação está populado e se o nome completo pode ser salvo.\n   - **Edição**: Edite um usuário existente. Altere seu Posto/Graduação e seu nome completo e salve. Verifique se a alteração foi persistida.\n   - **Exclusão**: Exclua um usuário pela interface.\n\n4. **Teste de Soft Delete**:\n   - Após excluir um usuário no passo anterior, verifique no Tinker que o registro ainda existe no banco com `deleted_at` preenchido.\n   ```php\n   // Substitua 1 pelo ID do usuário deletado\n   \\App\\Models\\User::withTrashed()->find(1);\n   ```\n   - Confirme que o mesmo usuário não é encontrado sem `withTrashed()`:\n   ```php\n   \\App\\Models\\User::find(1); // Deve retornar null\n   ```\n\n5. **Validação da Documentação**:\n   - Abra o arquivo `database_schema.md` e confirme que a descrição das tabelas `users` e `ranks` está atualizada e correta.",
+        "status": "done",
+        "dependencies": [
+          "1",
+          "8",
+          "9"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar Migration para Tabela de Postos/Graduações (`ranks`)",
+            "description": "Gerar e configurar o arquivo de migration para a criação da tabela `ranks`, que armazenará as informações hierárquicas de postos e graduações.",
+            "dependencies": [],
+            "details": "Executar o comando `vendor/bin/sail artisan make:migration create_ranks_table`. No arquivo de migration, definir o schema com as colunas: `id`, `force` (string), `name` (string), `abbreviation` (string), `order` (integer com índice) e `timestamps`.",
+            "status": "done",
+            "testStrategy": "Verificar se o arquivo de migration é criado no diretório `database/migrations`. Inspecionar o código gerado para garantir que o schema da tabela `ranks` está definido corretamente conforme a especificação.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:36:07.315Z"
+          },
+          {
+            "id": 2,
+            "title": "Criar Migration para Adicionar Campos na Tabela `users`",
+            "description": "Gerar uma nova migration para adicionar as colunas `full_name`, `rank_id` (com chave estrangeira para `ranks`) e suporte a `SoftDeletes` na tabela de usuários existente.",
+            "dependencies": [
+              1
+            ],
+            "details": "Executar `vendor/bin/sail artisan make:migration add_rank_fields_to_users_table`. No schema, adicionar `$table->string('full_name')->after('name');`, `$table->foreignId('rank_id')->nullable()->after('full_name')->constrained('ranks')->onDelete('set null');` e `$table->softDeletes();`.",
+            "status": "done",
+            "testStrategy": "Inspecionar o arquivo da nova migration para confirmar que as colunas `full_name`, `rank_id` e `deleted_at` serão corretamente adicionadas à tabela `users`.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:36:10.855Z"
+          },
+          {
+            "id": 3,
+            "title": "Criar Model `Rank` e Definir Relacionamentos",
+            "description": "Gerar o model `Rank` e configurar os relacionamentos Eloquent necessários entre `User` e `Rank`.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Executar `vendor/bin/sail artisan make:model Rank`. Em `app/Models/Rank.php`, adicionar o relacionamento `public function users() { return $this->hasMany(User::class); }`. Em `app/Models/User.php`, adicionar o trait `use SoftDeletes;` e o relacionamento `public function rank() { return $this->belongsTo(Rank::class); }`.",
+            "status": "done",
+            "testStrategy": "Revisar os arquivos `app/Models/User.php` e `app/Models/Rank.php` para garantir que os relacionamentos `belongsTo` e `hasMany`, assim como o trait `SoftDeletes`, foram implementados corretamente.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:36:38.177Z"
+          },
+          {
+            "id": 4,
+            "title": "Criar Seeder para Popular a Tabela de Postos e Graduações (`RankSeeder`)",
+            "description": "Gerar um seeder para preencher a tabela `ranks` com os dados hierárquicos de postos e graduações das diferentes forças, conforme a documentação do projeto.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Executar `vendor/bin/sail artisan make:seeder RankSeeder`. No método `run()`, implementar a lógica para inserir os registros de postos e graduações, utilizando os dados de `.taskmaster/docs/ranks.md` como referência.",
+            "status": "done",
+            "testStrategy": "Após a execução da migration da tabela `ranks`, executar o seeder isoladamente com `php artisan db:seed --class=RankSeeder` e verificar no banco de dados se a tabela `ranks` foi populada corretamente.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:37:13.363Z"
+          },
+          {
+            "id": 5,
+            "title": "Integrar `RankSeeder` no Processo de Seed Principal",
+            "description": "Garantir que o `RankSeeder` seja executado durante o processo de `db:seed`, chamando-o na ordem correta dentro do `DatabaseSeeder` para evitar erros de chave estrangeira.",
+            "dependencies": [
+              4
+            ],
+            "details": "Editar o arquivo `database/seeders/DatabaseSeeder.php` e adicionar a chamada `$this->call(RankSeeder::class);` antes da chamada ao `UserSeeder` existente.",
+            "status": "done",
+            "testStrategy": "Executar o comando completo `vendor/bin/sail artisan migrate:fresh --seed` e verificar se o processo é concluído sem erros, indicando que a ordem de execução dos seeders está correta.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:37:25.870Z"
+          },
+          {
+            "id": 6,
+            "title": "Atualizar `UserFactory` com `full_name` e `rank_id`",
+            "description": "Modificar a `UserFactory` para que os usuários gerados para testes e seeding tenham um nome completo (`full_name`) e um `rank_id` aleatório e válido, obtido da tabela `ranks`.",
+            "dependencies": [
+              3,
+              5
+            ],
+            "details": "Em `database/factories/UserFactory.php`, adicionar `'full_name' => $this->faker->name()` e `'rank_id' => \\App\\Models\\Rank::inRandomOrder()->first()->id` na definição da factory.",
+            "status": "done",
+            "testStrategy": "Utilizar o Tinker para criar um novo usuário via factory (`\\App\\Models\\User::factory()->create();`) e verificar se os campos `full_name` e `rank_id` foram preenchidos corretamente no registro do banco de dados.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:37:41.790Z"
+          },
+          {
+            "id": 7,
+            "title": "Atualizar Formulário do `UserResource` no Filament",
+            "description": "Modificar o método `form()` do `UserResource` para permitir a criação e edição dos campos `full_name` e `rank_id` na interface do Filament.",
+            "dependencies": [
+              3
+            ],
+            "details": "Em `app/Filament/Resources/UserResource.php`, dentro do método `form()`, adicionar um `TextInput` para `full_name` e um `Select` para `rank_id` utilizando `relationship('rank', 'name')` com as opções `searchable()` e `preload()`.",
+            "status": "done",
+            "testStrategy": "Acessar a página de criação ou edição de um usuário no painel Filament e confirmar que os campos 'Nome Completo' e 'Posto/Graduação' (com a lista de ranks) estão presentes e funcionais.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:38:20.021Z"
+          },
+          {
+            "id": 8,
+            "title": "Atualizar Tabela do `UserResource` no Filament",
+            "description": "Modificar o método `table()` do `UserResource` para exibir as colunas `full_name` e o nome do posto/graduação (`rank.name`) na listagem de usuários do Filament.",
+            "dependencies": [
+              3
+            ],
+            "details": "Em `app/Filament/Resources/UserResource.php`, dentro do método `table()`, adicionar `TextColumn` para `full_name` e `rank.name` (com `label('Posto/Grad')`). Ambos devem ser configurados com `searchable()` e `sortable()`.",
+            "status": "done",
+            "testStrategy": "Acessar a página de listagem de usuários no painel Filament e verificar se as colunas 'Nome Completo' e 'Posto/Grad' são exibidas com os dados corretos e se as funcionalidades de busca e ordenação funcionam.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:38:21.753Z"
+          },
+          {
+            "id": 9,
+            "title": "Atualizar Documentação do Schema do Banco de Dados",
+            "description": "Editar o arquivo `database_schema.md` para incluir a estrutura da nova tabela `ranks` e documentar as colunas adicionadas à tabela `users`.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "No arquivo `database_schema.md`, adicionar uma nova seção descrevendo a tabela `ranks` e seus campos. Atualizar a seção da tabela `users` para incluir os campos `full_name`, `rank_id` e `deleted_at`.",
+            "status": "done",
+            "testStrategy": "Revisar o arquivo `database_schema.md` após a edição para garantir que a documentação reflete com precisão as alterações implementadas no banco de dados.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:43:28.004Z"
+          },
+          {
+            "id": 10,
+            "title": "Executar Migrations e Seeders para Validar Integração Completa",
+            "description": "Executar o comando `migrate:fresh --seed` para recriar o banco de dados com todas as novas estruturas e dados, garantindo que todo o processo de implementação funcione de ponta a ponta.",
+            "dependencies": [
+              5,
+              6,
+              7,
+              8
+            ],
+            "details": "No terminal, dentro do ambiente do projeto, executar o comando `vendor/bin/sail artisan migrate:fresh --seed`. Este comando irá apagar todas as tabelas, executar todas as migrations e popular o banco de dados com todos os seeders configurados.",
+            "status": "done",
+            "testStrategy": "Confirmar que o comando `migrate:fresh --seed` é executado com sucesso sem nenhum erro. Após a execução, acessar o painel Filament e verificar se os dados de usuários e postos/graduações estão sendo exibidos corretamente.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T04:43:30.210Z"
+          }
+        ],
+        "updatedAt": "2025-11-21T04:43:30.210Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-21T03:19:14.315Z",
-      "taskCount": 8,
-      "completedCount": 4,
+      "lastModified": "2025-11-21T04:43:30.212Z",
+      "taskCount": 10,
+      "completedCount": 6,
       "tags": [
         "master"
       ]

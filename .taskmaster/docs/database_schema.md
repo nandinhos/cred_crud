@@ -30,6 +30,64 @@
 
 ---
 
+## 🗂️ Tabela: ranks
+
+### Estrutura
+
+| Campo            | Tipo             | Nullable | Default | Observações                              |
+|------------------|------------------|----------|---------|------------------------------------------|
+| id               | BIGINT UNSIGNED  | NO       | -       | Primary Key, Auto Increment              |
+| abbreviation     | VARCHAR(255)     | NO       | -       | Abreviação do posto/graduação            |
+| name             | VARCHAR(255)     | NO       | -       | Nome completo do posto/graduação         |
+| armed_force      | VARCHAR(255)     | NO       | -       | Força Armada (Exército, Marinha, Aero)   |
+| hierarchy_order  | INT              | NO       | -       | Ordem hierárquica (1=menor, 18=maior)    |
+| created_at       | TIMESTAMP        | YES      | NULL    | Data de criação                          |
+| updated_at       | TIMESTAMP        | YES      | NULL    | Data de atualização                      |
+
+### Índices:
+- **UNIQUE** (`abbreviation`, `armed_force`): Combinação única de abreviação e força
+- **INDEX** `armed_force`: Otimiza filtros por força armada
+- **INDEX** (`armed_force`, `hierarchy_order`): Otimiza ordenação hierárquica por força
+- **INDEX** `hierarchy_order`: Otimiza ordenação geral
+
+### Dados:
+- **Total**: 53 postos e graduações
+- **Marinha**: 18 ranks (do Marinheiro ao Almirante)
+- **Exército**: 17 ranks (do Soldado ao Marechal)
+- **Aeronáutica**: 18 ranks (do Soldado 2ª Classe ao Marechal do Ar)
+
+---
+
+## 🗂️ Tabela: users
+
+### Estrutura Atual (Pós-Task 10)
+
+| Campo              | Tipo             | Nullable | Default | Observações                          |
+|--------------------|------------------|----------|---------|--------------------------------------|
+| id                 | BIGINT UNSIGNED  | NO       | -       | Primary Key, Auto Increment          |
+| name               | VARCHAR(255)     | NO       | -       | Nome de guerra (nome curto)          |
+| full_name          | VARCHAR(255)     | NO       | -       | **NOVO** - Nome completo do usuário  |
+| rank_id            | BIGINT UNSIGNED  | YES      | NULL    | **NOVO** - Foreign Key → ranks.id    |
+| email              | VARCHAR(255)     | NO       | -       | Unique, email do usuário             |
+| email_verified_at  | TIMESTAMP        | YES      | NULL    | Data de verificação do email         |
+| password           | VARCHAR(255)     | NO       | -       | Senha hash                           |
+| remember_token     | VARCHAR(100)     | YES      | NULL    | Token de lembrar sessão              |
+| created_at         | TIMESTAMP        | YES      | NULL    | Data de criação                      |
+| updated_at         | TIMESTAMP        | YES      | NULL    | Data de atualização                  |
+| deleted_at         | TIMESTAMP        | YES      | NULL    | **NOVO** - Soft Delete               |
+
+### Relacionamentos:
+- **belongsTo**: Rank (rank_id → ranks.id, onDelete: SET NULL)
+- **hasMany**: Credentials
+- **belongsToMany**: Roles (via Spatie Permission)
+- **belongsToMany**: Permissions (via Spatie Permission)
+
+### Índices:
+- **UNIQUE** `email`: Garante unicidade de email
+- **INDEX** `rank_id`: Otimiza queries de relacionamento com ranks
+
+---
+
 ## 🗂️ Tabela: credentials
 
 ### Estrutura Atual (Pós-Refatoração)

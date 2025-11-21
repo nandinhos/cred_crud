@@ -42,7 +42,24 @@ class UserResource extends Resource
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
-                            ->label('Nome Completo'),
+                            ->label('Nome de Guerra')
+                            ->helperText('Nome curto utilizado no sistema'),
+
+                        TextInput::make('full_name')
+                            ->required()
+                            ->maxLength(255)
+                            ->label('Nome Completo')
+                            ->helperText('Nome completo do usuário'),
+
+                        Select::make('rank_id')
+                            ->label('Posto/Graduação')
+                            ->relationship('rank', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->helperText('Selecione o posto ou graduação')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->abbreviation} - {$record->name} ({$record->armed_force})")
+                            ->placeholder('Selecione o posto/graduação'),
 
                         TextInput::make('email')
                             ->label('E-mail')
@@ -90,15 +107,33 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('rank.abbreviation')
+                    ->label('Posto/Grad')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('success')
+                    ->placeholder('N/A')
+                    ->tooltip(fn ($record) => $record->rank ? "{$record->rank->name} ({$record->rank->armed_force})" : 'Sem posto/graduação'),
+
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Nome'),
+                    ->label('Nome de Guerra'),
+
+                TextColumn::make('full_name')
+                    ->searchable()
+                    ->sortable()
+                    ->label('Nome Completo')
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 TextColumn::make('email')
                     ->searchable()
                     ->sortable()
-                    ->label('E-mail'),
+                    ->label('E-mail')
+                    ->copyable()
+                    ->copyMessage('E-mail copiado!')
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 TextColumn::make('roles.name')
                     ->label('Perfis')
