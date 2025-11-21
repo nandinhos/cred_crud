@@ -38,17 +38,22 @@ class UserResource extends Resource
         return $schema
             ->components([
                 Section::make('Informações do Usuário')
+                    ->description('Dados pessoais e credenciais de acesso')
+                    ->icon('heroicon-o-user-circle')
+                    ->collapsible()
                     ->schema([
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
                             ->label('Nome de Guerra')
+                            ->prefixIcon('heroicon-o-user')
                             ->helperText('Nome curto utilizado no sistema'),
 
                         TextInput::make('full_name')
                             ->required()
                             ->maxLength(255)
                             ->label('Nome Completo')
+                            ->prefixIcon('heroicon-o-identification')
                             ->helperText('Nome completo do usuário'),
 
                         Select::make('rank_id')
@@ -57,6 +62,7 @@ class UserResource extends Resource
                             ->searchable()
                             ->preload()
                             ->nullable()
+                            ->prefixIcon('heroicon-o-star')
                             ->helperText('Selecione o posto ou graduação')
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->abbreviation} - {$record->name} ({$record->armed_force})")
                             ->placeholder('Selecione o posto/graduação'),
@@ -67,6 +73,7 @@ class UserResource extends Resource
                             ->searchable()
                             ->preload()
                             ->nullable()
+                            ->prefixIcon('heroicon-o-building-office')
                             ->helperText('Selecione a unidade militar')
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->office} - {$record->description}")
                             ->placeholder('Selecione a unidade'),
@@ -76,7 +83,8 @@ class UserResource extends Resource
                             ->email()
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->prefixIcon('heroicon-o-envelope'),
 
                         TextInput::make('password')
                             ->label('Senha')
@@ -86,11 +94,16 @@ class UserResource extends Resource
                             ->dehydrated(fn ($state) => filled($state))
                             ->revealable()
                             ->minLength(8)
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->prefixIcon('heroicon-o-lock-closed'),
                     ])
                     ->columns(2),
 
                 Section::make('Perfis e Permissões')
+                    ->description('Defina os perfis e permissões do usuário')
+                    ->icon('heroicon-o-shield-check')
+                    ->collapsible()
+                    ->collapsed()
                     ->schema([
                         Select::make('roles')
                             ->label('Perfis')
@@ -98,6 +111,7 @@ class UserResource extends Resource
                             ->relationship('roles', 'name')
                             ->preload()
                             ->searchable()
+                            ->prefixIcon('heroicon-o-user-group')
                             ->helperText('Selecione um ou mais perfis')
                             ->placeholder('Selecione os perfis'),
 

@@ -19,6 +19,8 @@ class CredentialForm
             ->components([
                 Section::make('Informações da Credencial')
                     ->description('Dados principais da credencial de segurança')
+                    ->icon('heroicon-o-shield-check')
+                    ->collapsible()
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label('Usuário Responsável')
@@ -26,6 +28,7 @@ class CredentialForm
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->prefixIcon('heroicon-o-user')
                             ->helperText('Usuário responsável por esta credencial'),
 
                         Forms\Components\TextInput::make('fscs')
@@ -35,6 +38,7 @@ class CredentialForm
                             ->unique(ignoreRecord: true, modifyRuleUsing: function ($rule, $get) {
                                 return $rule->whereNull('deleted_at');
                             })
+                            ->prefixIcon('heroicon-o-identification')
                             ->helperText('Código único da credencial'),
 
                         Forms\Components\Select::make('type')
@@ -42,6 +46,7 @@ class CredentialForm
                             ->options(CredentialType::options())
                             ->required()
                             ->native(false)
+                            ->prefixIcon('heroicon-o-document-text')
                             ->helperText('CRED: Credencial de Segurança | TCMS: Termo de Compromisso'),
 
                         Forms\Components\Select::make('secrecy')
@@ -49,12 +54,14 @@ class CredentialForm
                             ->options(CredentialSecrecy::options())
                             ->required()
                             ->native(false)
+                            ->prefixIcon('heroicon-o-lock-closed')
                             ->helperText('R: Reservado | S: Secreto'),
 
                         Forms\Components\TextInput::make('credential')
                             ->label('Número da Credencial')
                             ->required()
                             ->maxLength(255)
+                            ->prefixIcon('heroicon-o-hashtag')
                             ->helperText('Número ou código identificador da credencial (texto simples)'),
 
                         Forms\Components\Textarea::make('observation')
@@ -69,12 +76,15 @@ class CredentialForm
 
                 Section::make('Datas')
                     ->description('Controle de validade e concessão')
+                    ->icon('heroicon-o-calendar')
+                    ->collapsible()
                     ->schema([
                         Forms\Components\DatePicker::make('concession')
                             ->label('Data de Concessão')
                             ->nullable()
                             ->native(false)
                             ->displayFormat('d/m/Y')
+                            ->prefixIcon('heroicon-o-calendar-days')
                             ->helperText('Data de concessão. A validade será calculada automaticamente.'),
 
                         Forms\Components\DatePicker::make('validity')
@@ -84,6 +94,7 @@ class CredentialForm
                             ->displayFormat('d/m/Y')
                             ->disabled()
                             ->dehydrated(false)
+                            ->prefixIcon('heroicon-o-clock')
                             ->helperText('Calculado automaticamente: CRED = 2 anos | TCMS = 31/12 do ano'),
                     ])
                     ->columns(2),

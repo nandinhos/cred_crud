@@ -1,3 +1,6 @@
+/* Customizações do Filament */
+@import './filament-custom.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

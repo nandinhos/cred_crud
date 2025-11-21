@@ -303,7 +303,7 @@
         "status": "pending",
         "complexity": 3,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Separar em: (1) Criar enum BadgeColor com cases e métodos estáticos (forRole, forSecrecy, forValidity); (2) Refatorar CredentialsTable para usar BadgeColor::forSecrecy e BadgeColor::forValidity; (3) Refatorar UsersTable para usar BadgeColor::forRole; (4) Criar tests/Unit/BadgeColorEnumTest.php com cobertura completa; (5) Documentar uso do enum no CLAUDE.md.",
+        "expansionPrompt": "Separar em: (1) Criar o enum BadgeColor com todos os cases e métodos estáticos (forRole, forSecrecy, forValidity); (2) Refatorar a classe CredentialsTable para usar os métodos do enum BadgeColor; (3) Refatorar a classe UsersTable para usar o método forRole do enum; (4) Implementar a suite de testes unitários para o enum BadgeColor, garantindo 100% de cobertura de seus métodos; (5) Adicionar a documentação de uso do enum no arquivo CLAUDE.md.",
         "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
@@ -383,7 +383,7 @@
         "status": "pending",
         "complexity": 8,
         "recommendedSubtasks": 10,
-        "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover CredentialValidationTest obsoleto; (3) Criar CredentialResourceTest com testes de listagem e filtros; (4) Adicionar testes de criação/edição em CredentialResourceTest; (5) Criar UserResourceTest com CRUD e roles; (6) Criar PolicyTest para CredentialPolicy; (7) Criar ActivityLogObserverTest; (8) Criar RelationshipsTest para modelos e soft deletes; (9) Executar suite com coverage e atingir meta; (10) Documentar estratégias de teste.",
+        "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover o arquivo de teste obsoleto CredentialValidationTest; (3) Criar CredentialResourceTest com testes para listagem, filtros e paginação; (4) Adicionar testes de criação, edição e validação em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de papéis (roles); (6) Criar testes unitários para a CredentialPolicy; (7) Criar testes de integração para o ActivityLogObserver; (8) Criar testes para os relacionamentos dos Models e soft deletes; (9) Configurar e executar a suite com análise de cobertura para atingir a meta de 80%; (10) Documentar as estratégias de teste do projeto.",
         "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
@@ -515,7 +515,7 @@
         "status": "pending",
         "complexity": 7,
         "recommendedSubtasks": 9,
-        "expansionPrompt": "Decompor em: (1) Criar .github/workflows/laravel.yml com jobs de teste, lint e coverage; (2) Configurar MySQL service no GitHub Actions; (3) Criar script deploy.sh com otimizações; (4) Criar job NotifyExpiringCredentials; (5) Configurar queue driver (Redis) e testar dispatching; (6) Adicionar eager loading para evitar N+1; (7) Implementar detecção de queries lentas; (8) Criar .env.production.example; (9) Implementar health check endpoint.",
+        "expansionPrompt": "Decompor em: (1) Criar o arquivo de workflow .github/workflows/laravel.yml com jobs para testes e linting; (2) Configurar o service container do MySQL no GitHub Actions para o ambiente de teste; (3) Criar um script de deploy (deploy.sh) com comandos de otimização; (4) Criar o Job assíncrono NotifyExpiringCredentials; (5) Configurar o driver de fila (ex: Redis) e testar o despacho de jobs; (6) Implementar eager loading nos Eloquent queries para evitar problemas de N+1; (7) Implementar um listener para detecção de queries lentas em ambiente de desenvolvimento; (8) Criar um arquivo .env.production.example com configurações seguras; (9) Implementar um endpoint de health check.",
         "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
@@ -636,7 +636,7 @@
         "status": "pending",
         "complexity": 6,
         "recommendedSubtasks": 8,
-        "expansionPrompt": "Dividir em: (1) Configurar canais de logging (daily, security, audit); (2) Criar AuditMiddleware para log de ações; (3) Criar comando CollectMetrics; (4) Criar comando BackupDatabase com limpeza automática; (5) Criar comando NotifyExpiringCredentials; (6) Agendar todos os comandos no Console/Kernel; (7) Testar execução e outputs de todos os comandos; (8) Documentar rotinas de manutenção.",
+        "expansionPrompt": "Dividir em: (1) Configurar os canais de logging (daily, security, audit) em config/logging.php; (2) Criar e registrar um AuditMiddleware para log de ações do usuário; (3) Criar o comando Artisan 'CollectMetrics' para coletar e salvar métricas do sistema; (4) Criar o comando Artisan 'BackupDatabase' com funcionalidade de limpeza de backups antigos; (5) Criar o comando 'NotifyExpiringCredentials' para alertas; (6) Agendar todos os novos comandos no Console/Kernel; (7) Testar a execução individual e agendada de cada comando; (8) Documentar as novas rotinas de manutenção e monitoramento.",
         "updatedAt": "2025-11-20T00:00:00.000Z",
         "subtasks": [
           {
@@ -1278,13 +1278,82 @@
         "recommendedSubtasks": 9,
         "expansionPrompt": "Decompor em: (1) Criar migration para alterar schema de `credentials` (renomear, adicionar colunas, constraints); (2) Criar Enums para `CredentialType` e `CredentialSecrecy`; (3) Implementar `CredentialObserver` para calcular `validity`; (4) Atualizar model `Credential` com casts e accessor `status`; (5) Atualizar `CredentialFactory`; (6) Atualizar formulário do `CredentialResource` (Selects, Textarea, required); (7) Atualizar tabela do `CredentialResource` (BadgeColumn para status); (8) Adicionar `SelectFilter` para o novo status; (9) Atualizar todos os testes quebrados e criar novos para as novas lógicas.",
         "updatedAt": "2025-11-21T05:50:04.165Z"
+      },
+      {
+        "id": "13",
+        "title": "Criação do Dashboard Personalizado com Card de Credencial",
+        "description": "Desenvolver uma página inicial de dashboard que exibe um card com os dados da credencial do usuário logado e renomear o item de menu correspondente na sidebar para 'Dashboard'.",
+        "details": "Esta tarefa consiste em duas partes principais: ajustar a navegação do Filament e criar uma página de dashboard personalizada que sirva como a página inicial após o login.\n\n1. **Ajuste da Sidebar e Rota Principal:**\n   - No arquivo `app/Providers/Filament/AdminPanelProvider.php`, localize o método `navigation()` ou o grupo de navegação principal.\n   - Renomeie o item de menu de 'Painel de Controle' para 'Dashboard'.\n   - Configure a nova página de dashboard para ser a rota padrão do painel, modificando a propriedade `path('/')` e `pages([\n        PagesDashboard::class,\n    ])`.\n\n2. **Criação da Página de Dashboard:**\n   - Gere uma nova página customizada do Filament. Esta será um componente Livewire.\n   ```bash\n   vendor/bin/sail artisan make:filament-page Dashboard\n   ```\n   - Configure esta página para ser a URL raiz do painel administrativo no `AdminPanelProvider`.\n\n3. **Lógica do Componente (`app/Filament/Pages/Dashboard.php`):**\n   - No método `mount()` da classe `Dashboard`, obtenha o usuário autenticado e carregue suas relações de `credential` e `rank`, conforme estabelecido nas Tasks #12 e #10.\n   ```php\n   public \\App\\Models\\User $user;\n\n   public function mount(): void\n   {\n       $this->user = auth()->user()->load(['credential', 'rank']);\n   }\n   ```\n\n4. **Desenvolvimento da View (`resources/views/filament/pages/dashboard.blade.php`):**\n   - Utilize a sintaxe do Blade para construir o layout.\n   - Verifique se o usuário possui uma credencial com `@if ($this->user->credential)`.\n   - Se não houver credencial, exiba uma mensagem informativa, como 'Nenhuma credencial de segurança ativa encontrada para este usuário.'.\n   - Se houver, crie um card com Tailwind CSS (`<div class=\"p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md\">`).\n   - Exiba os dados do usuário e da credencial:\n     - **Posto/Graduação e Nome:** `$this->user->rank->name` e `$this->user->name`.\n     - **Número da Credencial:** `$this->user->credential->credential_number`.\n     - **Datas:** Formate as datas `concession_date` e `expiration_date` para `d/m/Y`.\n     - **Grau de Sigilo e Status:** Implemente badges coloridos. Exemplo para sigilo:\n       ```html\n       @switch($this->user->credential->secrecy)\n           @case('Reservado')\n               <span class=\"... bg-blue-100 text-blue-800 ...\">Reservado</span>\n               @break\n           @case('Secreto')\n               <span class=\"... bg-red-100 text-red-800 ...\">Secreto</span>\n               @break\n           @default\n               <span class=\"... bg-gray-100 text-gray-800 ...\">Não Classificado</span>\n       @endswitch\n       ```\n   - Utilize ícones do pacote `blade-heroicons` para melhorar a interface visual (ex: `identification`, `calendar`, `shield-check`).\n   - Garanta que o layout do card seja responsivo usando as classes utilitárias do Tailwind (ex: `grid`, `grid-cols-1`, `md:grid-cols-2`).",
+        "testStrategy": "A estratégia de teste deve validar tanto a interface quanto a lógica de apresentação dos dados.\n\n1. **Verificação da Sidebar:**\n   - Após o login, confirme que o item de menu 'Painel de Controle' foi renomeado para 'Dashboard' e que clicar nele leva para a nova página.\n\n2. **Teste com Usuário com Credencial:**\n   - Faça login com um usuário que tenha uma credencial ativa e um posto/graduação associado.\n   - Verifique se a página do dashboard é exibida por padrão.\n   - Confirme que o card de credencial é renderizado e exibe corretamente todos os dados: posto/graduação, nome completo, número da credencial, data de concessão, data de validade e grau de sigilo.\n   - Verifique se os badges de 'secrecy' e 'status' (se implementado) possuem as cores e textos corretos de acordo com os valores no banco de dados.\n\n3. **Teste com Usuário sem Credencial:**\n   - Faça login com um usuário que não possui uma credencial associada.\n   - Verifique se o dashboard exibe a mensagem 'Nenhuma credencial de segurança ativa encontrada' ou similar.\n   - Confirme que o card com os detalhes da credencial não é renderizado.\n\n4. **Teste de Responsividade:**\n   - Utilize as ferramentas de desenvolvedor do navegador para simular diferentes tamanhos de tela (mobile, tablet, desktop).\n   - Verifique se o layout do card e da página se ajusta de forma limpa, sem quebras ou sobreposição de conteúdo.",
+        "status": "done",
+        "dependencies": [
+          "10",
+          "12"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Gerar Página de Dashboard e Configurar Rota Principal no Filament",
+            "description": "Criar a nova página 'Dashboard' usando o comando artisan e configurá-la como a página inicial do painel administrativo, além de renomear o item de menu na sidebar.",
+            "dependencies": [],
+            "details": "Execute `php artisan make:filament-page Dashboard`. Em `app/Providers/Filament/AdminPanelProvider.php`, defina `->path('/')` e adicione `Pages\\Dashboard::class` às `pages`. Renomeie o item de navegação de 'Painel de Controle' para 'Dashboard'.",
+            "status": "done",
+            "testStrategy": "Após login, verificar se a URL padrão é `/admin`, se a nova página de dashboard carrega e se o menu lateral exibe 'Dashboard' corretamente.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:07:38.829Z"
+          },
+          {
+            "id": 2,
+            "title": "Implementar Lógica de Carregamento de Dados no Componente Dashboard",
+            "description": "No método `mount` da classe `Dashboard.php`, obter o usuário autenticado e carregar de forma otimizada suas relações `credential` e `rank` para serem usadas na view.",
+            "dependencies": [
+              1
+            ],
+            "details": "Na classe `app/Filament/Pages/Dashboard.php`, adicione uma propriedade pública `public \\App\\Models\\User $user;`. No método `mount()`, atribua a ela o resultado de `auth()->user()->load(['credential', 'rank'])`.",
+            "status": "done",
+            "testStrategy": "Utilizar `dd($this->user)` no método `mount` para depurar e confirmar que o objeto do usuário, junto com os dados das relações `credential` e `rank`, está sendo carregado corretamente na inicialização da página.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:07:53.983Z"
+          },
+          {
+            "id": 3,
+            "title": "Desenvolver a View do Card de Credencial com Lógica Condicional",
+            "description": "Criar o layout na view `dashboard.blade.php` para exibir os dados da credencial. O componente deve tratar o caso em que o usuário não possui uma credencial, exibindo uma mensagem informativa.",
+            "dependencies": [
+              2
+            ],
+            "details": "No arquivo `resources/views/filament/pages/dashboard.blade.php`, utilize a diretiva `@if ($this->user->credential)` para renderizar o card. Caso contrário, exiba um parágrafo com a mensagem 'Nenhuma credencial de segurança ativa encontrada para este usuário.'.",
+            "status": "done",
+            "testStrategy": "Acessar o dashboard com um usuário que possui credencial e com um que não possui. Verificar se o card é exibido para o primeiro e a mensagem informativa para o segundo. Validar a exibição dos dados básicos (nome, número da credencial, datas). ",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:08:35.128Z"
+          },
+          {
+            "id": 4,
+            "title": "Estilizar o Card com Tailwind CSS, Ícones e Garantir Responsividade",
+            "description": "Aplicar estilos visuais ao card usando Tailwind CSS, incluindo badges coloridos para status e grau de sigilo, adicionar ícones do pacote `blade-heroicons` e garantir que o layout se adapte a diferentes tamanhos de tela.",
+            "dependencies": [
+              3
+            ],
+            "details": "Utilize classes como `p-6`, `bg-white`, `dark:bg-gray-800`, `rounded-xl` e `shadow-md`. Implemente a lógica `@switch` para badges coloridos. Adicione ícones (`identification`, `calendar`) e use `grid`, `grid-cols-1`, `md:grid-cols-2` para responsividade.",
+            "status": "done",
+            "testStrategy": "Inspecionar visualmente o card em diferentes resoluções (desktop e mobile) para confirmar a responsividade do layout. Verificar se as cores dos badges para grau de sigilo estão corretas e se as datas estão formatadas como `d/m/Y`.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-21T06:09:12.448Z"
+          }
+        ],
+        "complexity": 4,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Dividir em: (1) Gerar a página Filament 'Dashboard' e configurá-la como a página inicial no AdminPanelProvider; (2) Implementar a lógica no método `mount` para carregar o usuário autenticado com suas relações `credential` e `rank`; (3) Desenvolver a view Blade, criando o card para exibir os dados da credencial e tratando o caso em que a credencial não existe; (4) Estilizar o card com Tailwind CSS, adicionar ícones e garantir a responsividade do layout.",
+        "updatedAt": "2025-11-21T06:09:12.448Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-21T05:50:04.166Z",
-      "taskCount": 12,
-      "completedCount": 8,
+      "lastModified": "2025-11-21T06:09:12.449Z",
+      "taskCount": 13,
+      "completedCount": 9,
       "tags": [
         "master"
       ]

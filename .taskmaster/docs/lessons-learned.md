@@ -670,3 +670,118 @@ $superAdmin->givePermissionTo($userPermissions);
 - Criar um "template" de Resource com as configurações de Actions já padronizadas para o projeto.
 - Testar a visibilidade e funcionalidade de todos os botões CRUD após qualquer alteração nos Resources ou assets.
 - Utilizar `php artisan tinker --execute="echo class_exists('Filament\\Actions\\Action') ? 'OK' : 'ERRO';"` para verificar a existência de classes em tempo de execução.
+
+---
+
+## 📅 Data: 21/11/2025
+
+### ❌ ERRO: Estilos Tailwind CSS não carregam em páginas customizadas do Filament
+
+#### 🔴 Sintomas
+- View Blade criada com classes Tailwind CSS puras não exibe estilos
+- Card aparece sem formatação, apenas conteúdo HTML puro
+- Classes como `bg-white`, `rounded-xl`, `shadow-lg` não são aplicadas
+- Cache do navegador limpo não resolve o problema
+- `npm run build` executado mas estilos não aparecem
+
+#### 🔍 Causa Raiz
+O Filament 4 possui seu próprio sistema de estilos e não processa automaticamente classes Tailwind CSS em views customizadas. O Filament usa seus componentes Blade nativos que já vêm estilizados com o tema do painel.
+
+**Problema específico:**
+- Views customizadas usando `<x-filament-panels::page>` não incluem automaticamente o CSS do Tailwind buildado
+- Filament prioriza seus próprios componentes sobre HTML/Tailwind puro
+- Classes Tailwind em elementos HTML puros não são processadas pelo sistema de estilos do Filament
+
+#### ✅ Solução
+
+**1. Usar componentes nativos do Filament em vez de HTML + Tailwind puro:**
+
+```blade
+<!-- ❌ ERRADO - HTML puro com classes Tailwind -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h2 class="text-xl font-bold">Título</h2>
+    <p class="text-sm text-gray-500">Conteúdo</p>
+</div>
+
+<!-- ✅ CORRETO - Componentes Filament -->
+<x-filament::section>
+    <x-slot name="heading">
+        Título
+    </x-slot>
+    
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+        Conteúdo
+    </div>
+</x-filament::section>
+```
+
+**2. Padrões de componentes Filament:**
+
+```blade
+<!-- Section com heading -->
+<x-filament::section>
+    <x-slot name="heading">Título da Seção</x-slot>
+    Conteúdo aqui
+</x-filament::section>
+
+<!-- Badge com cores -->
+<x-filament::badge color="success">Ativo</x-filament::badge>
+<x-filament::badge color="danger">Vencido</x-filament::badge>
+<x-filament::badge color="warning">Pendente</x-filament::badge>
+
+<!-- Ícones -->
+<x-filament::icon icon="heroicon-o-home" class="h-6 w-6" />
+
+<!-- Grid com classes Filament -->
+<div class="grid gap-6 md:grid-cols-2">
+    <div class="flex gap-x-3">
+        <x-filament::icon icon="heroicon-o-user" class="h-6 w-6 text-gray-400" />
+        <div class="grid gap-y-1">
+            <div class="text-sm font-medium text-gray-950 dark:text-white">Label</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">Valor</div>
+        </div>
+    </div>
+</div>
+```
+
+**3. Classes que funcionam com componentes Filament:**
+- `grid`, `gap-6`, `md:grid-cols-2` - Layout grid
+- `flex`, `gap-x-3` - Flexbox
+- `text-sm`, `font-medium` - Tipografia
+- `text-gray-950 dark:text-white` - Cores com dark mode
+- `h-6 w-6` - Tamanhos
+
+#### 📚 Boas Práticas
+
+1. **Sempre usar componentes Filament primeiro:**
+   - `<x-filament::section>` para seções
+   - `<x-filament::badge>` para badges
+   - `<x-filament::icon>` para ícones
+
+2. **Verificar componentes disponíveis:**
+   ```bash
+   grep -r "x-filament::" vendor/filament/filament/resources/views/components/
+   ```
+
+3. **Limpar cache após mudanças em views:**
+   ```bash
+   vendor/bin/sail artisan view:clear
+   vendor/bin/sail artisan cache:clear
+   ```
+
+4. **Testar imediatamente após mudanças:**
+   - Não confiar apenas em "npm run build"
+   - Acessar a página no navegador e inspecionar elementos
+   - Verificar se as classes estão sendo aplicadas no HTML renderizado
+
+#### 🎓 Lições Aprendidas
+
+- **Filament != Tailwind puro**: Filament usa componentes próprios, não aceita Tailwind arbitrário
+- **Verificar antes de buildar**: Testar a abordagem antes de executar builds desnecessários
+- **Seguir convenções do framework**: Usar componentes nativos garante compatibilidade e estilos
+- **Documentação é essencial**: Consultar docs do Filament para componentes disponíveis
+- **Testar visualmente**: Não assumir que código está funcionando sem ver no navegador
+
+#### 🔗 Referências
+- Documentação Filament 4: https://filamentphp.com/docs/4.x/panels/pages
+- Componentes Blade do Filament: `vendor/filament/filament/resources/views/components/`

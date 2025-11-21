@@ -1,11 +1,11 @@
 ## REGRA DE NEGÓCIO
 
 - todos os campos são opcionais, pois serão feitos critérios de status baseado no preenchimento dos campos;
-- os usuários devem ser vinculados a um único usuário que exista no sistema;
+- as credenciais devem ser vinculadas a um único usuário que exista no sistema;
 - possuimos super admin, admin e consulta;
-- o super admin tem acesso total e irrestrito ao sistema;
-- o admin pode visualizar, editar e excluir credenciais, não terá acesso e não verá a tela de usuários (nem visualizar a sidebar);
-- o consulta pode visualizar somente sua tela para fins de consulta de número de sua própria credencial (Página para mostrar crendencial por id de usuário) e terá acesso a uma página para anexar documentos quando solicitada a renovação, que só estará disponível, faltando 30 dias para o vencimento (não terá acesso a tela de credenciais nem a tela de usuários e nem visualizar a sidebar);
+- o super admin (militar desenvolvedor)tem acesso total e irrestrito ao sistema, mas também tem acesso a tela de consulta de sua própria credencial, que será a página inicial do sistema;
+- o admin (militares do setor de inteligência)podem visualizar, editar e excluir credenciais, não terá acesso e não verá a tela de usuários (nem visualizar a sidebar);
+- o consulta (os demais militares de todos os escritórios)pode visualizar somente sua tela para fins de consulta de número de sua própria credencial (Página para mostrar crendencial por id de usuário) e terá acesso a uma página para anexar documentos quando solicitada a renovação, que só estará disponível, faltando 30 dias para o vencimento (não terá acesso a tela de credenciais nem a tela de usuários e nem visualizar a sidebar);
 - possuímos a coluna chamada "type" para que ela mostre o tipo de documento que será criado no final do processo... ou CRED (Credencial de Segurança) ou TCMS (Termo de Compromisso e Manutenção de Sigilo);
 - possuímos a coluna "rank", que mostra o posto/gradução do militar pertencente a unidade militar;
 - a Data de Concessão e a Data de Validade são campos opcionais;
