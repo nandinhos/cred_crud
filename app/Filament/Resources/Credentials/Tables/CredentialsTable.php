@@ -62,6 +62,7 @@ class CredentialsTable
                         }
 
                         return match ($state) {
+                            'AR' => 'Acesso Restrito',
                             'R' => 'Reservado',
                             'S' => 'Secreto',
                             default => 'N/A'
@@ -82,6 +83,17 @@ class CredentialsTable
                     ->label('Usuário')
                     ->searchable()
                     ->sortable()
+                    ->html()
+                    ->formatStateUsing(function (Credential $record): string {
+                        $name = $record->user?->name ?? 'N/A';
+                        $office = $record->user?->office?->name ?? '';
+                        
+                        if ($office) {
+                            return $name . '<br><span style="color: #6b7280; font-style: italic; font-size: 0.75rem;">' . $office . '</span>';
+                        }
+                        
+                        return $name;
+                    })
                     ->toggleable(isToggledHiddenByDefault: false),
 
                 Tables\Columns\TextColumn::make('concession')
@@ -130,6 +142,7 @@ class CredentialsTable
                 SelectFilter::make('secrecy')
                     ->label('Nível de Sigilo')
                     ->options([
+                        'AR' => 'Acesso Restrito',
                         'R' => 'Reservado',
                         'S' => 'Secreto',
                     ]),
@@ -165,10 +178,13 @@ class CredentialsTable
             ])
             ->actions([
                 Action::make('edit')
-                    ->label('Editar')
+                    ->label('')
+                    ->tooltip('Editar')
                     ->icon('heroicon-m-pencil-square')
                     ->url(fn (Credential $record): string => Pages\EditCredential::getUrl(['record' => $record])),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->label('')
+                    ->tooltip('Excluir'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

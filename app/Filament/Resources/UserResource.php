@@ -201,9 +201,13 @@ class UserResource extends Resource
             ])
             ->actions([
                 Action::make('edit')
+                    ->label('')
+                    ->tooltip('Editar')
                     ->url(fn ($record): string => Pages\EditUser::getUrl(['record' => $record]))
-                    ->icon('heroicon-o-pencil'),
-                DeleteAction::make(),
+                    ->icon('heroicon-m-pencil-square'),
+                DeleteAction::make()
+                    ->label('')
+                    ->tooltip('Excluir'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

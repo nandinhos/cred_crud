@@ -64,4 +64,9 @@
     .fi-fo-field-wrp-hint-icon {
         @apply text-gray-400 hover:text-blue-500;
     }
+
+    /* Descrição da coluna usuário - cinza e itálico */
+    .fi-ta-text-column-description {
+        @apply text-gray-500 dark:text-gray-400 italic text-xs mt-0.5;
+    }
 }
