@@ -1,0 +1,175 @@
+@import '/vendor/filament/filament/resources/css/index.css';
+
+@config './tailwind.config.js';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Tema Customizado - Aeronáutica Brasileira
+ * Força Aérea Brasileira - Sistema CRED CRUD
+ */
+
+:root {
+    /* Cores Principais da Aeronáutica */
+    --aero-blue-primary: #003DA5;   /* Azul FAB - Cor principal */
+    --aero-blue-sky: #0066CC;       /* Azul céu - Intermediário */
+    --aero-blue-light: #4A90E2;     /* Azul claro - Destaques */
+    --aero-blue-dark: #002366;      /* Azul escuro - Textos */
+    --aero-gold: #FFD700;           /* Dourado - Badges especiais */
+    --aero-silver: #C0C0C0;         /* Prata - Secundário */
+    
+    /* Cores de Status */
+    --status-active: #10B981;       /* Verde - Ativa */
+    --status-pending: #F59E0B;      /* Âmbar - Pendente */
+    --status-expired: #EF4444;      /* Vermelho - Vencida */
+    --status-denied: #6B7280;       /* Cinza - Negada */
+    --status-processing: #8B5CF6;   /* Roxo - Em Processamento */
+}
+
+/* ============================================
+   CUSTOMIZAÇÕES GERAIS
+   ============================================ */
+
+/* Botões Primários - Azul FAB */
+.fi-btn-primary {
+    @apply shadow-sm hover:shadow-md transition-all duration-200;
+}
+
+.fi-btn-primary:hover {
+    @apply -translate-y-0.5;
+}
+
+/* Cards e Panels - Borda superior azul */
+.fi-section {
+    @apply border-t-4;
+    border-top-color: var(--aero-blue-primary);
+}
+
+/* Tabelas - Headers com fundo azul suave */
+.fi-ta-header {
+    @apply bg-blue-50 dark:bg-blue-950;
+}
+
+/* Badges - Estilo Aeronáutica */
+.fi-badge {
+    @apply font-semibold tracking-wide;
+}
+
+/* Sidebar - Item ativo com borda dourada */
+.fi-sidebar-nav-item-active {
+    @apply border-l-4 bg-blue-50 dark:bg-blue-950;
+    border-left-color: var(--aero-gold);
+}
+
+/* Stats Cards - Animação hover */
+.fi-wi-stats-overview-stat-card {
+    @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
+}
+
+/* ============================================
+   DESCRIÇÕES DE COLUNAS (Unidade em itálico)
+   ============================================ */
+.fi-ta-text-item-description {
+    @apply text-gray-500 dark:text-gray-400 italic text-xs mt-0.5;
+}
+
+/* ============================================
+   BADGES CUSTOMIZADOS POR TIPO
+   ============================================ */
+
+/* Badge CRED - Azul */
+.fi-badge[data-type="cred"] {
+    @apply bg-blue-900 text-white;
+    background-color: var(--aero-blue-primary);
+}
+
+/* Badge TCMS - Dourado */
+.fi-badge[data-type="tcms"] {
+    @apply text-blue-900 font-bold;
+    background-color: var(--aero-gold);
+}
+
+/* ============================================
+   GRADIENTE NO HEADER (OPCIONAL)
+   ============================================ */
+.fi-topbar {
+    @apply shadow-md;
+}
+
+/* ============================================
+   FORMS - Focus com cor da Aeronáutica
+   ============================================ */
+.fi-input:focus,
+.fi-select:focus {
+    @apply ring-2;
+    --tw-ring-color: var(--aero-blue-primary);
+}
+
+/* ============================================
+   MELHORIAS DE ACESSIBILIDADE
+   ============================================ */
+
+/* Contraste adequado para textos */
+.fi-section-header-heading {
+    @apply text-gray-900 dark:text-gray-100 font-bold;
+}
+
+/* Links com cor da Aeronáutica */
+.fi-link {
+    color: var(--aero-blue-primary);
+}
+
+.fi-link:hover {
+    color: var(--aero-blue-sky);
+}
+
+/* ============================================
+   RESPONSIVIDADE
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* Ajustes para mobile */
+    .fi-sidebar {
+        @apply shadow-xl;
+    }
+    
+    .fi-topbar {
+        @apply py-3;
+    }
+}
+
+/* ============================================
+   DARK MODE - Ajustes para modo escuro
+   ============================================ */
+
+.dark {
+    /* Ajustar cores no dark mode para manter identidade visual */
+    --aero-blue-primary: #4A90E2;
+    --aero-blue-sky: #0066CC;
+}
+
+/* ============================================
+   ANIMAÇÕES SUAVES
+   ============================================ */
+
+.fi-modal,
+.fi-dropdown {
+    @apply transition-all duration-200 ease-in-out;
+}
+
+/* ============================================
+   IMPRESSÃO - Remover cores de fundo
+   ============================================ */
+
+@media print {
+    .fi-sidebar,
+    .fi-topbar {
+        @apply hidden;
+    }
+    
+    .fi-section {
+        @apply border-t-0 shadow-none;
+    }
+}

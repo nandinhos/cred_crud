@@ -69,4 +69,49 @@
     .fi-ta-text-column-description {
         @apply text-gray-500 dark:text-gray-400 italic text-xs mt-0.5;
     }
+
+    /* ============================================
+       TEMA AERONÁUTICA - CUSTOMIZAÇÕES VISUAIS
+       ============================================ */
+
+    /* Sidebar - Item ativo com borda dourada */
+    .fi-sidebar-nav-item-active {
+        @apply border-l-4 bg-blue-50 dark:bg-blue-950;
+        border-left-color: #FFD700 !important; /* Dourado FAB */
+    }
+
+    /* Botões primários com efeito hover */
+    .fi-btn-primary {
+        @apply shadow-sm hover:shadow-md transition-all duration-200;
+    }
+
+    .fi-btn-primary:hover {
+        @apply -translate-y-0.5;
+    }
+
+    /* Cards com borda superior azul */
+    .fi-section {
+        @apply border-t-4;
+        border-top-color: #003DA5 !important; /* Azul FAB */
+    }
+
+    /* Stats cards com hover animado */
+    .fi-wi-stats-overview-stat-card {
+        @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
+    }
+
+    /* Headers de tabela com fundo azul suave */
+    .fi-ta-header {
+        @apply bg-blue-50 dark:bg-blue-950;
+    }
+
+    /* Topbar com sombra */
+    .fi-topbar {
+        @apply shadow-md;
+    }
+
+    /* Links com cor da Aeronáutica */
+    .fi-link {
+        @apply text-blue-900 hover:text-blue-700;
+    }
 }
