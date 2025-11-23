@@ -33,7 +33,7 @@ class BackupService
                 'date_formatted' => Carbon::createFromTimestamp($disk->lastModified($file))->format('d/m/Y H:i'),
                 'date_human' => Carbon::createFromTimestamp($disk->lastModified($file))->diffForHumans(),
             ];
-        })->sortByDesc('date')->take(10)->values()->all();
+        })->sortByDesc('date')->take(5)->values()->all();
 
         return $backups;
     }

@@ -61,6 +61,21 @@ class CredentialResource extends Resource
     }
 
     /**
+     * Ocultar do menu sidebar para perfil consulta
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        // Apenas admin e super_admin veem no menu
+        return $user->hasRole(['admin', 'super_admin']);
+    }
+
+    /**
      * Verificar se o usuário pode acessar este recurso
      */
     public static function canAccess(): bool
@@ -72,8 +87,8 @@ class CredentialResource extends Resource
         }
 
         // Admin ou super_admin podem acessar tudo
-        // Usuários com role 'consulta' podem apenas visualizar
-        return $user->hasRole(['admin', 'super_admin', 'consulta']);
+        // Usuários com role 'consulta' NÃO podem acessar diretamente
+        return $user->hasRole(['admin', 'super_admin']);
     }
 
     /**

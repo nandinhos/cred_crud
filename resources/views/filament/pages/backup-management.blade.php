@@ -58,7 +58,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div class="p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Backups Disponíveis (10 mais recentes)
+                Backups Disponíveis (05 mais recentes)
             </h3>
             
             @if(count($backups) > 0)

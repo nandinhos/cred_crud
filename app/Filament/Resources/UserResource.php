@@ -229,6 +229,24 @@ class UserResource extends Resource
         ];
     }
 
+    /**
+     * Ocultar do menu sidebar para perfil consulta
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        // Apenas admin e super_admin veem no menu
+        return $user->hasRole(['admin', 'super_admin']);
+    }
+
+    /**
+     * Bloquear acesso direto via URL para perfil consulta
+     */
     public static function canAccess(): bool
     {
         $user = auth()->user();
@@ -237,7 +255,8 @@ class UserResource extends Resource
             return false;
         }
 
-        return $user->hasRole(['admin', 'super_admin', 'consulta']);
+        // Apenas admin e super_admin podem acessar
+        return $user->hasRole(['admin', 'super_admin']);
     }
 
     public static function canCreate(): bool
