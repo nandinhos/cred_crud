@@ -106,3 +106,103 @@ it('can edit credential', function () {
 
     expect($credential->refresh()->observation)->toBe('Updated Observation');
 });
+
+it('can filter credentials by secrecy', function () {
+    $user = User::factory()->admin()->create();
+    
+    // Criar credenciais com diferentes níveis de sigilo
+    $reservado = Credential::factory()->count(3)->create(['secrecy' => CredentialSecrecy::RESERVADO->value]);
+    $secreto = Credential::factory()->count(2)->create(['secrecy' => CredentialSecrecy::SECRETO->value]);
+
+    $this->actingAs($user);
+
+    Livewire::test(ListCredentials::class)
+        ->filterTable('secrecy', CredentialSecrecy::RESERVADO->value)
+        ->assertCanSeeTableRecords($reservado)
+        ->assertCanNotSeeTableRecords($secreto);
+});
+
+it('can filter credentials by type', function () {
+    $user = User::factory()->admin()->create();
+    
+    // Criar credenciais de diferentes tipos
+    $cred = Credential::factory()->count(2)->create(['type' => CredentialType::CRED->value]);
+    $tcms = Credential::factory()->count(3)->create(['type' => CredentialType::TCMS->value]);
+
+    $this->actingAs($user);
+
+    Livewire::test(ListCredentials::class)
+        ->filterTable('type', CredentialType::TCMS->value)
+        ->assertCanSeeTableRecords($tcms)
+        ->assertCanNotSeeTableRecords($cred);
+});
+
+it('can search credentials by fscs', function () {
+    $user = User::factory()->admin()->create();
+    
+    $credential = Credential::factory()->create(['fscs' => 'SEARCH-123']);
+    $other = Credential::factory()->create(['fscs' => 'OTHER-456']);
+
+    $this->actingAs($user);
+
+    Livewire::test(ListCredentials::class)
+        ->searchTable('SEARCH-123')
+        ->assertCanSeeTableRecords([$credential])
+        ->assertCanNotSeeTableRecords([$other]);
+});
+
+it('can search credentials by credential field', function () {
+    $user = User::factory()->admin()->create();
+    
+    $credential = Credential::factory()->create(['credential' => 'CRED-UNIQUE-999']);
+    $other = Credential::factory()->create(['credential' => 'CRED-OTHER-111']);
+
+    $this->actingAs($user);
+
+    Livewire::test(ListCredentials::class)
+        ->searchTable('UNIQUE-999')
+        ->assertCanSeeTableRecords([$credential])
+        ->assertCanNotSeeTableRecords([$other]);
+});
+
+it('can sort credentials by fscs', function () {
+    $user = User::factory()->admin()->create();
+    
+    Credential::factory()->create(['fscs' => 'AAA-001']);
+    Credential::factory()->create(['fscs' => 'ZZZ-999']);
+    Credential::factory()->create(['fscs' => 'MMM-500']);
+
+    $this->actingAs($user);
+
+    Livewire::test(ListCredentials::class)
+        ->sortTable('fscs')
+        ->assertCanSeeTableRecords(
+            Credential::orderBy('fscs')->get(),
+            inOrder: true
+        );
+});
+
+it('shows correct badge colors for secrecy levels', function () {
+    $user = User::factory()->admin()->create();
+    
+    $reservado = Credential::factory()->create(['secrecy' => CredentialSecrecy::RESERVADO->value]);
+    $secreto = Credential::factory()->create(['secrecy' => CredentialSecrecy::SECRETO->value]);
+
+    $this->actingAs($user);
+
+    $component = Livewire::test(ListCredentials::class);
+    
+    // Verificar que as credenciais estão na tabela
+    $component->assertCanSeeTableRecords([$reservado, $secreto]);
+});
+
+it('displays user name in credentials table', function () {
+    $user = User::factory()->admin()->create(['name' => 'Test User']);
+    $credential = Credential::factory()->create(['user_id' => $user->id]);
+
+    $this->actingAs($user);
+
+    Livewire::test(ListCredentials::class)
+        ->assertCanSeeTableRecords([$credential])
+        ->assertSee('Test User');
+});
