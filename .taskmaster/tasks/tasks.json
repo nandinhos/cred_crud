@@ -389,7 +389,7 @@
         "complexity": 8,
         "recommendedSubtasks": 10,
         "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover o arquivo de teste obsoleto CredentialValidationTest; (3) Criar CredentialResourceTest com testes para listagem, filtros e paginação; (4) Adicionar testes de criação, edição e validação em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de papéis (roles); (6) Criar testes unitários para a CredentialPolicy; (7) Criar testes de integração para o ActivityLogObserver; (8) Criar testes para os relacionamentos dos Models e soft deletes; (9) Configurar e executar a suite com análise de cobertura para atingir a meta de 80%; (10) Documentar as estratégias de teste do projeto.",
-        "updatedAt": "2025-11-23T03:54:32.093Z",
+        "updatedAt": "2025-11-23T03:59:05.974Z",
         "subtasks": [
           {
             "id": 1,
@@ -476,9 +476,10 @@
             "description": "Criar tests/Unit/Models/RelationshipsTest.php usando Pest para testar relacionamentos Eloquent entre User e Credential, comportamento de soft delete e integridade referencial com SET NULL.",
             "dependencies": [],
             "details": "Criar tests/Unit/Models/RelationshipsTest.php. Implementar: (1) 'user hasMany credentials' criando 3 credenciais vinculadas a user e testando $user->credentials->toHaveCount(3); (2) 'credential belongsTo user' testando $credential->user->is($expectedUser); (3) 'soft delete preserva credencial' deletando credencial e testando assertSoftDeleted('credentials', ['id' => $credential->id]); (4) 'deletar user seta credential.user_id como NULL' deletando user e verificando que credential existe mas user_id é null (SET NULL constraint); (5) 'withTrashed recupera soft deleted'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Unit/Models/RelationshipsTest.php. Verificar que $user->credentials carrega coleção correta. Confirmar que após $credential->delete(), Credential::withTrashed()->find($id) retorna o registro.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:59:05.974Z"
           },
           {
             "id": 9,
@@ -1400,7 +1401,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-23T03:54:32.094Z",
+      "lastModified": "2025-11-23T03:59:05.976Z",
       "taskCount": 15,
       "completedCount": 12,
       "tags": [
