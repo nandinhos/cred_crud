@@ -10,13 +10,16 @@ class CredentialObserver
 {
     public function created(Credential $credential): void
     {
-        $this->logActivity('created', $credential);
+        $this->logActivity('created', $credential, [
+            'attributes' => $credential->getAttributes(),
+        ]);
     }
 
     public function updated(Credential $credential): void
     {
         $this->logActivity('updated', $credential, [
-            'changes' => $credential->getChanges(),
+            'old' => $credential->getOriginal(),
+            'attributes' => $credential->getAttributes(),
         ]);
     }
 
@@ -44,7 +47,7 @@ class CredentialObserver
             'subject_id' => $credential->id,
             'causer_type' => Auth::check() ? get_class(Auth::user()) : null,
             'causer_id' => Auth::id(),
-            'properties' => ! empty($extra) ? json_encode($extra) : null,
+            'properties' => json_encode($extra),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

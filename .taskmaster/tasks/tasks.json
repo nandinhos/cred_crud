@@ -385,11 +385,11 @@
           "2",
           "4"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "complexity": 8,
         "recommendedSubtasks": 10,
         "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover o arquivo de teste obsoleto CredentialValidationTest; (3) Criar CredentialResourceTest com testes para listagem, filtros e paginação; (4) Adicionar testes de criação, edição e validação em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de papéis (roles); (6) Criar testes unitários para a CredentialPolicy; (7) Criar testes de integração para o ActivityLogObserver; (8) Criar testes para os relacionamentos dos Models e soft deletes; (9) Configurar e executar a suite com análise de cobertura para atingir a meta de 80%; (10) Documentar as estratégias de teste do projeto.",
-        "updatedAt": "2025-11-20T00:00:00.000Z",
+        "updatedAt": "2025-11-23T03:54:32.093Z",
         "subtasks": [
           {
             "id": 1,
@@ -397,9 +397,10 @@
             "description": "Modificar tests/Feature/RoleAuthorizationTest.php para substituir criação manual de usuários por User::factory(), garantindo que todos os testes usem factories do Laravel e Spatie Permission para atribuição de roles.",
             "dependencies": [],
             "details": "Abrir tests/Feature/RoleAuthorizationTest.php e substituir todas as instâncias de User::create() por User::factory()->create(). Manter a estrutura de testes existente (super_admin, admin, consulta) mas usar factories. Exemplo: $user = User::factory()->create(); $user->assignRole('super_admin'); $this->actingAs($user)->get('/admin')->assertStatus(200). Garantir que todos os testes passem após refatoração.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/RoleAuthorizationTest.php e confirmar que todos os testes passam. Verificar que não há criação manual de usuários no arquivo.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:38:28.752Z"
           },
           {
             "id": 2,
@@ -407,9 +408,10 @@
             "description": "Deletar o arquivo tests/Feature/CredentialValidationTest.php que contém testes obsoletos ou redundantes, confirmando que nenhuma funcionalidade crítica será perdida.",
             "dependencies": [],
             "details": "Antes de deletar, revisar o conteúdo de tests/Feature/CredentialValidationTest.php para garantir que os testes não são mais necessários ou foram substituídos por testes melhores. Executar rm tests/Feature/CredentialValidationTest.php ou deletar via IDE. Confirmar que o arquivo não existe mais com ls tests/Feature/CredentialValidationTest.php (deve retornar erro).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test para garantir que a suite completa ainda passa sem este arquivo. Verificar que ls tests/Feature/CredentialValidationTest.php retorna erro 'No such file or directory'.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:38:53.989Z"
           },
           {
             "id": 3,
@@ -417,9 +419,10 @@
             "description": "Criar tests/Feature/Filament/CredentialResourceTest.php usando Pest para testar componente Livewire ListCredentials, incluindo listagem de registros, paginação e filtros por secrecy.",
             "dependencies": [],
             "details": "Executar vendor/bin/sail artisan make:test Feature/Filament/CredentialResourceTest --pest. Implementar testes: (1) 'pode listar credenciais' usando livewire(ListCredentials::class)->assertCanSeeTableRecords($credentials); (2) 'pode filtrar por secrecy' criando 3 credenciais com secrecy='R' e testando ->filterTable('secrecy', 'R')->assertCountTableRecords(3); (3) 'pode ordenar por validity' testando ->sortTable('validity'). Usar Credential::factory() para criar dados de teste.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/Filament/CredentialResourceTest.php --filter='pode listar credenciais'. Verificar que todos os testes de listagem e filtros passam sem erros.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:39:46.180Z"
           },
           {
             "id": 4,
@@ -429,9 +432,10 @@
               3
             ],
             "details": "No arquivo tests/Feature/Filament/CredentialResourceTest.php, adicionar: (1) 'pode criar credencial' usando livewire(CreateCredential::class)->fillForm(['fscs' => 'TEST-001', 'name' => 'Teste', 'secrecy' => 'R', 'validity' => now()->addYear()->format('Y-m-d')])->call('create')->assertHasNoFormErrors(); (2) 'pode editar credencial' carregando record existente e testando fillForm + call('save'); (3) 'valida fscs único' tentando criar credencial com FSCS duplicado e esperando erro; (4) 'valida validity futura' testando data passada.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/Filament/CredentialResourceTest.php --filter='pode criar credencial'. Verificar que credencial foi criada no banco com assertDatabaseHas. Testar cenários de validação com assertHasFormErrors.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:39:51.093Z"
           },
           {
             "id": 5,
@@ -439,9 +443,10 @@
             "description": "Criar tests/Feature/Filament/UserResourceTest.php para testar componentes Livewire de gerenciamento de usuários, incluindo criação, edição, listagem e atribuição de roles via Spatie Permission.",
             "dependencies": [],
             "details": "Executar vendor/bin/sail artisan make:test Feature/Filament/UserResourceTest --pest. Implementar: (1) 'pode listar usuários' com livewire(ListUsers::class)->assertCanSeeTableRecords(); (2) 'pode criar usuário com role' preenchendo formulário com name, email, password, roles=['admin'] e verificando hasRole('admin'); (3) 'pode editar usuário e trocar role' modificando role existente; (4) 'valida email único' tentando criar com email duplicado; (5) 'super_admin pode acessar recurso' testando canAccess().",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/Filament/UserResourceTest.php. Verificar que User::where('email', 'novo@test.com')->first()->hasRole('admin') retorna true. Confirmar validações com assertHasFormErrors.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:43:02.007Z"
           },
           {
             "id": 6,
@@ -449,9 +454,10 @@
             "description": "Criar tests/Unit/Policies/CredentialPolicyTest.php usando Pest para testar todos os métodos de autorização da CredentialPolicy, verificando permissões por role (super_admin, admin, consulta).",
             "dependencies": [],
             "details": "Criar tests/Unit/Policies/CredentialPolicyTest.php. Implementar: (1) 'super_admin pode tudo' testando viewAny, view, create, update, delete retornam true; (2) 'admin pode gerenciar credenciais' testando mesmas permissões; (3) 'consulta só pode visualizar' testando view=true mas create/update/delete=false; (4) 'usuário sem role não tem acesso' testando todas as permissões retornam false. Usar User::factory() com assignRole() e Credential::factory(). Instanciar CredentialPolicy diretamente para testar métodos.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Unit/Policies/CredentialPolicyTest.php. Confirmar que expect($policy->view($admin, $credential))->toBeTrue() passa para super_admin e admin, mas create retorna false para role consulta.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:50:39.925Z"
           },
           {
             "id": 7,
@@ -459,9 +465,10 @@
             "description": "Criar tests/Feature/ActivityLogObserverTest.php para testar o Observer que registra ações de criação, atualização e exclusão de credenciais na tabela activity_logs, incluindo user_id correto.",
             "dependencies": [],
             "details": "Executar vendor/bin/sail artisan make:test Feature/ActivityLogObserverTest --pest. Implementar: (1) 'registra criação no log' criando credencial autenticado como usuário e verificando assertDatabaseHas('activity_logs', ['action' => 'created', 'user_id' => $user->id]); (2) 'registra atualização' testando update e action='updated'; (3) 'registra exclusão' testando delete e action='deleted'; (4) 'armazena dados relevantes' verificando que model_type e model_id estão corretos. Usar Auth::login($user) antes das operações.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar vendor/bin/sail artisan test tests/Feature/ActivityLogObserverTest.php. Confirmar que após Credential::factory()->create() existe registro em activity_logs com $this->assertDatabaseHas(). Verificar user_id corresponde ao usuário autenticado.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T03:54:32.093Z"
           },
           {
             "id": 8,
@@ -1393,7 +1400,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-22T19:49:43.733Z",
+      "lastModified": "2025-11-23T03:54:32.094Z",
       "taskCount": 15,
       "completedCount": 12,
       "tags": [
