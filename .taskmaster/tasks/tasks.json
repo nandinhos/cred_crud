@@ -385,11 +385,11 @@
           "2",
           "4"
         ],
-        "status": "in-progress",
+        "status": "done",
         "complexity": 8,
         "recommendedSubtasks": 10,
         "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover o arquivo de teste obsoleto CredentialValidationTest; (3) Criar CredentialResourceTest com testes para listagem, filtros e paginação; (4) Adicionar testes de criação, edição e validação em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de papéis (roles); (6) Criar testes unitários para a CredentialPolicy; (7) Criar testes de integração para o ActivityLogObserver; (8) Criar testes para os relacionamentos dos Models e soft deletes; (9) Configurar e executar a suite com análise de cobertura para atingir a meta de 80%; (10) Documentar as estratégias de teste do projeto.",
-        "updatedAt": "2025-11-23T04:23:08.055Z",
+        "updatedAt": "2025-11-23T04:25:18.063Z",
         "subtasks": [
           {
             "id": 1,
@@ -509,10 +509,10 @@
               9
             ],
             "details": "Criar .taskmaster/docs/testing-strategies.md documentando: (1) Estrutura de testes (Feature vs Unit, quando usar cada); (2) Padrões Pest específicos do projeto (it(), beforeEach(), datasets); (3) Testing Filament/Livewire com livewire()->fillForm()->call()->assert*; (4) Uso de factories para User e Credential; (5) Testing Policies diretamente vs Gates; (6) Testing Observers com Auth mock; (7) Comandos úteis (test --filter, --coverage, --parallel); (8) Exemplo completo de teste de Resource Filament; (9) Troubleshooting comum. Referenciar este doc em CLAUDE.md seção 'Testing Requirements'.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Revisar documento criado manualmente. Confirmar que contém exemplos de código executáveis. Testar um dos exemplos copiando código e executando para validar que documentação está correta e atualizada.",
             "parentId": "undefined",
-            "updatedAt": "2025-11-23T04:23:08.055Z"
+            "updatedAt": "2025-11-23T04:25:18.063Z"
           }
         ]
       },
@@ -648,11 +648,11 @@
           "5",
           "6"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "complexity": 6,
         "recommendedSubtasks": 8,
         "expansionPrompt": "Dividir em: (1) Configurar os canais de logging (daily, security, audit) em config/logging.php; (2) Criar e registrar um AuditMiddleware para log de ações do usuário; (3) Criar o comando Artisan 'CollectMetrics' para coletar e salvar métricas do sistema; (4) Criar o comando Artisan 'BackupDatabase' com funcionalidade de limpeza de backups antigos; (5) Criar o comando 'NotifyExpiringCredentials' para alertas; (6) Agendar todos os novos comandos no Console/Kernel; (7) Testar a execução individual e agendada de cada comando; (8) Documentar as novas rotinas de manutenção e monitoramento.",
-        "updatedAt": "2025-11-20T00:00:00.000Z",
+        "updatedAt": "2025-11-23T17:37:35.707Z",
         "subtasks": [
           {
             "id": 1,
@@ -660,9 +660,10 @@
             "description": "Atualizar o arquivo `config/logging.php` para incluir três canais de log distintos: 'daily' para logs gerais, 'security' para avisos de segurança e 'audit' para trilhas de auditoria, cada um com sua própria política de retenção.",
             "dependencies": [],
             "details": "Adicionar as configurações dos canais 'daily', 'security', e 'audit' no array `channels` dentro de `config/logging.php`, conforme o código fornecido na tarefa pai, ajustando os dias de retenção para cada um.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "Verificar a criação dos arquivos de log em `storage/logs/` após disparar eventos de log para cada canal usando `php artisan tinker`. Exemplo: `Log::channel('security')->warning('Teste de segurança');` e `Log::channel('audit')->info('Teste de auditoria');`",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T17:37:35.707Z"
           },
           {
             "id": 2,
@@ -1403,9 +1404,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-23T04:23:08.056Z",
+      "lastModified": "2025-11-23T17:37:35.709Z",
       "taskCount": 15,
-      "completedCount": 12,
+      "completedCount": 13,
       "tags": [
         "master"
       ]
