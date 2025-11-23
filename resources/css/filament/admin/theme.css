@@ -1,10 +1,8 @@
-@import '/vendor/filament/filament/resources/css/index.css';
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
 
-@config './tailwind.config.js';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@source '../../../../app/Filament/**/*.php';
+@source '../../../../resources/views/filament/**/*.blade.php';
+@source '../../../../vendor/filament/**/*.blade.php';
 
 /**
  * Tema Customizado - Aeronáutica Brasileira
@@ -13,19 +11,92 @@
 
 :root {
     /* Cores Principais da Aeronáutica */
-    --aero-blue-primary: #003DA5;   /* Azul FAB - Cor principal */
-    --aero-blue-sky: #0066CC;       /* Azul céu - Intermediário */
-    --aero-blue-light: #4A90E2;     /* Azul claro - Destaques */
-    --aero-blue-dark: #002366;      /* Azul escuro - Textos */
-    --aero-gold: #FFD700;           /* Dourado - Badges especiais */
-    --aero-silver: #C0C0C0;         /* Prata - Secundário */
-    
+    --aero-blue-primary: #003DA5;
+    /* Azul FAB - Cor principal */
+    --aero-blue-sky: #0066CC;
+    /* Azul céu - Intermediário */
+    --aero-blue-light: #4A90E2;
+    /* Azul claro - Destaques */
+    --aero-blue-dark: #002366;
+    /* Azul escuro - Textos */
+    --aero-gold: #FFD700;
+    /* Dourado - Badges especiais */
+    --aero-silver: #C0C0C0;
+    /* Prata - Secundário */
+
     /* Cores de Status */
-    --status-active: #10B981;       /* Verde - Ativa */
-    --status-pending: #F59E0B;      /* Âmbar - Pendente */
-    --status-expired: #EF4444;      /* Vermelho - Vencida */
-    --status-denied: #6B7280;       /* Cinza - Negada */
-    --status-processing: #8B5CF6;   /* Roxo - Em Processamento */
+    --status-active: #10B981;
+    /* Verde - Ativa */
+    --status-pending: #F59E0B;
+    /* Âmbar - Pendente */
+    --status-expired: #EF4444;
+    /* Vermelho - Vencida */
+    --status-denied: #6B7280;
+    /* Cinza - Negada */
+    --status-processing: #8B5CF6;
+    /* Roxo - Em Processamento */
+
+
+
+}
+
+/* ============================================
+   AJUSTES DE LAYOUT E ESPAÇAMENTO
+   ============================================ */
+
+/* Fundo da página mais escuro */
+body {
+    background-color: #f1f5f9;
+    /* Slate 100 */
+}
+
+.dark body {
+    background-color: #0f172a;
+    /* Slate 900 */
+}
+
+/* Reduzir espaçamento do conteúdo principal */
+.fi-main {
+    @apply px-4 md:px-6;
+    padding-top: 0.75rem !important;
+    /* Reduzindo padding superior */
+    padding-bottom: 1rem !important;
+}
+
+/* Reduzir espaço do breadcrumb */
+.fi-breadcrumbs {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Ajustar espaçamento do header da página */
+.fi-header {
+    margin-bottom: 1rem !important;
+    padding-top: 0 !important;
+}
+
+/* Ajustar container da tabela para evitar overflow desnecessário */
+.fi-ta-content {
+    @apply overflow-x-auto;
+}
+
+/* Reduzir padding das células da tabela para caber mais conteúdo */
+.fi-ta-cell {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.fi-ta-header-cell {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+/* Aproximar o título da página do topo */
+.fi-header {
+    margin-bottom: 1rem !important;
 }
 
 /* ============================================
@@ -41,20 +112,19 @@
     @apply -translate-y-0.5;
 }
 
-/* Cards e Panels - Borda superior azul */
+/* Cards e Panels - Borda superior azul e melhor separação */
 .fi-section {
-    @apply border-t-4;
+    @apply border-t-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-gray-200 dark:border-gray-700;
     border-top-color: var(--aero-blue-primary);
 }
 
-/* Tabelas - Headers com fundo azul suave */
-.fi-ta-header {
-    @apply bg-blue-50 dark:bg-blue-950;
+/* Headers de Seções */
+.fi-section-header-heading {
+    @apply text-lg font-bold text-blue-600 dark:text-blue-400;
 }
 
-/* Badges - Estilo Aeronáutica */
-.fi-badge {
-    @apply font-semibold tracking-wide;
+.fi-section-description {
+    @apply text-sm text-gray-600 dark:text-gray-400;
 }
 
 /* Sidebar - Item ativo com borda dourada */
@@ -68,11 +138,94 @@
     @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
 }
 
+/* Topbar com sombra */
+.fi-topbar {
+    @apply shadow-md;
+}
+
+/* Links */
+.fi-link {
+    color: var(--aero-blue-primary);
+    @apply hover:text-blue-700 transition-colors;
+}
+
+.fi-link:hover {
+    color: var(--aero-blue-sky);
+}
+
 /* ============================================
-   DESCRIÇÕES DE COLUNAS (Unidade em itálico)
+   FORMULÁRIOS
    ============================================ */
-.fi-ta-text-item-description {
+
+/* Labels dos formulários - mais destaque */
+.fi-fo-field-wrp-label label {
+    @apply font-semibold text-gray-800 dark:text-gray-200 text-sm;
+}
+
+/* Helper text - mais sutil */
+.fi-fo-field-wrp-hint {
+    @apply text-xs text-gray-500 dark:text-gray-400 italic;
+}
+
+/* Inputs - melhor contraste e focus */
+.fi-input {
+    @apply border-gray-300 dark:border-gray-600;
+}
+
+.fi-input:focus,
+.fi-select:focus {
+    @apply ring-2;
+    --tw-ring-color: var(--aero-blue-primary);
+}
+
+/* Selects */
+.fi-select-input {
+    @apply bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600;
+}
+
+/* Ícones dos campos */
+.fi-input-wrp-icon {
+    @apply text-blue-500 dark:text-blue-400;
+}
+
+/* Mensagens de validação */
+.fi-fo-field-wrp-error-message {
+    @apply text-red-600 dark:text-red-400 text-xs font-medium;
+}
+
+/* Tooltip de ajuda */
+.fi-fo-field-wrp-hint-icon {
+    @apply text-gray-400 hover:text-blue-500;
+}
+
+/* ============================================
+   TABELAS - ESTILOS ADICIONAIS
+   ============================================ */
+
+/* Headers com fundo azul suave */
+.fi-ta-header {
+    @apply bg-blue-50 dark:bg-blue-950;
+}
+
+/* Títulos das colunas */
+.fi-ta-header-cell {
+    @apply font-bold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800;
+}
+
+/* Células da tabela */
+.fi-ta-cell {
+    @apply text-gray-900 dark:text-gray-100;
+}
+
+/* Descrições de colunas (Unidade em itálico) */
+.fi-ta-text-item-description,
+.fi-ta-text-column-description {
     @apply text-gray-500 dark:text-gray-400 italic text-xs mt-0.5;
+}
+
+/* Badges - Estilo Geral */
+.fi-badge {
+    @apply font-medium px-3 py-1 rounded-full text-xs tracking-wide;
 }
 
 /* ============================================
@@ -92,56 +245,27 @@
 }
 
 /* ============================================
-   GRADIENTE NO HEADER (OPCIONAL)
-   ============================================ */
-.fi-topbar {
-    @apply shadow-md;
-}
-
-/* ============================================
-   FORMS - Focus com cor da Aeronáutica
-   ============================================ */
-.fi-input:focus,
-.fi-select:focus {
-    @apply ring-2;
-    --tw-ring-color: var(--aero-blue-primary);
-}
-
-/* ============================================
-   MELHORIAS DE ACESSIBILIDADE
-   ============================================ */
-
-/* Contraste adequado para textos */
-.fi-section-header-heading {
-    @apply text-gray-900 dark:text-gray-100 font-bold;
-}
-
-/* Links com cor da Aeronáutica */
-.fi-link {
-    color: var(--aero-blue-primary);
-}
-
-.fi-link:hover {
-    color: var(--aero-blue-sky);
-}
-
-/* ============================================
    RESPONSIVIDADE
    ============================================ */
 
 @media (max-width: 768px) {
+
     /* Ajustes para mobile */
     .fi-sidebar {
         @apply shadow-xl;
     }
-    
+
     .fi-topbar {
         @apply py-3;
+    }
+
+    .fi-main {
+        @apply px-2;
     }
 }
 
 /* ============================================
-   DARK MODE - Ajustes para modo escuro
+   DARK MODE
    ============================================ */
 
 .dark {
@@ -151,7 +275,7 @@
 }
 
 /* ============================================
-   ANIMAÇÕES SUAVES
+   ANIMAÇÕES
    ============================================ */
 
 .fi-modal,
@@ -160,15 +284,16 @@
 }
 
 /* ============================================
-   IMPRESSÃO - Remover cores de fundo
+   IMPRESSÃO
    ============================================ */
 
 @media print {
+
     .fi-sidebar,
     .fi-topbar {
         @apply hidden;
     }
-    
+
     .fi-section {
         @apply border-t-0 shadow-none;
     }

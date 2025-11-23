@@ -27,6 +27,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->maxContentWidth('full')
+            ->sidebarWidth('13rem')
             ->login()
             ->colors([
                 'primary' => Color::hex('#003DA5'), // Azul FAB
