@@ -11,9 +11,50 @@ use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-    Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-    Role::firstOrCreate(['name' => 'consulta', 'guard_name' => 'web']);
+    // Limpar cache de permissões
+    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+    // Criar permissões
+    $permissions = [
+        'Visualizar Usuários',
+        'Criar Usuários',
+        'Editar Usuários',
+        'Excluir Usuários',
+        'Visualizar Credenciais',
+        'Criar Credenciais',
+        'Editar Credenciais',
+        'Excluir Credenciais',
+        'Visualizar Logs',
+        'Exportar Relatórios',
+        'Gerenciar Permissões',
+    ];
+
+    foreach ($permissions as $permission) {
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+    }
+
+    // Criar roles
+    $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+    $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $consulta = Role::firstOrCreate(['name' => 'consulta', 'guard_name' => 'web']);
+
+    // Atribuir permissões aos roles
+    $superAdmin->syncPermissions(\Spatie\Permission\Models\Permission::all());
+    $admin->syncPermissions([
+        'Visualizar Usuários',
+        'Criar Usuários',
+        'Editar Usuários',
+        'Visualizar Credenciais',
+        'Criar Credenciais',
+        'Editar Credenciais',
+        'Excluir Credenciais',
+        'Visualizar Logs',
+        'Exportar Relatórios',
+    ]);
+    $consulta->syncPermissions([
+        'Visualizar Credenciais',
+        'Visualizar Logs',
+    ]);
 });
 
 it('can list credentials', function () {
@@ -109,7 +150,7 @@ it('can edit credential', function () {
 
 it('can filter credentials by secrecy', function () {
     $user = User::factory()->admin()->create();
-    
+
     // Criar credenciais com diferentes níveis de sigilo
     $reservado = Credential::factory()->count(3)->create(['secrecy' => CredentialSecrecy::RESERVADO->value]);
     $secreto = Credential::factory()->count(2)->create(['secrecy' => CredentialSecrecy::SECRETO->value]);
@@ -124,7 +165,7 @@ it('can filter credentials by secrecy', function () {
 
 it('can filter credentials by type', function () {
     $user = User::factory()->admin()->create();
-    
+
     // Criar credenciais de diferentes tipos
     $cred = Credential::factory()->count(2)->create(['type' => CredentialType::CRED->value]);
     $tcms = Credential::factory()->count(3)->create(['type' => CredentialType::TCMS->value]);
@@ -139,7 +180,7 @@ it('can filter credentials by type', function () {
 
 it('can search credentials by fscs', function () {
     $user = User::factory()->admin()->create();
-    
+
     $credential = Credential::factory()->create(['fscs' => 'SEARCH-123']);
     $other = Credential::factory()->create(['fscs' => 'OTHER-456']);
 
@@ -153,7 +194,7 @@ it('can search credentials by fscs', function () {
 
 it('can search credentials by credential field', function () {
     $user = User::factory()->admin()->create();
-    
+
     $credential = Credential::factory()->create(['credential' => 'CRED-UNIQUE-999']);
     $other = Credential::factory()->create(['credential' => 'CRED-OTHER-111']);
 
@@ -167,7 +208,7 @@ it('can search credentials by credential field', function () {
 
 it('can sort credentials by fscs', function () {
     $user = User::factory()->admin()->create();
-    
+
     Credential::factory()->create(['fscs' => 'AAA-001']);
     Credential::factory()->create(['fscs' => 'ZZZ-999']);
     Credential::factory()->create(['fscs' => 'MMM-500']);
@@ -184,14 +225,14 @@ it('can sort credentials by fscs', function () {
 
 it('shows correct badge colors for secrecy levels', function () {
     $user = User::factory()->admin()->create();
-    
+
     $reservado = Credential::factory()->create(['secrecy' => CredentialSecrecy::RESERVADO->value]);
     $secreto = Credential::factory()->create(['secrecy' => CredentialSecrecy::SECRETO->value]);
 
     $this->actingAs($user);
 
     $component = Livewire::test(ListCredentials::class);
-    
+
     // Verificar que as credenciais estão na tabela
     $component->assertCanSeeTableRecords([$reservado, $secreto]);
 });

@@ -389,7 +389,7 @@
         "complexity": 8,
         "recommendedSubtasks": 10,
         "expansionPrompt": "Dividir em subtasks detalhadas: (1) Refatorar RoleAuthorizationTest para usar factories; (2) Remover o arquivo de teste obsoleto CredentialValidationTest; (3) Criar CredentialResourceTest com testes para listagem, filtros e paginação; (4) Adicionar testes de criação, edição e validação em CredentialResourceTest; (5) Criar UserResourceTest com testes de CRUD e atribuição de papéis (roles); (6) Criar testes unitários para a CredentialPolicy; (7) Criar testes de integração para o ActivityLogObserver; (8) Criar testes para os relacionamentos dos Models e soft deletes; (9) Configurar e executar a suite com análise de cobertura para atingir a meta de 80%; (10) Documentar as estratégias de teste do projeto.",
-        "updatedAt": "2025-11-23T03:59:05.974Z",
+        "updatedAt": "2025-11-23T04:02:16.766Z",
         "subtasks": [
           {
             "id": 1,
@@ -496,9 +496,10 @@
               8
             ],
             "details": "Executar vendor/bin/sail artisan test --coverage --min=80. Analisar relatório de cobertura gerado. Se cobertura < 80%, identificar arquivos com baixa cobertura (Models, Policies, Resources, Observers) e adicionar testes faltantes. Focar em: (1) Models (User, Credential) - testar getters, scopes, relationships; (2) Policies não cobertas; (3) Observers edge cases; (4) Resource actions customizadas. Repetir até atingir 80%+. Gerar relatório HTML com --coverage-html coverage_report se disponível.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Comando vendor/bin/sail artisan test --coverage deve passar com Lines >= 80%. Revisar output do terminal ou arquivo coverage_report/index.html. Confirmar que arquivos críticos (User.php, Credential.php, CredentialPolicy.php) têm >80% de cobertura individualmente.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T04:02:16.766Z"
           },
           {
             "id": 10,
@@ -1401,7 +1402,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-23T03:59:05.976Z",
+      "lastModified": "2025-11-23T04:02:16.767Z",
       "taskCount": 15,
       "completedCount": 12,
       "tags": [
