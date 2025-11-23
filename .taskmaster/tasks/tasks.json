@@ -652,7 +652,7 @@
         "complexity": 6,
         "recommendedSubtasks": 8,
         "expansionPrompt": "Dividir em: (1) Configurar os canais de logging (daily, security, audit) em config/logging.php; (2) Criar e registrar um AuditMiddleware para log de ações do usuário; (3) Criar o comando Artisan 'CollectMetrics' para coletar e salvar métricas do sistema; (4) Criar o comando Artisan 'BackupDatabase' com funcionalidade de limpeza de backups antigos; (5) Criar o comando 'NotifyExpiringCredentials' para alertas; (6) Agendar todos os novos comandos no Console/Kernel; (7) Testar a execução individual e agendada de cada comando; (8) Documentar as novas rotinas de manutenção e monitoramento.",
-        "updatedAt": "2025-11-23T17:37:35.707Z",
+        "updatedAt": "2025-11-23T17:43:18.827Z",
         "subtasks": [
           {
             "id": 1,
@@ -660,10 +660,10 @@
             "description": "Atualizar o arquivo `config/logging.php` para incluir três canais de log distintos: 'daily' para logs gerais, 'security' para avisos de segurança e 'audit' para trilhas de auditoria, cada um com sua própria política de retenção.",
             "dependencies": [],
             "details": "Adicionar as configurações dos canais 'daily', 'security', e 'audit' no array `channels` dentro de `config/logging.php`, conforme o código fornecido na tarefa pai, ajustando os dias de retenção para cada um.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Verificar a criação dos arquivos de log em `storage/logs/` após disparar eventos de log para cada canal usando `php artisan tinker`. Exemplo: `Log::channel('security')->warning('Teste de segurança');` e `Log::channel('audit')->info('Teste de auditoria');`",
             "parentId": "undefined",
-            "updatedAt": "2025-11-23T17:37:35.707Z"
+            "updatedAt": "2025-11-23T17:42:30.154Z"
           },
           {
             "id": 2,
@@ -673,9 +673,10 @@
               1
             ],
             "details": "Criar o arquivo `app/Http/Middleware/AuditMiddleware.php` com a lógica para registrar `user_id`, `email`, `action`, `url` e `ip`. Registrar o middleware no `app/Http/Kernel.php` para ser aplicado globalmente ou em grupos de rotas específicos.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "Após aplicar o middleware, navegar por páginas protegidas por autenticação, realizar algumas ações (visualizar, criar, editar) e verificar se as ações são registradas corretamente com todos os detalhes no arquivo `storage/logs/audit.log`.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T17:43:18.827Z"
           },
           {
             "id": 3,
@@ -1404,7 +1405,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-23T17:37:35.709Z",
+      "lastModified": "2025-11-23T17:43:18.828Z",
       "taskCount": 15,
       "completedCount": 13,
       "tags": [
