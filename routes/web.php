@@ -57,6 +57,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rota de download de backup (apenas super_admin e admin)
+    Route::get('/backup/download/{filename}', function (string $filename) {
+        $user = auth()->user();
+
+        if (! $user->hasRole('super_admin') && ! $user->hasRole('admin')) {
+            abort(403, 'Acesso negado');
+        }
+
+        $service = new \App\Services\BackupService;
+        $path = $service->getDownloadPath($filename);
+
+        if (file_exists($path)) {
+            return response()->download($path);
+        }
+
+        abort(404, 'Backup não encontrado');
+    })->name('backup.download');
 });
 
 require __DIR__.'/auth.php';

@@ -652,7 +652,7 @@
         "complexity": 6,
         "recommendedSubtasks": 8,
         "expansionPrompt": "Dividir em: (1) Configurar os canais de logging (daily, security, audit) em config/logging.php; (2) Criar e registrar um AuditMiddleware para log de ações do usuário; (3) Criar o comando Artisan 'CollectMetrics' para coletar e salvar métricas do sistema; (4) Criar o comando Artisan 'BackupDatabase' com funcionalidade de limpeza de backups antigos; (5) Criar o comando 'NotifyExpiringCredentials' para alertas; (6) Agendar todos os novos comandos no Console/Kernel; (7) Testar a execução individual e agendada de cada comando; (8) Documentar as novas rotinas de manutenção e monitoramento.",
-        "updatedAt": "2025-11-23T18:05:10.507Z",
+        "updatedAt": "2025-11-23T20:53:45.676Z",
         "subtasks": [
           {
             "id": 1,
@@ -684,10 +684,10 @@
             "description": "Criar um comando Artisan que coleta métricas chave do sistema, como contagem de usuários, contagem de credenciais (total, expiradas, expirando em breve) e o tamanho do banco de dados. As métricas devem ser salvas em um arquivo JSON diário.",
             "dependencies": [],
             "details": "Gerar o comando `CollectMetrics` usando `artisan make:command`. Implementar a lógica para buscar dados dos models `User` e `Credential` e consultar o `information_schema` para o tamanho do banco. Salvar a saída em `storage/metrics/metrics_YYYY-MM-DD.json`.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Executar o comando `php artisan metrics:collect` e verificar se o arquivo JSON é criado em `storage/metrics/` com a estrutura e os dados corretos e consistentes com o estado atual do banco de dados.",
             "parentId": "undefined",
-            "updatedAt": "2025-11-23T18:05:10.507Z"
+            "updatedAt": "2025-11-23T19:45:41.109Z"
           },
           {
             "id": 4,
@@ -695,9 +695,10 @@
             "description": "Desenvolver um comando Artisan que realiza um backup completo do banco de dados MySQL usando `mysqldump`. O comando deve também incluir uma funcionalidade para limpar backups antigos, mantendo um número configurável de cópias.",
             "dependencies": [],
             "details": "Gerar o comando `BackupDatabase` com a opção `--keep`. A lógica deve construir e executar o comando `mysqldump` com as credenciais do banco de dados. Implementar a função `cleanOldBackups` para gerenciar a rotação dos arquivos de backup em `storage/app/backups/`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar `php artisan db:backup --keep=3`. Verificar se o arquivo de backup `.sql` foi criado em `storage/app/backups/`. Executar o comando quatro vezes para garantir que o backup mais antigo é removido corretamente.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-23T20:53:45.676Z"
           },
           {
             "id": 5,
@@ -1406,7 +1407,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-23T18:05:10.509Z",
+      "lastModified": "2025-11-23T20:53:45.678Z",
       "taskCount": 15,
       "completedCount": 13,
       "tags": [
