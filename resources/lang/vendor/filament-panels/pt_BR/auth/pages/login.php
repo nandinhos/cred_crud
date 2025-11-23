@@ -4,7 +4,7 @@ return [
 
     'title' => 'Login',
 
-    'heading' => 'Faça login',
+    'heading' => 'AIT - GAC-PAC',
 
     'actions' => [
 

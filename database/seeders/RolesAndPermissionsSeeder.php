@@ -16,19 +16,19 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Criar permissions
+        // Criar permissions (em português e resumidas)
         $permissions = [
-            'view_users',
-            'create_users',
-            'edit_users',
-            'delete_users',
-            'view_credentials',
-            'create_credentials',
-            'edit_credentials',
-            'delete_credentials',
-            'view_audit_logs',
-            'export_reports',
-            'manage_permissions',
+            'Visualizar Usuários',
+            'Criar Usuários',
+            'Editar Usuários',
+            'Excluir Usuários',
+            'Visualizar Credenciais',
+            'Criar Credenciais',
+            'Editar Credenciais',
+            'Excluir Credenciais',
+            'Visualizar Logs',
+            'Exportar Relatórios',
+            'Gerenciar Permissões',
         ];
 
         foreach ($permissions as $permission) {
@@ -44,31 +44,31 @@ class RolesAndPermissionsSeeder extends Seeder
         // Administrador - Gerencia usuários e credenciais
         $admin = Role::create(['name' => 'admin']);
         $admin->givePermissionTo([
-            'view_users',
-            'create_users',
-            'edit_users',
-            'view_credentials',
-            'create_credentials',
-            'edit_credentials',
-            'delete_credentials',
-            'view_audit_logs',
-            'export_reports',
+            'Visualizar Usuários',
+            'Criar Usuários',
+            'Editar Usuários',
+            'Visualizar Credenciais',
+            'Criar Credenciais',
+            'Editar Credenciais',
+            'Excluir Credenciais',
+            'Visualizar Logs',
+            'Exportar Relatórios',
         ]);
 
         // Operador - Visualiza e edita credenciais
         $operador = Role::create(['name' => 'operador']);
         $operador->givePermissionTo([
-            'view_credentials',
-            'create_credentials',
-            'edit_credentials',
-            'view_audit_logs',
+            'Visualizar Credenciais',
+            'Criar Credenciais',
+            'Editar Credenciais',
+            'Visualizar Logs',
         ]);
 
         // Consulta - Apenas visualização
         $consulta = Role::create(['name' => 'consulta']);
         $consulta->givePermissionTo([
-            'view_credentials',
-            'view_audit_logs',
+            'Visualizar Credenciais',
+            'Visualizar Logs',
         ]);
 
         $this->command->info('Roles e permissions criados com sucesso!');
