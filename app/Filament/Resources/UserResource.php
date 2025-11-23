@@ -104,7 +104,6 @@ class UserResource extends Resource
                     ->description('Defina os perfis e permissões do usuário')
                     ->icon('heroicon-o-shield-check')
                     ->collapsible()
-                    ->collapsed()
                     ->schema([
                         Select::make('roles')
                             ->label('Perfis')
@@ -123,8 +122,7 @@ class UserResource extends Resource
                             ->helperText('Permissões específicas')
                             ->searchable(),
                     ])
-                    ->collapsed()
-                    ->collapsible(),
+                    ->columns(2),
             ]);
     }
 
