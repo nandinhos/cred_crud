@@ -423,6 +423,13 @@ test: adiciona testes para autenticação
 - Tests must cover: happy paths, failure paths, edge cases
 - Run minimum necessary tests before committing
 - Test files: `tests/Feature/` and `tests/Unit/`
+- **Minimum coverage**: 80% (Current: 84.9%)
+- **Detailed documentation**: See `.taskmaster/docs/testing-strategies.md` for:
+  - Complete testing patterns and strategies
+  - Filament/Livewire testing examples
+  - Factory usage
+  - Policy and Observer testing
+  - Troubleshooting guide
 - **Example:**
   ```php
   it('can list credentials', function () {
