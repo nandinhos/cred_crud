@@ -24,12 +24,29 @@ class CredentialForm
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label('Usuário Responsável')
-                            ->relationship('user', 'name')
+                            ->relationship(
+                                name: 'user',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: function ($query, $livewire) {
+                                    // Pegar o ID do registro atual (se estiver editando)
+                                    $recordId = $livewire->record?->id ?? null;
+
+                                    // Filtrar usuários que NÃO têm credenciais ativas
+                                    $query->whereDoesntHave('credentials', function ($credentialQuery) use ($recordId) {
+                                        $credentialQuery->whereNull('deleted_at');
+                                        
+                                        // Se estiver editando, ignorar a credencial atual
+                                        if ($recordId) {
+                                            $credentialQuery->where('id', '!=', $recordId);
+                                        }
+                                    });
+                                }
+                            )
                             ->searchable()
                             ->preload()
                             ->required()
                             ->prefixIcon('heroicon-o-user')
-                            ->helperText('Usuário responsável por esta credencial')
+                            ->helperText('Apenas usuários sem credenciais ativas são exibidos')
                             ->rules([
                                 function ($livewire) {
                                     return function (string $attribute, $value, \Closure $fail) use ($livewire) {
