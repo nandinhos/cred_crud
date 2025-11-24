@@ -197,7 +197,14 @@ else
     exit 1
 fi
 
-# Criar usuário admin
+# Executar seeders essenciais
+log "👤 Criando roles e permissões..."
+if docker-compose exec -T laravel.test php artisan db:seed --class=RolesAndPermissionsSeeder --force; then
+    log "✅ Roles e permissões criadas"
+else
+    warning "Problema ao criar roles e permissões (podem já existir)"
+fi
+
 log "👤 Criando usuário administrador..."
 if docker-compose exec -T laravel.test php artisan db:seed --class=AdminUserSeeder --force; then
     log "✅ Usuário administrador criado"
@@ -205,12 +212,18 @@ else
     warning "Problema ao criar usuário admin (pode já existir)"
 fi
 
+log "🏢 Criando offices e ranks..."
+docker-compose exec -T laravel.test php artisan db:seed --class=OfficeSeeder --force 2>/dev/null
+docker-compose exec -T laravel.test php artisan db:seed --class=RankSeeder --force 2>/dev/null
+log "✅ Dados auxiliares criados"
+
 # Limpar caches
 log "🧹 Limpando caches..."
 docker-compose exec -T laravel.test php artisan config:clear
 docker-compose exec -T laravel.test php artisan cache:clear
 docker-compose exec -T laravel.test php artisan route:clear
 docker-compose exec -T laravel.test php artisan view:clear
+docker-compose exec -T laravel.test php artisan filament:clear-cached-components 2>/dev/null
 
 # Otimizar autoload
 log "⚡ Otimizando autoload..."
@@ -272,6 +285,14 @@ echo "📋 Install Guide: INSTALL.md"
 echo "🔧 Best Practices: .taskmaster/docs/best-practices-laravel12-filament4.md"
 echo "📖 Commands: .taskmaster/docs/useful-commands.md"
 echo "🔍 Lessons: .taskmaster/docs/lessons-learned.md"
+echo "🧪 Testing: .taskmaster/docs/testing-strategies.md"
+echo ""
+echo -e "${BLUE}✨ FUNCIONALIDADES DISPONÍVEIS:${NC}"
+echo "👥 Gestão de Usuários (admin/super_admin)"
+echo "🛡️ Gestão de Credenciais (CRED/TCMS)"
+echo "💾 Sistema de Backups (5 mais recentes)"
+echo "📊 Métricas do Sistema (comando metrics:collect)"
+echo "📝 Auditoria de Ações (logs automáticos)"
 echo ""
 echo -e "${GREEN}✨ Acesse http://localhost/admin para começar! ✨${NC}"
 echo ""
