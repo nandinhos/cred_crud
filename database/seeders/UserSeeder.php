@@ -88,8 +88,41 @@ class UserSeeder extends Seeder
         ]);
         $consulta2->assignRole('consulta');
 
-        // Usuários comuns (5 usuários sem roles específicas)
-        User::factory()->count(5)->create();
+        // Usuários de Consulta 3
+        $consulta3 = User::create([
+            'name' => 'Carlos',
+            'full_name' => 'Carlos Mendes Silva',
+            'rank_id' => $sargento?->id,
+            'office_id' => $gacPac?->id,
+            'email' => 'consulta3@credcrud.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+        ]);
+        $consulta3->assignRole('consulta');
+
+        // Usuários de Consulta 4
+        $consulta4 = User::create([
+            'name' => 'Beatriz',
+            'full_name' => 'Beatriz Alves Costa',
+            'rank_id' => $tenente?->id,
+            'office_id' => $scpEmb?->id,
+            'email' => 'consulta4@credcrud.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+        ]);
+        $consulta4->assignRole('consulta');
+
+        // Usuários de Consulta 5
+        $consulta5 = User::create([
+            'name' => 'Rafael',
+            'full_name' => 'Rafael Santos Oliveira',
+            'rank_id' => $capitao?->id,
+            'office_id' => $ecpGpx?->id,
+            'email' => 'consulta5@credcrud.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+        ]);
+        $consulta5->assignRole('consulta');
 
         $this->command->info('✅ Usuários criados com sucesso!');
         $this->command->info('📊 Total de usuários: '.User::count());
