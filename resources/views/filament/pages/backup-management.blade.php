@@ -95,15 +95,19 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('backup.download', ['filename' => $backup['name']]) }}" 
-                                           class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
+                                           class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-2"
                                            title="Download">
-                                            <x-heroicon-o-arrow-down-tray class="w-5 h-5 inline"/>
+                                            <x-heroicon-o-arrow-down-tray class="w-4 h-4 mr-1"/>
+                                            Download
                                         </a>
-                                        <button wire:click="deleteBackup('{{ $backup['name'] }}')"
-                                                wire:confirm="Tem certeza que deseja deletar este backup?"
-                                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                                title="Deletar">
-                                            <x-heroicon-o-trash class="w-5 h-5 inline"/>
+                                        
+                                        <button 
+                                            wire:click="setBackupToDelete('{{ $backup['name'] }}')"
+                                            x-on:click="$wire.mountAction('deleteBackup')"
+                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            title="Deletar">
+                                            <x-heroicon-o-trash class="w-4 h-4 mr-1"/>
+                                            Deletar
                                         </button>
                                     </td>
                                 </tr>
@@ -122,4 +126,6 @@
             @endif
         </div>
     </div>
+    
+    <x-filament-actions::modals />
 </x-filament-panels::page>

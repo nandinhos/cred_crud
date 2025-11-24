@@ -111,22 +111,40 @@ class BackupManagement extends Page
         ];
     }
 
-    public function deleteBackup(string $filename): void
+    public string $backupToDelete = '';
+
+    public function deleteBackupAction(): Action
     {
-        $service = new BackupService;
+        return Action::make('deleteBackup')
+            ->label('Deletar Backup')
+            ->icon('heroicon-o-trash')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Deletar Backup')
+            ->modalDescription(fn () => "Tem certeza que deseja deletar o backup '{$this->backupToDelete}'? Esta ação não pode ser desfeita.")
+            ->modalSubmitActionLabel('Sim, deletar')
+            ->modalCancelActionLabel('Cancelar')
+            ->action(function () {
+                $service = new BackupService;
 
-        if ($service->deleteBackup($filename)) {
-            Notification::make()
-                ->title('Backup deletado com sucesso!')
-                ->success()
-                ->send();
+                if ($service->deleteBackup($this->backupToDelete)) {
+                    Notification::make()
+                        ->title('Backup deletado com sucesso!')
+                        ->success()
+                        ->send();
 
-            $this->loadData();
-        } else {
-            Notification::make()
-                ->title('Erro ao deletar backup')
-                ->danger()
-                ->send();
-        }
+                    $this->loadData();
+                } else {
+                    Notification::make()
+                        ->title('Erro ao deletar backup')
+                        ->danger()
+                        ->send();
+                }
+            });
+    }
+
+    public function setBackupToDelete(string $filename): void
+    {
+        $this->backupToDelete = $filename;
     }
 }
