@@ -30,6 +30,25 @@ class Credential extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Boot do modelo - Adicionar validações
+     */
+    protected static function booted(): void
+    {
+        // Validar que cada usuário pode ter apenas uma credencial ativa
+        static::creating(function (Credential $credential) {
+            if ($credential->user_id) {
+                $hasActiveCredential = static::where('user_id', $credential->user_id)
+                    ->whereNull('deleted_at')
+                    ->exists();
+
+                if ($hasActiveCredential) {
+                    throw new \Exception('Este usuário já possui uma credencial ativa. Apenas uma credencial por usuário é permitida.');
+                }
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'fscs',

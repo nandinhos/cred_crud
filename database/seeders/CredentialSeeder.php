@@ -13,99 +13,108 @@ class CredentialSeeder extends Seeder
      */
     public function run(): void
     {
-        $superAdmin = User::role('super_admin')->first();
-        $admin = User::role('admin')->first();
-        $consulta = User::role('consulta')->first();
+        $this->command->info('🔐 Criando credenciais (uma por usuário)...');
+
         $users = User::all();
 
-        // Credenciais ATIVAS tipo CRED (com concessão)
-        $this->command->info('🟢 Criando credenciais ATIVAS (CRED)...');
+        if ($users->isEmpty()) {
+            $this->command->warn('⚠️  Nenhum usuário encontrado. Execute UserSeeder primeiro.');
 
-        Credential::factory()
-            ->cred()
-            ->active()
-            ->count(15)
-            ->create([
-                'user_id' => $users->random()->id,
-            ]);
+            return;
+        }
 
-        // CREDENCIAIS PENDENTES tipo CRED (sem concessão)
-        $this->command->info('🟡 Criando credenciais PENDENTES (CRED)...');
+        // Distribuir credenciais entre os usuários
+        // Cada usuário recebe APENAS UMA credencial
 
-        Credential::factory()
-            ->cred()
-            ->pending()
-            ->count(8)
-            ->create([
-                'user_id' => $users->random()->id,
-            ]);
+        $totalUsers = $users->count();
+        $credentialsCreated = 0;
 
-        // CREDENCIAIS EM PROCESSAMENTO tipo TCMS
-        $this->command->info('🔵 Criando credenciais EM PROCESSAMENTO (TCMS)...');
+        // Definir distribuição de credenciais
+        $distributions = [
+            ['type' => 'cred', 'status' => 'active', 'count' => (int) ($totalUsers * 0.4)], // 40% ativas
+            ['type' => 'cred', 'status' => 'pending', 'count' => (int) ($totalUsers * 0.2)], // 20% pendentes
+            ['type' => 'tcms', 'status' => 'processing', 'count' => (int) ($totalUsers * 0.2)], // 20% em processamento
+            ['type' => 'cred', 'status' => 'expired', 'count' => (int) ($totalUsers * 0.15)], // 15% vencidas
+            ['type' => 'cred', 'status' => 'denied', 'count' => (int) ($totalUsers * 0.05)], // 5% negadas
+        ];
 
-        Credential::factory()
-            ->tcms()
-            ->count(10)
-            ->create([
-                'user_id' => $users->random()->id,
-                'concession' => now()->subMonths(rand(1, 6)),
-            ]);
+        $userIndex = 0;
 
-        // CREDENCIAIS VENCIDAS
-        $this->command->info('🔴 Criando credenciais VENCIDAS...');
+        foreach ($distributions as $dist) {
+            $count = min($dist['count'], $totalUsers - $credentialsCreated);
 
-        Credential::factory()
-            ->cred()
-            ->expired()
-            ->count(12)
-            ->create([
-                'user_id' => $users->random()->id,
-            ]);
+            for ($i = 0; $i < $count; $i++) {
+                if ($userIndex >= $totalUsers) {
+                    break;
+                }
 
-        // Credenciais específicas por nível de sigilo
-        $this->command->info('🔐 Criando credenciais por nível de SIGILO...');
+                $user = $users[$userIndex];
+                $userIndex++;
 
-        // 5 credenciais SECRETAS (S)
-        Credential::factory()
-            ->secret()
-            ->count(5)
-            ->create([
-                'user_id' => $superAdmin->id,
-                'validity' => now()->addMonths(rand(6, 12)),
-            ]);
+                // Criar credencial baseada no tipo e status
+                $credentialData = [
+                    'user_id' => $user->id,
+                ];
 
-        // 10 credenciais RESERVADAS (R)
-        Credential::factory()
-            ->reserved()
-            ->count(10)
-            ->create([
-                'user_id' => $admin->id,
-            ]);
+                switch ($dist['status']) {
+                    case 'active':
+                        Credential::factory()
+                            ->cred()
+                            ->active()
+                            ->create($credentialData);
+                        $this->command->info("  🟢 Credencial ATIVA criada para {$user->name}");
+                        break;
 
-        // CREDENCIAIS NEGADAS
-        $this->command->info('⚫ Criando credenciais NEGADAS...');
+                    case 'pending':
+                        Credential::factory()
+                            ->cred()
+                            ->pending()
+                            ->create($credentialData);
+                        $this->command->info("  🟡 Credencial PENDENTE criada para {$user->name}");
+                        break;
 
-        Credential::factory()
-            ->count(3)
-            ->sequence(
-                ['fscs' => '00000'],
-                ['fscs' => '00001'],
-                ['fscs' => '00002'],
-            )
-            ->create([
-                'user_id' => $users->random()->id,
-            ]);
+                    case 'processing':
+                        Credential::factory()
+                            ->tcms()
+                            ->create(array_merge($credentialData, [
+                                'concession' => now()->subMonths(rand(1, 6)),
+                            ]));
+                        $this->command->info("  🔵 Credencial EM PROCESSAMENTO criada para {$user->name}");
+                        break;
+
+                    case 'expired':
+                        Credential::factory()
+                            ->cred()
+                            ->expired()
+                            ->create($credentialData);
+                        $this->command->info("  🔴 Credencial VENCIDA criada para {$user->name}");
+                        break;
+
+                    case 'denied':
+                        Credential::factory()
+                            ->create(array_merge($credentialData, [
+                                'fscs' => str_pad($i, 5, '0', STR_PAD_LEFT),
+                            ]));
+                        $this->command->info("  ⚫ Credencial NEGADA criada para {$user->name}");
+                        break;
+                }
+
+                $credentialsCreated++;
+            }
+        }
 
         // Estatísticas finais
         $this->command->info('');
         $this->command->info('✅ Credenciais criadas com sucesso!');
         $this->command->info('📊 Total de credenciais: '.Credential::count());
+        $this->command->info('👥 Usuários com credenciais: '.$credentialsCreated);
+        $this->command->info('👤 Usuários sem credenciais: '.($totalUsers - $credentialsCreated));
+        $this->command->info('');
         $this->command->info('📄 CRED: '.Credential::where('type', 'CRED')->count());
         $this->command->info('📋 TCMS: '.Credential::where('type', 'TCMS')->count());
-        $this->command->info('🔐 Secretas (S): '.Credential::where('secrecy', 'S')->count());
-        $this->command->info('🛡️  Reservadas (R): '.Credential::where('secrecy', 'R')->count());
         $this->command->info('');
         $this->command->info('Por Status:');
+
         // Contar por status usando o accessor
         $all = Credential::all();
         $this->command->info('🟢 Ativas: '.$all->where('status', 'Ativa')->count());

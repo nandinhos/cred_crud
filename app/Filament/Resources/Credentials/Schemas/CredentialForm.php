@@ -29,7 +29,26 @@ class CredentialForm
                             ->preload()
                             ->required()
                             ->prefixIcon('heroicon-o-user')
-                            ->helperText('Usuário responsável por esta credencial'),
+                            ->helperText('Usuário responsável por esta credencial')
+                            ->rules([
+                                function ($livewire) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($livewire) {
+                                        // Ignorar validação se estamos editando o mesmo registro
+                                        $recordId = $livewire->record?->id ?? null;
+
+                                        $query = \App\Models\Credential::where('user_id', $value)
+                                            ->whereNull('deleted_at');
+
+                                        if ($recordId) {
+                                            $query->where('id', '!=', $recordId);
+                                        }
+
+                                        if ($query->exists()) {
+                                            $fail('Este usuário já possui uma credencial ativa. Apenas uma credencial por usuário é permitida.');
+                                        }
+                                    };
+                                },
+                            ]),
 
                         Forms\Components\TextInput::make('fscs')
                             ->label('FSCS')
