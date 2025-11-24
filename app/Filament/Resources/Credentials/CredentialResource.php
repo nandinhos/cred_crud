@@ -92,7 +92,7 @@ class CredentialResource extends Resource
     }
 
     /**
-     * Verificar se o usuário pode criar registros
+     * Permitir criar credenciais
      */
     public static function canCreate(): bool
     {
@@ -102,12 +102,11 @@ class CredentialResource extends Resource
             return false;
         }
 
-        // Apenas admin e super_admin podem criar
         return $user->hasRole(['admin', 'super_admin']);
     }
 
     /**
-     * Verificar se o usuário pode editar registros
+     * Permitir editar credenciais
      */
     public static function canEdit($record): bool
     {
@@ -117,12 +116,11 @@ class CredentialResource extends Resource
             return false;
         }
 
-        // Apenas admin e super_admin podem editar
         return $user->hasRole(['admin', 'super_admin']);
     }
 
     /**
-     * Verificar se o usuário pode deletar registros
+     * Permitir deletar credenciais
      */
     public static function canDelete($record): bool
     {
@@ -132,7 +130,6 @@ class CredentialResource extends Resource
             return false;
         }
 
-        // Apenas admin e super_admin podem deletar
         return $user->hasRole(['admin', 'super_admin']);
     }
 

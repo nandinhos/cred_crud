@@ -1160,3 +1160,194 @@ test('forSecrecy retorna cor correta para Acesso Restrito', function () {
 - Database Transactions: https://laravel.com/docs/12.x/database#database-transactions
 - Enum Validation: https://www.php.net/manual/en/language.enumerations.php
 
+
+---
+
+## 🔐 Policies vs Permissions vs Roles - Precedência e Conflitos
+
+**Data:** 2025-11-23  
+**Contexto:** Sistema de backup com RBAC completo  
+**Problema:** Botões de criar/editar/deletar sumiram após implementar `canAccess()` nos Resources
+
+### ❌ PROBLEMA:
+
+Ao implementar controle de acesso RBAC para o perfil "consulta", os botões de ação (Criar, Editar, Deletar) desapareceram para **todos os usuários**, incluindo admin e super_admin.
+
+**Código problemático:**
+```php
+// UserResource.php
+public static function canAccess(): bool
+{
+    return auth()->user()->hasRole(['admin', 'super_admin']);
+}
+
+// UserPolicy.php
+public function create(User $user): bool
+{
+    return $user->can('create_users'); // ❌ Permissão não existe!
+}
+```
+
+### 🔍 CAUSA RAIZ:
+
+**1. Precedência de Verificação no Filament:**
+- O Filament verifica **Policy primeiro**, depois os métodos do Resource
+- Se a Policy retornar `false`, o Resource nunca é consultado
+
+**2. Permissões Inexistentes:**
+- A Policy verificava permissões que nunca foram criadas no seeder:
+  - `create_users` ❌
+  - `edit_users` ❌
+  - `delete_users` ❌
+
+**3. Diferença entre `can()` e `hasRole()`:**
+- `$user->can('permission')` - Verifica permissão específica (Spatie Permission)
+- `$user->hasRole('role')` - Verifica se usuário tem uma role
+
+### ✅ SOLUÇÃO:
+
+**1. Corrigir a Policy para usar `hasRole()` ao invés de `can()`:**
+
+```php
+// app/Policies/UserPolicy.php
+public function create(User $user): bool
+{
+    return $user->hasRole(['admin', 'super_admin']);
+}
+
+public function update(User $user, User $model): bool
+{
+    return $user->hasRole(['admin', 'super_admin']);
+}
+
+public function delete(User $user, User $model): bool
+{
+    // Não pode deletar a si mesmo
+    if ($user->id === $model->id) {
+        return false;
+    }
+    
+    return $user->hasRole(['admin', 'super_admin']);
+}
+```
+
+**2. Adicionar métodos específicos no Resource (redundância segura):**
+
+```php
+// app/Filament/Resources/UserResource.php
+public static function canCreate(): bool
+{
+    $user = auth()->user();
+    return $user && $user->hasRole(['admin', 'super_admin']);
+}
+
+public static function canEdit($record): bool
+{
+    $user = auth()->user();
+    return $user && $user->hasRole(['admin', 'super_admin']);
+}
+
+public static function canDelete($record): bool
+{
+    $user = auth()->user();
+    return $user && $user->hasRole(['admin', 'super_admin']);
+}
+```
+
+**3. Manter `shouldRegisterNavigation()` para ocultar do menu:**
+
+```php
+public static function shouldRegisterNavigation(): bool
+{
+    $user = auth()->user();
+    return $user && $user->hasRole(['admin', 'super_admin']);
+}
+```
+
+### 📋 CHECKLIST DE VERIFICAÇÃO:
+
+Sempre que implementar RBAC em um Resource Filament:
+
+- [ ] ✅ Verificar se as **permissões** usadas na Policy existem no seeder
+- [ ] ✅ Decidir: usar `hasRole()` OU `can()` (não misturar)
+- [ ] ✅ Implementar `shouldRegisterNavigation()` para ocultar menu
+- [ ] ✅ Implementar `canAccess()` para bloquear acesso direto via URL
+- [ ] ✅ Implementar `canCreate()`, `canEdit()`, `canDelete()` se necessário
+- [ ] ✅ Testar com cada perfil (admin, super_admin, consulta)
+- [ ] ✅ Limpar caches após mudanças: `filament:clear-cached-components`
+
+### 🎯 ORDEM DE PRECEDÊNCIA (Filament):
+
+```
+1. Policy (se existir)
+   ↓ se false, para aqui
+2. Resource::canCreate()/canEdit()/canDelete()
+   ↓ se false, para aqui
+3. Resource::canAccess()
+   ↓ se false, para aqui
+4. Botão/Ação é exibida
+```
+
+### 💡 BOAS PRÁTICAS:
+
+**✅ RECOMENDADO:**
+```php
+// Policy: Validação de negócio específica
+public function create(User $user): bool
+{
+    return $user->hasRole(['admin', 'super_admin']);
+}
+
+// Resource: Controle de acesso geral
+public static function canAccess(): bool
+{
+    return auth()->user()?->hasRole(['admin', 'super_admin']) ?? false;
+}
+```
+
+**❌ EVITAR:**
+```php
+// Misturar hasRole() e can() sem certeza das permissões
+public function create(User $user): bool
+{
+    return $user->can('create_users'); // Permissão existe?
+}
+
+// Bloquear tudo apenas com canAccess()
+public static function canAccess(): bool
+{
+    return false; // Bloqueia criar/editar/deletar também!
+}
+```
+
+### 🧪 COMANDOS DE DEBUG:
+
+```bash
+# Verificar permissões de um usuário
+php artisan tinker
+$user = User::find(1);
+$user->permissions->pluck('name');
+$user->roles->pluck('name');
+
+# Limpar caches do Filament
+php artisan filament:clear-cached-components
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+```
+
+### 📊 RESULTADO:
+
+- ✅ Botões aparecem para admin e super_admin
+- ✅ Menu oculto para perfil "consulta"
+- ✅ Acesso direto via URL bloqueado para "consulta"
+- ✅ Policies usando roles ao invés de permissões inexistentes
+- ✅ Redundância segura entre Policy e Resource
+
+### 🔗 RELACIONADO:
+
+- Issue #7.4 - Sistema de Backup e melhorias UX/RBAC
+- Arquivo: `app/Policies/UserPolicy.php`
+- Arquivo: `app/Filament/Resources/UserResource.php`
+- Arquivo: `app/Filament/Resources/Credentials/CredentialResource.php`
+

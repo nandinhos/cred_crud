@@ -259,6 +259,9 @@ class UserResource extends Resource
         return $user->hasRole(['admin', 'super_admin']);
     }
 
+    /**
+     * Permitir criar usuários
+     */
     public static function canCreate(): bool
     {
         $user = auth()->user();
@@ -270,6 +273,9 @@ class UserResource extends Resource
         return $user->hasRole(['admin', 'super_admin']);
     }
 
+    /**
+     * Permitir editar usuários
+     */
     public static function canEdit($record): bool
     {
         $user = auth()->user();
@@ -281,6 +287,9 @@ class UserResource extends Resource
         return $user->hasRole(['admin', 'super_admin']);
     }
 
+    /**
+     * Permitir deletar usuários
+     */
     public static function canDelete($record): bool
     {
         $user = auth()->user();
