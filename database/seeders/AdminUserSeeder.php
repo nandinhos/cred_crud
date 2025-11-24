@@ -46,6 +46,7 @@ class AdminUserSeeder extends Seeder
             ['email' => config('auth.super_admin_email')],
             [
                 'name' => 'Administrator',
+                'full_name' => 'Administrator',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
