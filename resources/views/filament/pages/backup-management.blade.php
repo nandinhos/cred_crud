@@ -97,8 +97,7 @@
                                         <a href="{{ route('backup.download', ['filename' => $backup['name']]) }}" 
                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-2"
                                            title="Download">
-                                            <x-heroicon-o-arrow-down-tray class="w-4 h-4 mr-1"/>
-                                            Download
+                                            <x-heroicon-o-arrow-down-tray class="w-6 h-6 mr-1"/>
                                         </a>
                                         
                                         <button 
@@ -106,8 +105,7 @@
                                             x-on:click="$wire.mountAction('deleteBackup')"
                                             class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                             title="Deletar">
-                                            <x-heroicon-o-trash class="w-4 h-4 mr-1"/>
-                                            Deletar
+                                            <x-heroicon-o-trash class="w-6 h-6 mr-1"/>
                                         </button>
                                     </td>
                                 </tr>
