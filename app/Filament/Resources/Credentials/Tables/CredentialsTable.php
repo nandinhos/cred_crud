@@ -189,8 +189,18 @@ class CredentialsTable
             ->defaultSort('validity', 'asc') // Ordenar por validade (mais urgentes primeiro)
             ->paginated(false) // Remover paginação - mostrar todos os registros
             ->recordClasses(function (Credential $record): ?string {
-                // Credenciais sem validade ou negadas não têm cor de fundo
-                if (!$record->validity || $record->fscs === '00000') {
+                // Credencial Negada - Cinza
+                if ($record->fscs === '00000') {
+                    return 'bg-gray-100 hover:bg-gray-200 transition-colors duration-150';
+                }
+
+                // Credencial Pendente (sem concessão) - Azul claro
+                if (!$record->concession) {
+                    return 'bg-blue-50 hover:bg-blue-100 transition-colors duration-150';
+                }
+
+                // Credenciais sem validade
+                if (!$record->validity) {
                     return null;
                 }
 
