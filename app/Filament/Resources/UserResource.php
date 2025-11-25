@@ -212,7 +212,8 @@ class UserResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->paginated(false); // Remover paginação - mostrar todos os usuários
     }
 
     public static function getRelations(): array
