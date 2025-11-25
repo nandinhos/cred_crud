@@ -1,10 +1,5 @@
 <x-filament-panels::page>
     @if ($this->activeCredential)
-        {{-- Header com título da credencial --}}
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Minha Credencial</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Informações da sua credencial de segurança</p>
-        </div>
 
         {{-- Cards de Informação Principal --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -21,7 +16,7 @@
                     @if ($user->rank)
                         <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <div class="flex-shrink-0 mt-0.5">
-                                <x-heroicon-o-star class="w-5 h-5 text-amber-500"/>
+                                <x-heroicon-o-user-circle class="w-5 h-5 text-amber-500"/>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Posto/Graduação</dt>
