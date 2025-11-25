@@ -196,33 +196,33 @@ class CredentialsTable
 
                 $validity = $record->validity;
                 
-                // Vencida - Vermelho claro
+                // Vencida - Vermelho mais forte
                 if ($validity->isPast()) {
-                    return 'bg-red-50 hover:bg-red-100 transition-colors duration-150';
+                    return 'bg-red-100 hover:bg-red-200 transition-colors duration-150';
                 }
                 
                 $daysUntilExpiry = now()->diffInDays($validity, false);
                 
                 // Gradiente de 60 dias até vencimento (amarelo → laranja → vermelho)
                 
-                // Crítica (1-15 dias) - Laranja/Vermelho claro
+                // Crítica (1-15 dias) - Laranja/Vermelho forte
                 if ($daysUntilExpiry <= 15) {
+                    return 'bg-orange-200 hover:bg-orange-300 transition-colors duration-150';
+                }
+                
+                // Atenção (16-30 dias) - Laranja médio
+                if ($daysUntilExpiry <= 30) {
                     return 'bg-orange-100 hover:bg-orange-200 transition-colors duration-150';
                 }
                 
-                // Atenção (16-30 dias) - Laranja claro
-                if ($daysUntilExpiry <= 30) {
-                    return 'bg-orange-50 hover:bg-orange-100 transition-colors duration-150';
-                }
-                
-                // Alerta (31-45 dias) - Amarelo/Laranja claro
+                // Alerta (31-45 dias) - Amarelo forte
                 if ($daysUntilExpiry <= 45) {
-                    return 'bg-yellow-100 hover:bg-yellow-200 transition-colors duration-150';
+                    return 'bg-yellow-200 hover:bg-yellow-300 transition-colors duration-150';
                 }
                 
-                // Início do gradiente (46-60 dias) - Amarelo pastel claro
+                // Início do gradiente (46-60 dias) - Amarelo médio
                 if ($daysUntilExpiry <= 60) {
-                    return 'bg-yellow-50 hover:bg-yellow-100 transition-colors duration-150';
+                    return 'bg-yellow-100 hover:bg-yellow-200 transition-colors duration-150';
                 }
                 
                 // Normal (> 60 dias) - Sem cor especial
