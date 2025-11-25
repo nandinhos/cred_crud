@@ -15,119 +15,93 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Pegar alguns ranks e offices para os usuários fixos
-        $generalEx = Rank::where('abbreviation', 'Gen Ex')->first();
-        $coronel = Rank::where('abbreviation', 'Cel')->where('armed_force', 'Exército')->first();
+        $this->command->info('👥 Criando 50 usuários...');
+
+        // Pegar ranks e offices
+        $primeiroSargento = Rank::where('abbreviation', '1º Sgt')->where('armed_force', 'Exército')->first();
+        $tenente = Rank::where('abbreviation', 'Ten')->where('armed_force', 'Exército')->first();
         $capitao = Rank::where('abbreviation', 'Cap')->where('armed_force', 'Exército')->first();
-        $tenente = Rank::where('abbreviation', '1º Ten')->where('armed_force', 'Exército')->first();
-        $sargento = Rank::where('abbreviation', '1º Sgt')->where('armed_force', 'Exército')->first();
+        $major = Rank::where('abbreviation', 'Maj')->where('armed_force', 'Exército')->first();
+        $coronel = Rank::where('abbreviation', 'Cel')->where('armed_force', 'Exército')->first();
 
-        $gacPac = Office::where('office', 'GAC-PAC')->first();
-        $scpEmb = Office::where('office', 'SCP-EMB')->first();
-        $ecpGpx = Office::where('office', 'ECP-GPX')->first();
-        $ecpIja = Office::where('office', 'ECP-IJA')->first();
-        $ecpPoa = Office::where('office', 'ECP-POA')->first();
+        $offices = Office::all();
+        $allRanks = Rank::all();
 
-        // Super Admin - Acesso total ao sistema
+        // 1 Super Admin: 1S FERNANDO
         $superAdmin = User::create([
-            'name' => 'Admin',
-            'full_name' => 'Super Administrador do Sistema',
-            'rank_id' => $generalEx?->id,
-            'office_id' => $gacPac?->id,
-            'email' => 'superadmin@credcrud.com',
+            'name' => 'Fernando',
+            'full_name' => '1S Fernando Silva',
+            'rank_id' => $primeiroSargento?->id,
+            'office_id' => $offices->random()->id,
+            'email' => 'fernando@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
         $superAdmin->assignRole('super_admin');
+        $this->command->info('  👑 Super Admin: 1S Fernando');
 
-        // Admin 1 - Administrador principal
+        // 2 Admins: TEN FRANCO, 1S MOISES
         $admin1 = User::create([
-            'name' => 'João',
-            'full_name' => 'João Silva Santos',
-            'rank_id' => $coronel?->id,
-            'office_id' => $scpEmb?->id,
-            'email' => 'admin@credcrud.com',
+            'name' => 'Franco',
+            'full_name' => 'Ten Franco Oliveira',
+            'rank_id' => $tenente?->id,
+            'office_id' => $offices->random()->id,
+            'email' => 'franco@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
         $admin1->assignRole('admin');
 
-        // Admin 2 - Administrador secundário
         $admin2 = User::create([
-            'name' => 'Maria',
-            'full_name' => 'Maria Santos Oliveira',
-            'rank_id' => $capitao?->id,
-            'office_id' => $ecpGpx?->id,
-            'email' => 'admin2@credcrud.com',
+            'name' => 'Moises',
+            'full_name' => '1S Moises Santos',
+            'rank_id' => $primeiroSargento?->id,
+            'office_id' => $offices->random()->id,
+            'email' => 'moises@credcrud.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
         $admin2->assignRole('admin');
+        $this->command->info('  🛡️  Admins: Ten Franco, 1S Moises');
 
-        // Usuário de Consulta 1
-        $consulta1 = User::create([
-            'name' => 'Pedro',
-            'full_name' => 'Pedro Oliveira Costa',
-            'rank_id' => $tenente?->id,
-            'office_id' => $ecpIja?->id,
-            'email' => 'consulta@credcrud.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        $consulta1->assignRole('consulta');
+        // 47 Usuários de Consulta
+        $nomes = [
+            'Pedro', 'Ana', 'Carlos', 'Beatriz', 'Rafael', 'Juliana', 'Lucas', 'Mariana',
+            'Gabriel', 'Fernanda', 'Thiago', 'Camila', 'Bruno', 'Larissa', 'Diego', 'Patricia',
+            'Rodrigo', 'Amanda', 'Felipe', 'Bruna', 'Gustavo', 'Renata', 'Leonardo', 'Carla',
+            'Marcelo', 'Daniela', 'Anderson', 'Tatiana', 'Ricardo', 'Vanessa', 'Paulo', 'Simone',
+            'Fabio', 'Cristina', 'Vinicius', 'Adriana', 'Alexandre', 'Monica', 'Roberto', 'Sandra',
+            'Sergio', 'Claudia', 'Marcos', 'Luciana', 'Antonio', 'Silvia', 'Jose'
+        ];
 
-        // Usuário de Consulta 2
-        $consulta2 = User::create([
-            'name' => 'Ana',
-            'full_name' => 'Ana Costa Pereira',
-            'rank_id' => $sargento?->id,
-            'office_id' => $ecpPoa?->id,
-            'email' => 'consulta2@credcrud.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        $consulta2->assignRole('consulta');
+        $sobrenomes = [
+            'Silva', 'Santos', 'Oliveira', 'Souza', 'Lima', 'Pereira', 'Costa', 'Rodrigues',
+            'Almeida', 'Nascimento', 'Araujo', 'Ribeiro', 'Carvalho', 'Gomes', 'Martins', 'Rocha',
+            'Fernandes', 'Barbosa', 'Dias', 'Monteiro', 'Cardoso', 'Teixeira', 'Cavalcanti', 'Ramos'
+        ];
 
-        // Usuários de Consulta 3
-        $consulta3 = User::create([
-            'name' => 'Carlos',
-            'full_name' => 'Carlos Mendes Silva',
-            'rank_id' => $sargento?->id,
-            'office_id' => $gacPac?->id,
-            'email' => 'consulta3@credcrud.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        $consulta3->assignRole('consulta');
+        for ($i = 0; $i < 47; $i++) {
+            $nome = $nomes[$i % count($nomes)];
+            $sobrenome = $sobrenomes[$i % count($sobrenomes)];
+            $rank = $allRanks->random();
+            
+            $user = User::create([
+                'name' => $nome,
+                'full_name' => $rank->abbreviation . ' ' . $nome . ' ' . $sobrenome,
+                'rank_id' => $rank->id,
+                'office_id' => $offices->random()->id,
+                'email' => strtolower($nome . $i) . '@credcrud.com',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]);
+            $user->assignRole('consulta');
+        }
 
-        // Usuários de Consulta 4
-        $consulta4 = User::create([
-            'name' => 'Beatriz',
-            'full_name' => 'Beatriz Alves Costa',
-            'rank_id' => $tenente?->id,
-            'office_id' => $scpEmb?->id,
-            'email' => 'consulta4@credcrud.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        $consulta4->assignRole('consulta');
-
-        // Usuários de Consulta 5
-        $consulta5 = User::create([
-            'name' => 'Rafael',
-            'full_name' => 'Rafael Santos Oliveira',
-            'rank_id' => $capitao?->id,
-            'office_id' => $ecpGpx?->id,
-            'email' => 'consulta5@credcrud.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        $consulta5->assignRole('consulta');
-
-        $this->command->info('✅ Usuários criados com sucesso!');
-        $this->command->info('📊 Total de usuários: '.User::count());
-        $this->command->info('👑 Super Admins: '.User::role('super_admin')->count());
-        $this->command->info('🛡️  Admins: '.User::role('admin')->count());
-        $this->command->info('👀 Consulta: '.User::role('consulta')->count());
+        $this->command->info('  👀 Consulta: 47 usuários');
+        $this->command->info('');
+        $this->command->info('✅ Total de usuários criados: ' . User::count());
+        $this->command->info('👑 Super Admins: ' . User::role('super_admin')->count());
+        $this->command->info('🛡️  Admins: ' . User::role('admin')->count());
+        $this->command->info('👀 Consulta: ' . User::role('consulta')->count());
     }
 }
