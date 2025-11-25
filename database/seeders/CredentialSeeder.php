@@ -114,17 +114,30 @@ class CredentialSeeder extends Seeder
                 // Credenciais com validade
                 // Calcular data de concessão baseado na validade desejada
                 // CRED: validade = concessão + 2 anos
-                // Então: concessão = validade_desejada - 2 anos
+                // TCMS: validade = concessão + 1 ano
                 
                 $desiredValidityDate = now()->addDays($dist['days']);
-                $concessionDate = $desiredValidityDate->copy()->subYears(2);
+                
+                // Determinar tipo (maioria CRED, alguns TCMS para variedade)
+                $isTCMS = $credentialsCreated % 10 === 0; // 10% TCMS
+                $type = $isTCMS ? 'TCMS' : 'CRED';
+                
+                // Calcular concessão baseado no tipo
+                $concessionDate = $isTCMS 
+                    ? $desiredValidityDate->copy()->subYear() 
+                    : $desiredValidityDate->copy()->subYears(2);
+                
+                // Sigilo baseado no tipo
+                // CRED: apenas R ou S
+                // TCMS: apenas AR
+                $secrecy = $isTCMS ? 'AR' : ['R', 'S'][rand(0, 1)];
 
                 Credential::create([
                     'user_id' => $user->id,
                     'fscs' => $fscs,
-                    'type' => 'CRED',
-                    'secrecy' => ['R', 'S', 'AR'][rand(0, 2)],
-                    'credential' => 'CRED-' . $fscs,
+                    'type' => $type,
+                    'secrecy' => $secrecy,
+                    'credential' => $type . '-' . $fscs,
                     'concession' => $concessionDate,
                     'validity' => $desiredValidityDate,
                 ]);

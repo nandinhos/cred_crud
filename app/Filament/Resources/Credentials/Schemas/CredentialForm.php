@@ -82,16 +82,50 @@ class CredentialForm
                             ->options(CredentialType::options())
                             ->required()
                             ->native(false)
+                            ->live() // Tornar reativo para atualizar o campo de sigilo
                             ->prefixIcon('heroicon-o-document-text')
-                            ->helperText('CRED: Credencial de Segurança | TCMS: Termo de Compromisso'),
+                            ->helperText('CRED: Credencial de Segurança | TCMS: Termo de Compromisso')
+                            ->afterStateUpdated(function ($state, $set) {
+                                // Limpar o sigilo quando o tipo mudar
+                                $set('secrecy', null);
+                            }),
 
                         Forms\Components\Select::make('secrecy')
                             ->label('Nível de Sigilo')
-                            ->options(CredentialSecrecy::options())
+                            ->options(function ($get) {
+                                $type = $get('type');
+                                
+                                // CRED: apenas R ou S
+                                if ($type === 'CRED') {
+                                    return [
+                                        'R' => 'Reservado',
+                                        'S' => 'Secreto',
+                                    ];
+                                }
+                                
+                                // TCMS: apenas AR
+                                if ($type === 'TCMS') {
+                                    return [
+                                        'AR' => 'Acesso Restrito',
+                                    ];
+                                }
+                                
+                                // Padrão: todas as opções
+                                return CredentialSecrecy::options();
+                            })
                             ->required()
                             ->native(false)
                             ->prefixIcon('heroicon-o-lock-closed')
-                            ->helperText('R: Reservado | S: Secreto'),
+                            ->helperText(function ($get) {
+                                $type = $get('type');
+                                if ($type === 'CRED') {
+                                    return 'CRED: Reservado ou Secreto';
+                                }
+                                if ($type === 'TCMS') {
+                                    return 'TCMS: Acesso Restrito';
+                                }
+                                return 'Selecione o tipo de documento primeiro';
+                            }),
 
                         Forms\Components\TextInput::make('credential')
                             ->label('Número da Credencial')
