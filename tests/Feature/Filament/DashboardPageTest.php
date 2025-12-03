@@ -81,10 +81,12 @@ it('returns most recent active credential', function () {
     $user->assignRole('admin');
 
     // Credencial antiga
+    // Credencial antiga
     $oldCredential = Credential::factory()->create([
         'user_id' => $user->id,
         'concession' => now()->subYears(2),
     ]);
+    $oldCredential->delete();
 
     // Credencial mais recente
     $recentCredential = Credential::factory()->create([

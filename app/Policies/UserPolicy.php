@@ -27,7 +27,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->can('create_users');
     }
 
     /**
@@ -35,7 +35,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->can('edit_users');
     }
 
     /**
@@ -48,7 +48,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->can('delete_users');
     }
 
     /**

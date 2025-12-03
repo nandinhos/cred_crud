@@ -6,10 +6,23 @@ use App\Models\User;
 it('user has many credentials', function () {
     $user = User::factory()->create();
 
-    Credential::factory()->count(3)->create(['user_id' => $user->id]);
+    // Create and delete first credential
+    $cred1 = Credential::factory()->create(['user_id' => $user->id]);
+    $cred1->delete();
 
-    expect($user->credentials)->toHaveCount(3);
-    expect($user->credentials->first())->toBeInstanceOf(Credential::class);
+    // Create and delete second credential
+    $cred2 = Credential::factory()->create(['user_id' => $user->id]);
+    $cred2->delete();
+
+    // Create third (active) credential
+    $cred3 = Credential::factory()->create(['user_id' => $user->id]);
+
+    // Check active credentials (should be 1)
+    expect($user->credentials)->toHaveCount(1);
+    expect($user->credentials->first()->id)->toBe($cred3->id);
+
+    // Check all credentials (should be 3)
+    expect($user->credentials()->withTrashed()->count())->toBe(3);
 });
 
 it('credential belongs to user', function () {
@@ -55,10 +68,10 @@ it('soft deleting user does not cascade to credentials', function () {
 it('with trashed recovers soft deleted credentials', function () {
     $user = User::factory()->create();
 
-    $activeCredential = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'ACTIVE-001']);
     $deletedCredential = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'DELETED-001']);
-
     $deletedCredential->delete();
+
+    $activeCredential = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'ACTIVE-001']);
 
     // Sem withTrashed
     expect($user->credentials)->toHaveCount(1);
@@ -112,18 +125,24 @@ it('credential requires user due to not null constraint', function () {
 it('activeCredential returns only non-deleted credentials', function () {
     $user = User::factory()->create();
 
-    $active1 = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'ACTIVE-1']);
-    $active2 = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'ACTIVE-2']);
     $deleted = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'DELETED']);
-
     $deleted->delete();
 
+    $active1 = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'ACTIVE-1']);
+    
+    // Cannot create another active credential, so we can only test with one active and one deleted
+    // Or we delete active1 and create active2
+    // But the test expects multiple active credentials?
+    // "activeCredential returns only non-deleted credentials"
+    // If the rule says ONLY ONE active credential, then this test expecting 2 active credentials is invalid.
+    
+    // I will update the test to expect 1 active credential and verify it is the correct one.
+    
     $activeCredentials = $user->activeCredential;
 
-    expect($activeCredentials)->toHaveCount(2);
+    expect($activeCredentials)->toHaveCount(1);
     $fscsArray = $activeCredentials->pluck('fscs')->toArray();
     expect($fscsArray)->toContain('ACTIVE-1');
-    expect($fscsArray)->toContain('ACTIVE-2');
     expect($fscsArray)->not->toContain('DELETED');
 });
 
@@ -135,12 +154,14 @@ it('credentialHistory returns all credentials ordered by creation date', functio
         'fscs' => 'FIRST',
         'created_at' => now()->subDays(10),
     ]);
+    $first->delete();
 
     $second = Credential::factory()->create([
         'user_id' => $user->id,
         'fscs' => 'SECOND',
         'created_at' => now()->subDays(5),
     ]);
+    $second->delete();
 
     $third = Credential::factory()->create([
         'user_id' => $user->id,
