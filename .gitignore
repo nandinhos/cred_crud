@@ -43,3 +43,4 @@ node_modules/
 # tasks.json
 # tasks/ 
 backup_*.sql
+/storage/metrics/*.json
