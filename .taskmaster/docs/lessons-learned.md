@@ -1939,6 +1939,246 @@ test('TCMS com FSCS mas SEM concessão tem status Pane - Verificar', function ()
 ### 🔴 Problema
 
 Após criar ou editar um registro (credencial ou usuário), o sistema permanecia na mesma página de edição/criação, causando:
+
+---
+
+## 🔄 Histórico de Credenciais: Namespaces do Filament v4 e SoftDeletes
+
+**Data:** 2024  
+**Contexto:** Implementação do sistema de histórico de credenciais com soft delete, restore e force delete
+
+### 🔴 Problemas Encontrados
+
+#### 1. Namespaces Incorretos no Filament v4
+
+**Erro comum:**
+```php
+Class "Filament\Tables\Actions\ViewAction" not found
+Class "Filament\Tables\Actions\BulkActionGroup" not found
+Class "Filament\Schemas\Components\TextEntry" not found
+Class "Filament\Infolists\Components\Section" not found
+```
+
+**❌ O que NÃO funciona:**
+```php
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Schemas\Components\TextEntry;
+use Filament\Infolists\Components\Section;
+```
+
+**✅ Namespaces CORRETOS no Filament v4:**
+
+```php
+// Actions individuais (Edit, Delete, View, Restore, ForceDelete)
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\ForceDeleteAction;
+
+// Bulk Actions
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ForceDeleteBulkAction;
+
+// Components para Infolists
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+
+// Enums
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize; // NÃO é TextEntry\TextEntrySize
+```
+
+**📋 Regra Geral:**
+- **Actions** (individuais e bulk): `Filament\Actions\*`
+- **Infolist Components**: `Filament\Infolists\Components\*`
+- **Schema Components**: `Filament\Schemas\Components\*`
+- **Enums**: `Filament\Support\Enums\*`
+
+#### 2. Query withTrashed em RelationManagers
+
+**❌ O que NÃO funciona:**
+```php
+public function getTableQuery(): ?Builder
+{
+    return parent::getTableQuery()->withTrashed();
+}
+// Erro: Call to a member function withTrashed() on null
+```
+
+**✅ Forma CORRETA no Filament v4:**
+```php
+public function table(Table $table): Table
+{
+    return $table
+        ->modifyQueryUsing(fn (Builder $query) => $query->withTrashed())
+        ->columns([...])
+}
+```
+
+#### 3. Regra de Negócio: Uma Credencial Ativa por Usuário
+
+**Problema inicial:** Regra bloqueava criação de novas credenciais mesmo quando a antiga estava vencida ou no histórico.
+
+**✅ Lógica Correta Implementada:**
+
+```php
+static::creating(function (Credential $credential) {
+    if ($credential->user_id) {
+        $existingCredential = static::where('user_id', $credential->user_id)
+            ->whereNull('deleted_at')
+            ->first();
+
+        if ($existingCredential) {
+            $status = $existingCredential->status;
+            
+            // Se vencida: permite criar e deleta a antiga após sucesso
+            if ($status === 'Vencida') {
+                return; // Será deletada no evento 'created'
+            }
+            
+            // Se ativa/processamento/pane: bloqueia
+            if (in_array($status, ['Ativa', 'Em Processamento', 'Pane - Verificar', 'Pendente'])) {
+                throw new \Exception("Usuário já possui credencial com status '{$status}'");
+            }
+        }
+    }
+});
+
+static::created(function (Credential $credential) {
+    // Deletar credenciais vencidas automaticamente após criar nova
+    if ($credential->user_id) {
+        $vencidas = static::where('user_id', $credential->user_id)
+            ->where('id', '!=', $credential->id)
+            ->whereNull('deleted_at')
+            ->get()
+            ->filter(fn ($cred) => $cred->status === 'Vencida');
+
+        foreach ($vencidas as $old) {
+            $old->delete();
+        }
+    }
+});
+```
+
+**Fluxo correto:**
+1. ✅ Vencida → Permite criar nova, deleta a vencida automaticamente
+2. ❌ Ativa/Processamento/Pane → Bloqueia com mensagem clara
+3. ✅ Sem credencial ou só deletadas → Permite criar normalmente
+
+#### 4. Campo Select Mostrando ID ao Invés de Nome
+
+**Problema:** Ao editar pelo RelationManager, o campo de usuário mostrava ID ao invés do nome.
+
+**❌ Causa:** Query complexa com `modifyQueryUsing` estava interferindo no `titleAttribute`.
+
+**✅ Solução:**
+```php
+Forms\Components\Select::make('user_id')
+    ->label('Usuário Responsável')
+    ->relationship(
+        name: 'user',
+        titleAttribute: 'name'
+    )
+    ->searchable()
+    ->preload()
+    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name) // Garante nome correto
+```
+
+**No RelationManager:** Ocultar campo de usuário (já está no contexto):
+```php
+Forms\Components\Hidden::make('user_id')
+    ->default(fn () => $this->getOwnerRecord()->id)
+```
+
+#### 5. Listagem de Usuários Restrita
+
+**Problema inicial:** Formulário filtrava usuários, mostrando apenas os sem credenciais ativas.
+
+**❌ Com nova regra de negócio:** Isso impedia criar credencial para usuário com credencial vencida.
+
+**✅ Solução:** Remover filtro, mostrar TODOS os usuários, deixar validação no modelo.
+
+```php
+Forms\Components\Select::make('user_id')
+    ->relationship(name: 'user', titleAttribute: 'name')
+    ->searchable()
+    ->preload()
+    ->helperText('Todos os usuários disponíveis. A validação será feita ao salvar.')
+    // SEM modifyQueryUsing - mostrar todos!
+```
+
+### ✅ Implementação Final
+
+**Arquivos Criados:**
+1. `app/Filament/Resources/UserResource/RelationManagers/CredentialsRelationManager.php`
+2. `tests/Feature/Filament/CredentialHistoryTest.php`
+3. `tests/Feature/Models/CredentialSoftDeleteTest.php`
+4. `.taskmaster/docs/credential-history.md`
+
+**Arquivos Modificados:**
+1. `app/Filament/Resources/Credentials/Tables/CredentialsTable.php` - Actions de restore/forceDelete
+2. `app/Filament/Resources/UserResource.php` - Registro do RelationManager
+3. `app/Models/Credential.php` - Regras de negócio aprimoradas
+4. `app/Filament/Resources/Credentials/Schemas/CredentialForm.php` - Remoção de filtros
+
+**Funcionalidades:**
+- ✅ Soft Delete de credenciais
+- ✅ Restore individual e em lote
+- ✅ Force Delete (apenas super_admin)
+- ✅ Histórico completo por usuário
+- ✅ Validação inteligente baseada em status
+- ✅ Notificações em todas as ações
+- ✅ Infolist rico para visualização
+- ✅ Cores diferentes para credenciais deletadas
+
+### 💡 Lições Importantes
+
+1. **SEMPRE usar namespaces corretos do Filament v4** - Actions em `Filament\Actions\*`
+2. **Usar `modifyQueryUsing` em tables** - Não `getTableQuery()` em RelationManagers
+3. **Regras de negócio no modelo** - Não no formulário
+4. **SoftDeletes permite histórico completo** - Essencial para auditoria
+5. **Validar por status, não apenas por existência** - Mais flexível e inteligente
+6. **Deletar vencidas automaticamente** - Melhor UX
+7. **Testar a partir da branch correta** - Evita reimplementar correções antigas
+
+### 🔍 Como Debugar Problemas de Namespace
+
+```bash
+# Verificar logs sempre
+tail -100 storage/logs/laravel.log | grep -A 10 "Exception"
+
+# Procurar classe no vendor
+find vendor/filament -name "NomeDaClasse.php" -type f
+
+# Verificar sintaxe PHP
+php -l app/Filament/Resources/arquivo.php
+
+# Limpar caches
+php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
+```
+
+### 🎯 Sempre Partir da Branch Correta
+
+**Aprendizado Crítico:** Sempre criar feature branches a partir da `main` atualizada, não de branches antigas que podem ter bugs já corrigidos.
+
+```bash
+# Fluxo correto
+git checkout main
+git pull origin main
+git checkout -b feature/nova-funcionalidade
+
+# NÃO fazer
+git checkout branch-antiga
+git checkout -b feature/nova-funcionalidade # ❌ Pode ter bugs antigos
+```
+
+---
 - **Falta de feedback visual claro** de que a ação foi concluída
 - **Dependência apenas da notificação** no topo da tela (que pode passar despercebida)
 - **Sensação de que nada aconteceu** se o usuário não prestar atenção na notificação

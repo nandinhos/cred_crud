@@ -35,15 +35,67 @@ class Credential extends Model
      */
     protected static function booted(): void
     {
-        // Validar que cada usuário pode ter apenas uma credencial ativa
+        // Validar que cada usuário pode ter apenas uma credencial ativa ao CRIAR
         static::creating(function (Credential $credential) {
             if ($credential->user_id) {
-                $hasActiveCredential = static::where('user_id', $credential->user_id)
+                $existingCredential = static::where('user_id', $credential->user_id)
                     ->whereNull('deleted_at')
-                    ->exists();
+                    ->first();
 
-                if ($hasActiveCredential) {
-                    throw new \Exception('Este usuário já possui uma credencial ativa. Apenas uma credencial por usuário é permitida.');
+                if ($existingCredential) {
+                    $status = $existingCredential->status;
+                    
+                    // Se a credencial existente está vencida, permitir e deletar a antiga
+                    if ($status === 'Vencida') {
+                        // Será deletada no evento 'created'
+                        return;
+                    }
+                    
+                    // Se credencial está ATIVA, EM PROCESSAMENTO ou PANE - bloquear
+                    if (in_array($status, ['Ativa', 'Em Processamento', 'Pane - Verificar', 'Pendente'])) {
+                        throw new \Exception(
+                            "Este usuário já possui uma credencial com status '{$status}'. " .
+                            "Não é possível criar uma nova credencial enquanto houver uma ativa, em processamento ou com pane. " .
+                            "Delete ou resolva a situação da credencial atual primeiro."
+                        );
+                    }
+                }
+            }
+        });
+
+        // Após criar com sucesso, deletar credencial vencida se existir
+        static::created(function (Credential $credential) {
+            if ($credential->user_id) {
+                $vencida = static::where('user_id', $credential->user_id)
+                    ->where('id', '!=', $credential->id)
+                    ->whereNull('deleted_at')
+                    ->get()
+                    ->filter(function ($cred) {
+                        return $cred->status === 'Vencida';
+                    });
+
+                // Deletar todas as credenciais vencidas (soft delete)
+                foreach ($vencida as $old) {
+                    $old->delete();
+                }
+            }
+        });
+
+        // Validar que cada usuário pode ter apenas uma credencial ativa ao RESTAURAR
+        static::restoring(function (Credential $credential) {
+            if ($credential->user_id) {
+                $existingCredential = static::where('user_id', $credential->user_id)
+                    ->where('id', '!=', $credential->id)
+                    ->whereNull('deleted_at')
+                    ->first();
+
+                if ($existingCredential) {
+                    $status = $existingCredential->status;
+                    
+                    throw new \Exception(
+                        "Este usuário já possui uma credencial com status '{$status}'. " .
+                        "Não é possível restaurar. Delete a credencial ativa primeiro."
+                    );
                 }
             }
         });
