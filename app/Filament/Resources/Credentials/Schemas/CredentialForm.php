@@ -26,27 +26,14 @@ class CredentialForm
                             ->label('Usuário Responsável')
                             ->relationship(
                                 name: 'user',
-                                titleAttribute: 'name',
-                                modifyQueryUsing: function ($query, $livewire) {
-                                    // Pegar o ID do registro atual (se estiver editando)
-                                    $recordId = $livewire->record?->id ?? null;
-
-                                    // Filtrar usuários que NÃO têm credenciais ativas
-                                    $query->whereDoesntHave('credentials', function ($credentialQuery) use ($recordId) {
-                                        $credentialQuery->whereNull('deleted_at');
-
-                                        // Se estiver editando, ignorar a credencial atual
-                                        if ($recordId) {
-                                            $credentialQuery->where('id', '!=', $recordId);
-                                        }
-                                    });
-                                }
+                                titleAttribute: 'name'
                             )
                             ->searchable()
                             ->preload()
                             ->required()
                             ->prefixIcon('heroicon-o-user')
-                            ->helperText('Apenas usuários sem credenciais ativas são exibidos')
+                            ->helperText('Todos os usuários disponíveis. A validação será feita ao salvar.')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                             ->rules([
                                 function ($livewire) {
                                     return function (string $attribute, $value, \Closure $fail) use ($livewire) {

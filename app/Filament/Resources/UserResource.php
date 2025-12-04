@@ -178,7 +178,15 @@ class UserResource extends Resource
                     ->counts('credentials')
                     ->label('Credenciais')
                     ->badge()
-                    ->color('info'),
+                    ->color('info')
+                    ->tooltip('Total de credenciais (incluindo histórico)'),
+
+                TextColumn::make('active_credentials_count')
+                    ->label('Ativas')
+                    ->badge()
+                    ->color('success')
+                    ->getStateUsing(fn ($record) => $record->credentials()->whereNull('deleted_at')->count())
+                    ->tooltip('Credenciais ativas'),
 
                 TextColumn::make('created_at')
                     ->dateTime('d/m/Y H:i')
@@ -218,7 +226,9 @@ class UserResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            UserResource\RelationManagers\CredentialsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

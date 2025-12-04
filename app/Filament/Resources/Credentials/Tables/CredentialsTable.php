@@ -9,7 +9,13 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -131,6 +137,23 @@ class CredentialsTable
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\IconColumn::make('is_deleted')
+                    ->label('Status')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-trash')
+                    ->falseIcon('heroicon-o-check-circle')
+                    ->trueColor('danger')
+                    ->falseColor('success')
+                    ->getStateUsing(fn (Credential $record): bool => $record->trashed())
+                    ->tooltip(fn (Credential $record): string => $record->trashed() ? 'Deletada' : 'Ativa')
+                    ->toggleable(isToggledHiddenByDefault: false),
+
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->label('Deletada em')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -188,6 +211,9 @@ class CredentialsTable
                     }),
             ])
             ->actions([
+                ViewAction::make()
+                    ->label('')
+                    ->tooltip('Visualizar'),
                 Action::make('edit')
                     ->label('')
                     ->tooltip('Editar')
@@ -195,7 +221,35 @@ class CredentialsTable
                     ->url(fn (Credential $record): string => Pages\EditCredential::getUrl(['record' => $record])),
                 DeleteAction::make()
                     ->label('')
-                    ->tooltip('Excluir'),
+                    ->tooltip('Excluir')
+                    ->successNotification(
+                        Notification::make()
+                            ->success()
+                            ->title('Credencial excluída')
+                            ->body('A credencial foi movida para a lixeira.')
+                    ),
+                RestoreAction::make()
+                    ->label('')
+                    ->tooltip('Restaurar')
+                    ->successNotification(
+                        Notification::make()
+                            ->success()
+                            ->title('Credencial restaurada')
+                            ->body('A credencial foi restaurada com sucesso.')
+                    ),
+                ForceDeleteAction::make()
+                    ->label('')
+                    ->tooltip('Excluir Permanentemente')
+                    ->requiresConfirmation()
+                    ->modalHeading('Excluir Credencial Permanentemente')
+                    ->modalDescription('Atenção! Esta ação é irreversível. A credencial será permanentemente excluída do sistema.')
+                    ->modalSubmitActionLabel('Sim, excluir permanentemente')
+                    ->successNotification(
+                        Notification::make()
+                            ->success()
+                            ->title('Credencial excluída permanentemente')
+                            ->body('A credencial foi removida permanentemente do sistema.')
+                    ),
             ])
             ->defaultSort('validity', 'asc') // Ordenar por validade (mais urgentes primeiro)
             ->paginated(false) // Remover paginação - mostrar todos os registros
@@ -230,6 +284,11 @@ class CredentialsTable
                     ->orderBy('created_at', 'desc');
             })
             ->recordClasses(function (Credential $record): ?string {
+                // PRIORIDADE 0: Credencial Deletada - Cinza claro com opacidade
+                if ($record->trashed()) {
+                    return 'bg-gray-100 hover:bg-gray-200 transition-colors duration-150 opacity-60';
+                }
+
                 // PRIORIDADE 1: Credenciais com status "Pane - Verificar" ficam com fundo vermelho vivo
                 if ($record->status === 'Pane - Verificar') {
                     return 'bg-red-200 hover:bg-red-300 transition-colors duration-150 border-l-4 border-red-600';
@@ -286,7 +345,31 @@ class CredentialsTable
             })
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('Credenciais excluídas')
+                                ->body('As credenciais foram movidas para a lixeira.')
+                        ),
+                    RestoreBulkAction::make()
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('Credenciais restauradas')
+                                ->body('As credenciais foram restauradas com sucesso.')
+                        ),
+                    ForceDeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Excluir Credenciais Permanentemente')
+                        ->modalDescription('Atenção! Esta ação é irreversível. As credenciais selecionadas serão permanentemente excluídas do sistema.')
+                        ->modalSubmitActionLabel('Sim, excluir permanentemente')
+                        ->successNotification(
+                            Notification::make()
+                                ->success()
+                                ->title('Credenciais excluídas permanentemente')
+                                ->body('As credenciais foram removidas permanentemente do sistema.')
+                        ),
                 ]),
             ]);
     }
