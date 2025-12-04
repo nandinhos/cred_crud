@@ -11,7 +11,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_users');
+        return $user->hasPermissionTo('Visualizar Usuários');
     }
 
     /**
@@ -19,7 +19,7 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->can('view_users');
+        return $user->hasPermissionTo('Visualizar Usuários');
     }
 
     /**
@@ -27,7 +27,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_users');
+        return $user->hasPermissionTo('Criar Usuários');
     }
 
     /**
@@ -35,7 +35,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return $user->can('edit_users');
+        return $user->hasPermissionTo('Editar Usuários');
     }
 
     /**
@@ -48,7 +48,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->can('delete_users');
+        return $user->hasPermissionTo('Excluir Usuários');
     }
 
     /**
@@ -56,7 +56,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        return $user->can('edit_users');
+        return $user->hasPermissionTo('Editar Usuários');
     }
 
     /**
@@ -69,6 +69,6 @@ class UserPolicy
             return false;
         }
 
-        return $user->can('delete_users') && $user->hasRole('Super Admin');
+        return $user->hasPermissionTo('Excluir Usuários') && $user->hasRole('super_admin');
     }
 }

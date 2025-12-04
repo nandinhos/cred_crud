@@ -193,8 +193,12 @@
         <div class="flex items-center justify-center min-h-[400px]">
             <x-filament::section class="max-w-2xl">
                 <div class="text-center py-12">
-                    <x-heroicon-o-exclamation-triangle class="mx-auto h-16 w-16 text-gray-400"/>
-                    <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                    <div class="flex justify-center">
+                        <div class="rounded-full bg-warning-100 dark:bg-warning-900/20 p-4">
+                            <x-heroicon-o-exclamation-triangle class="h-12 w-12 text-warning-600 dark:text-warning-400"/>
+                        </div>
+                    </div>
+                    <h3 class="mt-6 text-lg font-semibold text-gray-900 dark:text-white">
                         Nenhuma Credencial Ativa
                     </h3>
                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
