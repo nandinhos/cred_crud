@@ -1930,3 +1930,118 @@ test('TCMS com FSCS mas SEM concessão tem status Pane - Verificar', function ()
 - **Benefício:** Sistema consistente e fácil de manter
 
 ---
+
+## 💡 Melhorias de UX: Redirecionamento Após Salvar
+
+**Data:** 04/12/2025
+**Contexto:** Feedback do usuário sobre a percepção de conclusão de ações
+
+### 🔴 Problema
+
+Após criar ou editar um registro (credencial ou usuário), o sistema permanecia na mesma página de edição/criação, causando:
+- **Falta de feedback visual claro** de que a ação foi concluída
+- **Dependência apenas da notificação** no topo da tela (que pode passar despercebida)
+- **Sensação de que nada aconteceu** se o usuário não prestar atenção na notificação
+- **Experiência confusa** para usuários menos familiarizados com o sistema
+
+### 🎯 Causa Raiz
+
+**Comportamento padrão do Filament:**
+- Por padrão, após criar um registro, o Filament redireciona para a página de **edição** do registro criado
+- Após editar, permanece na página de edição
+- Isso é útil para edições sucessivas, mas pode confundir quando não é esperado
+
+**Expectativa do usuário:**
+- Usuário espera ver o registro na listagem após salvar
+- Confirmação visual de que o registro foi incluído/atualizado na base
+- Fluxo natural: Criar/Editar → Ver resultado na lista
+
+### ✅ Solução
+
+**Implementar redirecionamento personalizado:**
+
+```php
+// Em CreateCredential.php e EditCredential.php
+protected function getRedirectUrl(): string
+{
+    return $this->getResource()::getUrl('index');
+}
+```
+
+**Benefícios:**
+1. ✅ Feedback visual imediato (usuário vê o registro na lista)
+2. ✅ Confirmação de que a ação foi concluída
+3. ✅ Experiência mais intuitiva e natural
+4. ✅ Reduz dependência de notificações
+5. ✅ Melhora percepção de responsividade do sistema
+
+### 📊 Aplicação
+
+**Páginas atualizadas:**
+- `CreateCredential.php` - Redireciona para lista de credenciais
+- `EditCredential.php` - Redireciona para lista de credenciais
+- `CreateUser.php` - Redireciona para lista de usuários
+- `EditUser.php` - Redireciona para lista de usuários
+
+### 🧪 Validação
+
+**Testes executados:**
+- ✅ 125 testes passando (270 assertions)
+- ✅ Nenhuma regressão detectada
+- ✅ Teste manual confirmou melhoria na experiência
+
+### 💡 Lições Aprendidas
+
+**1. Feedback do usuário é ouro:**
+- Nem sempre o comportamento "correto" tecnicamente é o mais intuitivo
+- Observar como usuários reais interagem com o sistema
+- Pequenas mudanças podem ter grande impacto na percepção
+
+**2. UX não é sobre notificações:**
+- Notificações são auxiliares, não principais
+- Feedback visual direto é mais efetivo
+- Mudança de contexto (ir para listagem) confirma ação
+
+**3. Padrões de framework vs Expectativa do usuário:**
+- Frameworks têm comportamentos padrão que podem não se alinhar com expectativas
+- Personalizar quando necessário para melhorar UX
+- Documentar decisões de UX para manter consistência
+
+**4. Consistência é fundamental:**
+- Aplicar mesma lógica em todos os recursos similares
+- Se credenciais redirecionam, usuários também devem
+- Evita confusão e cria padrão mental
+
+**5. Simplicidade nas implementações:**
+- Solução simples: sobrescrever um método
+- Grande impacto na experiência
+- Não precisa ser complexo para ser efetivo
+
+### 🔄 Ações Preventivas
+
+1. ✅ Sempre testar fluxos com usuários reais (quando possível)
+2. ✅ Questionar comportamentos padrão de frameworks
+3. ✅ Priorizar feedback visual direto sobre notificações
+4. ✅ Manter consistência em recursos similares
+5. ✅ Documentar decisões de UX no código (comentários)
+
+### 📝 Padrão Estabelecido
+
+**Para todos os recursos do sistema:**
+- Após **Criar**: Redirecionar para **Listagem**
+- Após **Editar**: Redirecionar para **Listagem**
+- Após **Deletar**: Já redireciona para Listagem (padrão Filament)
+
+**Exceções possíveis:**
+- Formulários multi-step (wizards)
+- Criação em massa
+- Casos onde edição sucessiva é esperada
+
+### ⏱️ Impacto
+
+- **Tempo de implementação:** 10 minutos
+- **Linhas de código:** 8 por página (32 no total)
+- **Impacto na UX:** Alto
+- **Satisfação do usuário:** Significativamente melhorada
+
+---
