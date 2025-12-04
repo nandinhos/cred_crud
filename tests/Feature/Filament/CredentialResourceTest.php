@@ -134,18 +134,28 @@ it('validates unique fscs', function () {
 
 it('can edit credential', function () {
     $user = User::factory()->admin()->create();
-    $credential = Credential::factory()->create();
+    $credential = Credential::factory()->create([
+        'type' => CredentialType::CRED->value,
+        'secrecy' => CredentialSecrecy::RESERVADO->value,
+    ]);
 
     $this->actingAs($user);
 
     Livewire::test(EditCredential::class, ['record' => $credential->getRouteKey()])
         ->fillForm([
+            'user_id' => $credential->user_id,
+            'fscs' => $credential->fscs,
+            'type' => $credential->type,
+            'secrecy' => CredentialSecrecy::SECRETO->value, // Alterando o sigilo
+            'credential' => $credential->credential,
             'observation' => 'Updated Observation',
         ])
         ->call('save')
         ->assertHasNoFormErrors();
 
-    expect($credential->refresh()->observation)->toBe('Updated Observation');
+    $credential->refresh();
+    expect($credential->observation)->toBe('Updated Observation');
+    expect($credential->secrecy)->toBe(CredentialSecrecy::SECRETO);
 });
 
 it('can filter credentials by secrecy', function () {
