@@ -164,7 +164,7 @@ test('super_admin pode acessar painel administrativo', function () {
     // Verificar se pode acessar o painel
     $panel = app(\Filament\Panel::class);
     expect($user->canAccessPanel($panel))->toBeTrue();
-    
+
     // Verificar role
     expect($user->hasRole('super_admin'))->toBeTrue();
 });

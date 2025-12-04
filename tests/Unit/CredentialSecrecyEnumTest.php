@@ -22,7 +22,7 @@ it('returns correct label for secreto', function () {
 });
 
 it('returns correct color for acesso restrito', function () {
-    expect(CredentialSecrecy::ACESSO_RESTRITO->color())->toBe('info');
+    expect(CredentialSecrecy::ACESSO_RESTRITO->color())->toBe('indigo');
 });
 
 it('returns correct color for reservado', function () {

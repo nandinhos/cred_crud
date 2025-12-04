@@ -129,15 +129,15 @@ it('activeCredential returns only non-deleted credentials', function () {
     $deleted->delete();
 
     $active1 = Credential::factory()->create(['user_id' => $user->id, 'fscs' => 'ACTIVE-1']);
-    
+
     // Cannot create another active credential, so we can only test with one active and one deleted
     // Or we delete active1 and create active2
     // But the test expects multiple active credentials?
     // "activeCredential returns only non-deleted credentials"
     // If the rule says ONLY ONE active credential, then this test expecting 2 active credentials is invalid.
-    
+
     // I will update the test to expect 1 active credential and verify it is the correct one.
-    
+
     $activeCredentials = $user->activeCredential;
 
     expect($activeCredentials)->toHaveCount(1);

@@ -18,6 +18,7 @@ enum BadgeColor: string
     case Info = 'info';
     case Primary = 'primary';
     case Gray = 'gray';
+    case Indigo = 'indigo';
 
     /**
      * Retorna cor para tipo de documento
@@ -43,7 +44,7 @@ enum BadgeColor: string
     public static function forSecrecy(string $secrecy): string
     {
         return match ($secrecy) {
-            'AR' => self::Info->value,
+            'AR' => self::Indigo->value,
             'R' => self::Success->value,
             'S' => self::Danger->value,
             default => self::Gray->value,

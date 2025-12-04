@@ -14,11 +14,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property int|null $user_id
- * @property string $fscs
+ * @property string|null $fscs
  * @property string $type
  * @property string|null $observation
  * @property string $secrecy
- * @property string $credential
+ * @property string|null $credential
  * @property \Illuminate\Support\Carbon|null $concession
  * @property \Illuminate\Support\Carbon|null $validity
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -96,7 +96,7 @@ class Credential extends Model
     {
         return Attribute::make(
             get: function (): string {
-                // Regra 1: Negada - fscs = "00000"
+                // Regra 1: Negada - fscs = "00000" (considerado como não existe)
                 if ($this->fscs === '00000') {
                     return 'Negada';
                 }
@@ -106,22 +106,29 @@ class Credential extends Model
                     return 'Vencida';
                 }
 
-                // Regra 3: Em Processamento - fscs existe + type = TCMS
-                if ($this->fscs && $this->type === CredentialType::TCMS) {
+                // Regra 3: TCMS sem FSCS (documento de sigilo) - Status Válida
+                // FSCS nulo + Número de Credencial contém "TCMS" = documento de sigilo válido
+                if (! $this->fscs && $this->type === CredentialType::TCMS && $this->credential && stripos($this->credential, 'TCMS') !== false) {
+                    return 'Válida';
+                }
+
+                // Regra 4: Em Processamento - fscs existe (não null e != "00000") + type = TCMS + COM concessão
+                // TCMS sem concessão = Pane - Verificar (cai no fallback)
+                if ($this->fscs && $this->fscs !== '00000' && $this->type === CredentialType::TCMS && $this->concession) {
                     return 'Em Processamento';
                 }
 
-                // Regra 4: Pendente - fscs existe + type = CRED + sem concessão
-                if ($this->fscs && $this->type === CredentialType::CRED && ! $this->concession) {
+                // Regra 5: Pendente - fscs existe (não null e != "00000") + type = CRED + sem concessão
+                if ($this->fscs && $this->fscs !== '00000' && $this->type === CredentialType::CRED && ! $this->concession) {
                     return 'Pendente';
                 }
 
-                // Regra 5: Ativa - fscs existe + type = CRED + com concessão
-                if ($this->fscs && $this->type === CredentialType::CRED && $this->concession) {
-                    return 'Ativa';
+                // Regra 6: Válida - fscs existe (não null e != "00000") + type = CRED + com concessão
+                if ($this->fscs && $this->fscs !== '00000' && $this->type === CredentialType::CRED && $this->concession) {
+                    return 'Válida';
                 }
 
-                return 'Desconhecido';
+                return 'Pane - Verificar';
             }
         );
     }
@@ -136,7 +143,8 @@ class Credential extends Model
             'Vencida' => 'danger',
             'Em Processamento' => 'primary',
             'Pendente' => 'warning',
-            'Ativa' => 'success',
+            'Válida' => 'success',
+            'Pane - Verificar' => 'danger', // Vermelho vivo para chamar atenção
             default => 'gray',
         };
     }

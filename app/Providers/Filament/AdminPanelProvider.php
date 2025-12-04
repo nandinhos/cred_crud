@@ -35,6 +35,8 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::hex('#003DA5'), // Azul FAB
                 'danger' => Color::Red,
                 'gray' => Color::Slate,
+                'indigo' => Color::Indigo, // Acesso Restrito
+                'secondary' => Color::Gray, // Negada
                 'info' => Color::hex('#0066CC'), // Azul Céu
                 'success' => Color::Green,
                 'warning' => Color::Orange,

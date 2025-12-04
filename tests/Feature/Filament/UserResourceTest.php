@@ -65,7 +65,7 @@ beforeEach(function () {
 it('can list users', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $users = User::factory()->count(5)->create();
 
     $this->actingAs($admin);
@@ -94,7 +94,7 @@ it('can create user with role', function () {
         ->assertHasNoFormErrors();
 
     $user = User::where('email', 'novo@test.com')->first();
-    
+
     expect($user)->not->toBeNull();
     expect($user->hasRole('admin'))->toBeTrue();
 });
@@ -120,7 +120,7 @@ it('can create user with multiple roles', function () {
         ->assertHasNoFormErrors();
 
     $user = User::where('email', 'multirole@test.com')->first();
-    
+
     expect($user->hasRole('admin'))->toBeTrue();
     expect($user->hasRole('operador'))->toBeTrue();
 });
@@ -128,7 +128,7 @@ it('can create user with multiple roles', function () {
 it('can edit user', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $user = User::factory()->create(['name' => 'Original Name']);
 
     $this->actingAs($admin);
@@ -146,7 +146,7 @@ it('can edit user', function () {
 it('can assign role to existing user', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $user = User::factory()->create();
     $consultaRole = Role::where('name', 'consulta')->first();
 
@@ -165,10 +165,10 @@ it('can assign role to existing user', function () {
 it('can change user role', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $user = User::factory()->create();
     $user->assignRole('consulta');
-    
+
     $adminRole = Role::where('name', 'admin')->first();
 
     $this->actingAs($admin);
@@ -181,7 +181,7 @@ it('can change user role', function () {
         ->assertHasNoFormErrors();
 
     $user->refresh();
-    
+
     expect($user->hasRole('admin'))->toBeTrue();
     expect($user->hasRole('consulta'))->toBeFalse();
 });
@@ -189,7 +189,7 @@ it('can change user role', function () {
 it('validates unique email on create', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     User::factory()->create(['email' => 'existing@test.com']);
 
     $this->actingAs($admin);
@@ -208,7 +208,7 @@ it('validates unique email on create', function () {
 it('can search users by name', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $user = User::factory()->create(['name' => 'SearchableUser']);
     $other = User::factory()->create(['name' => 'OtherUser']);
 
@@ -223,7 +223,7 @@ it('can search users by name', function () {
 it('can search users by email', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $user = User::factory()->create(['email' => 'searchable@test.com']);
     $other = User::factory()->create(['email' => 'other@test.com']);
 
@@ -238,10 +238,10 @@ it('can search users by email', function () {
 it('can filter users by role', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $adminUser = User::factory()->create();
     $adminUser->assignRole('admin');
-    
+
     $consultaUser = User::factory()->create();
     $consultaUser->assignRole('consulta');
 
@@ -258,7 +258,7 @@ it('can filter users by role', function () {
 it('displays user roles in table', function () {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
-    
+
     $user = User::factory()->create();
     $user->assignRole('operador');
 
@@ -280,7 +280,7 @@ it('only super_admin and admin can create users', function () {
 it('only super_admin and admin can edit users', function () {
     $consulta = User::factory()->create();
     $consulta->assignRole('consulta');
-    
+
     $otherUser = User::factory()->create();
 
     expect(\App\Filament\Resources\UserResource::canEdit($otherUser))->toBeFalse();

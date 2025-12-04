@@ -1569,3 +1569,364 @@ public static function canCreate(): bool
 4. **Cache de permissões**: Sempre limpar com `forgetCachedPermissions()` nos testes
 
 ---
+
+## 🎨 Cores Customizadas no Filament 4 - Registro Obrigatório
+
+**Data**: 2025-01-20  
+**Contexto**: Laravel 12 + Filament 4 + Tema Customizado
+
+### ❌ PROBLEMA: Badges e cores não aparecem visualmente no frontend
+
+#### 🔴 Sintomas
+1. **Cores dos badges não aplicadas** mesmo após definir nos Enums
+2. **Badge "Acesso Restrito"** deveria ser indigo mas aparecia com cor padrão
+3. **Badge "Negada"** deveria ser cinza (secondary) mas não funcionava
+4. **Status "Pane - Verificar"** vermelho não aparecia na tabela
+5. **Assets recompilados** mas cores não mudavam
+
+#### 🔍 Diagnóstico
+
+**Problema**: No Filament 4, cores customizadas (como `indigo` e `secondary`) precisam ser **explicitamente registradas** no AdminPanelProvider.
+
+**Código do Enum** (correto, mas insuficiente):
+```php
+// app/Enums/CredentialSecrecy.php
+public function color(): string
+{
+    return match ($this) {
+        self::ACESSO_RESTRITO => 'indigo', // ❌ Não funciona sem registro
+        self::RESERVADO => 'success',
+        self::SECRETO => 'danger',
+    };
+}
+```
+
+**Problema**: A cor `indigo` não está registrada no painel por padrão.
+
+#### ✅ SOLUÇÃO
+
+**1. Registrar cores customizadas no AdminPanelProvider:**
+
+```php
+// app/Providers/Filament/AdminPanelProvider.php
+
+use Filament\Support\Colors\Color;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        ->colors([
+            'primary' => Color::hex('#003DA5'), // Azul FAB
+            'danger' => Color::Red,
+            'gray' => Color::Slate,
+            'indigo' => Color::Indigo, // ✅ ADICIONAR
+            'secondary' => Color::Gray, // ✅ ADICIONAR
+            'info' => Color::hex('#0066CC'),
+            'success' => Color::Green,
+            'warning' => Color::Orange,
+        ]);
+}
+```
+
+**2. Recompilar assets:**
+```bash
+vendor/bin/sail npm run build
+```
+
+**3. Limpar caches:**
+```bash
+vendor/bin/sail artisan config:clear
+vendor/bin/sail artisan view:clear
+vendor/bin/sail artisan cache:clear
+```
+
+#### 🎯 Cores Disponíveis no Filament 4
+
+**Cores Padrão** (funcionam sem registro):
+- `danger` (vermelho)
+- `success` (verde)
+- `warning` (laranja/amarelo)
+- `info` (azul claro)
+- `primary` (cor principal do tema)
+
+**Cores que PRECISAM ser registradas**:
+- `indigo` (roxo/índigo)
+- `gray` (cinza)
+- `secondary` (geralmente cinza)
+- `purple` (roxo)
+- `pink` (rosa)
+- Qualquer cor customizada com `Color::hex()`
+
+### 📊 RESULTADO:
+✅ Badges com cores corretas no frontend
+✅ "Acesso Restrito" aparece indigo
+✅ "Negada" aparece cinza
+✅ "Pane - Verificar" aparece vermelho vivo
+✅ Coloração de linhas da tabela funciona
+
+### 🎓 LIÇÕES APRENDIDAS
+
+1. **Sempre registrar cores customizadas**:
+   - Se usar uma cor diferente das padrões (danger, success, warning, info, primary)
+   - DEVE registrar no `AdminPanelProvider`
+   - Caso contrário, Filament usa cor padrão (geralmente cinza)
+
+2. **Workflow de alteração de cores**:
+   ```
+   1. Definir cor no Enum/Model
+   2. Registrar cor no AdminPanelProvider
+   3. Recompilar assets: npm run build
+   4. Limpar caches do Laravel
+   5. Limpar cache do navegador (Ctrl+Shift+R)
+   ```
+
+3. **Não é necessário rebuild do container**:
+   - Alterações de cores são apenas frontend
+   - Basta recompilar assets com `npm run build`
+   - Container não precisa ser recriado
+
+4. **Verificar se cor está registrada antes de usar**:
+   - Consultar `AdminPanelProvider` para ver cores disponíveis
+   - Adicionar nova cor se necessário
+   - Evita problemas de cores não aplicadas
+
+5. **Cores Tailwind vs Cores Filament**:
+   - Classes Tailwind (bg-red-200, text-indigo-500) funcionam diretamente
+   - Badges do Filament precisam cores registradas no painel
+   - Linhas da tabela usam classes Tailwind (funcionam sem registro)
+
+### 📚 Referências
+- [Filament v4 - Theming](https://filamentphp.com/docs/4.x/panels/themes)
+- [Filament v4 - Colors](https://filamentphp.com/docs/4.x/support/colors)
+- [Tailwind CSS - Customization](https://tailwindcss.com/docs/customizing-colors)
+
+### 🔧 Exemplo Completo
+
+```php
+// Enum
+public function color(): string
+{
+    return match ($this) {
+        self::ACESSO_RESTRITO => 'indigo', // Usar nome registrado
+        self::RESERVADO => 'success',
+        self::SECRETO => 'danger',
+    };
+}
+
+// AdminPanelProvider
+->colors([
+    'indigo' => Color::Indigo, // Registrar a cor
+    // ... outras cores
+])
+
+// Recompilar
+// vendor/bin/sail npm run build
+```
+
+### ⚠️ ATENÇÃO
+
+- **SEMPRE** testar no navegador após alterações de cor
+- **SEMPRE** limpar cache do navegador
+- **SEMPRE** verificar console do navegador (F12) para erros CSS
+- Cores de badges ≠ Classes CSS do Tailwind
+- Badges precisam registro, classes CSS não
+
+---
+
+## 🔄 Regras de Negócio Complexas: Status e Ordenação de Credenciais
+
+**Data:** 04/12/2025
+**Contexto:** Sistema de gestão de credenciais com múltiplos status e regras de priorização
+
+### 🔴 Problema
+
+Ao implementar o sistema de credenciais, surgiram inconsistências entre:
+1. As regras de status calculadas no Model
+2. A ordenação visual na tabela
+3. Os dados criados pelo seeder
+
+**Principais desafios:**
+- FSCS "00000" deveria ser tratado como "não existe" (credencial negada)
+- TCMS sem data de concessão estava sendo classificado como "Em Processamento", mas deveria ser "Pane - Verificar"
+- Ordenação não priorizava casos problemáticos (PANE) no topo da lista
+- Constraints de banco de dados conflitantes (unique no FSCS impedia múltiplas negadas)
+
+### 🎯 Causa Raiz
+
+**1. Lógica de status incompleta:**
+```php
+// ❌ ANTES - Não verificava se FSCS era "00000" nas outras regras
+if ($this->fscs && $this->type === CredentialType::TCMS) {
+    return 'Em Processamento';
+}
+```
+
+**2. Falta de validação de concessão:**
+```php
+// ❌ ANTES - TCMS sem concessão era "Em Processamento"
+// Mas sem concessão = termo nunca foi assinado = INCONSISTÊNCIA
+```
+
+**3. Ordenação genérica:**
+- Não priorizava casos problemáticos
+- Não agrupava TCMS "Em Processamento" por data de concessão
+
+### ✅ Solução
+
+**1. Ajustar regras de status no Model (`Credential.php`):**
+
+```php
+// ✅ DEPOIS - Verifica se FSCS é diferente de "00000" E exige concessão
+if ($this->fscs && $this->fscs !== '00000' && $this->type === CredentialType::TCMS && $this->concession) {
+    return 'Em Processamento';
+}
+// TCMS com FSCS mas SEM concessão cai no fallback "Pane - Verificar"
+```
+
+**2. Ordenação inteligente na tabela:**
+
+```php
+// Prioridade 0: PANE (SEMPRE PRIMEIRO)
+CASE
+    WHEN fscs IS NULL AND type = "TCMS" AND (credential IS NULL OR credential NOT LIKE "%TCMS%") THEN 0
+    WHEN fscs IS NULL AND type = "CRED" THEN 0
+    WHEN fscs IS NOT NULL AND fscs != "00000" AND type = "TCMS" AND concession IS NULL THEN 0
+    -- Prioridade 1: Em Processamento (apenas TCMS com concessão)
+    WHEN fscs IS NOT NULL AND fscs != "00000" AND type = "TCMS" AND concession IS NOT NULL THEN 1
+    -- Prioridade 3: Negadas (por último)
+    WHEN fscs = "00000" THEN 3
+    ELSE 2
+END as sort_priority
+```
+
+**3. Migrations corrigidas:**
+- Removida constraint única do `fscs` (permite múltiplas negadas com "00000")
+- Adicionada constraint única no `credential` (número da credencial deve ser único)
+
+**4. Seeder alinhado com as regras:**
+```php
+// Grupo 4: TCMS EM PROCESSAMENTO (5 registros - TODOS COM concessão)
+for ($i = 0; $i < 5; $i++) {
+    Credential::create([
+        'fscs' => str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT),
+        'type' => CredentialType::TCMS,
+        'concession' => Carbon::now()->subDays(rand(1, 30)), // COM concessão
+        'validity' => Carbon::createFromDate(Carbon::now()->year, 12, 31),
+    ]);
+}
+
+// Grupo 7: PANE (10 registros, incluindo 5 TCMS sem concessão)
+for ($i = 0; $i < 5; $i++) {
+    Credential::create([
+        'fscs' => str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT),
+        'type' => CredentialType::TCMS,
+        'concession' => null, // SEM concessão = PANE
+        'validity' => null,
+    ]);
+}
+```
+
+### 📊 Regras Finais de Status
+
+1. **NEGADA:** `fscs = "00000"` (sempre verificado primeiro nas outras regras)
+2. **VENCIDA:** `validity < hoje`
+3. **TCMS VÁLIDA:** `fscs = null + type = TCMS + credential contém "TCMS"`
+4. **EM PROCESSAMENTO:** `fscs válido + type = TCMS + **COM concessão**`
+5. **PENDENTE:** `fscs válido + type = CRED + sem concessão`
+6. **VÁLIDA:** `fscs válido + type = CRED + com concessão`
+7. **PANE - VERIFICAR:** Qualquer outro caso (inclui TCMS sem concessão)
+
+### 🎯 Ordenação da Tabela
+
+```
+PRIORIDADE 0: PANE - VERIFICAR (sempre primeiro)
+    ├─ TCMS sem FSCS e sem "TCMS" no credential
+    ├─ CRED sem FSCS
+    └─ TCMS com FSCS mas SEM concessão
+
+PRIORIDADE 1: EM PROCESSAMENTO
+    └─ TCMS com FSCS e COM concessão (ordenados por data)
+
+PRIORIDADE 2: DEMAIS
+    └─ Ordenadas por vencimento
+
+PRIORIDADE 3: NEGADAS (sempre por último)
+    └─ FSCS = "00000"
+```
+
+### 🧪 Testes Implementados
+
+**Total:** 79 testes passando (178 assertions)
+
+**Novos testes adicionados:**
+```php
+test('TCMS com FSCS e COM concessão tem status Em Processamento', function () {
+    $credential = Credential::factory()->create([
+        'fscs' => '12345',
+        'type' => 'TCMS',
+        'concession' => now(),
+    ]);
+    expect($credential->status)->toBe('Em Processamento');
+});
+
+test('TCMS com FSCS mas SEM concessão tem status Pane - Verificar', function () {
+    $credential = Credential::factory()->create([
+        'fscs' => '12345',
+        'type' => 'TCMS',
+        'concession' => null,
+    ]);
+    expect($credential->status)->toBe('Pane - Verificar');
+});
+```
+
+### 💡 Lições Aprendidas
+
+**1. Regras de negócio devem ser explícitas:**
+- Sempre validar todas as condições necessárias
+- FSCS "00000" deve ser tratado como "não existe" em todas as verificações
+- Concessão ausente em TCMS indica inconsistência grave
+
+**2. Ordenação deve priorizar problemas:**
+- Casos "PANE" devem aparecer sempre primeiro
+- Facilita identificação e correção de inconsistências
+- Melhora a experiência do usuário
+
+**3. Seeder deve refletir a realidade:**
+- Criar dados que cubram TODOS os cenários de status
+- Incluir casos edge e inconsistências propositais
+- Ajuda a validar visualmente as regras
+
+**4. Constraints devem fazer sentido:**
+- FSCS não pode ser único (múltiplas credenciais negadas têm "00000")
+- Número da credencial deve ser único
+- Pensar nos casos reais de uso antes de criar constraints
+
+**5. Testes são essenciais:**
+- Criar testes para cada regra de status
+- Validar casos normais E casos edge
+- Executar testes após cada alteração
+
+### 🔄 Ações Preventivas
+
+1. ✅ Documentar regras de negócio ANTES de implementar
+2. ✅ Criar matriz de cenários de teste
+3. ✅ Validar constraints com casos reais
+4. ✅ Implementar testes antes de criar o seeder
+5. ✅ Revisar ordenação com usuário final
+
+### 📁 Arquivos Afetados
+
+- `app/Models/Credential.php` - Regras de status
+- `app/Filament/Resources/Credentials/Tables/CredentialsTable.php` - Ordenação
+- `database/seeders/CredentialCompleteSeeder.php` - Dados de teste (70 registros)
+- `database/migrations/*_add_unique_constraint_to_credentials_table.php`
+- `database/migrations/*_remove_unique_constraint_from_fscs.php`
+- `tests/Feature/Models/CredentialStatusTest.php` - Testes de status
+
+### ⏱️ Tempo Investido vs Economia
+
+- **Tempo investido:** ~2 horas para refinar e corrigir as regras
+- **Economia futura:** Evita confusão, retrabalho e bugs em produção
+- **Benefício:** Sistema consistente e fácil de manter
+
+---

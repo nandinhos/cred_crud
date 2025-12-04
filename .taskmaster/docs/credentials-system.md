@@ -44,9 +44,94 @@
 - O histórico permite consultar todas as credenciais que um militar já teve, incluindo períodos de vigência;
 - Apenas a credencial mais recente (não deletada) fica ativa no sistema;
 
- # para o campo Status, coluna que deverá ser criada no frontend baseado nas condições, teremos as seguintes regras:
-	- Em Processamento (badge roxo): Quando possui fscs, type == "TCMS";
-	- Pendente (badge laranja): Quando possui fscs, type == "CRED" e não possuí data de concessão definida;
-	- Negada (badge cinza): Quando o fscs for == "00000";
-	- Ativa (badge verde):  Quando possui fscs, type == "CRED" e possuí data de concessão definida;
-	- Vencida (badge vermelha): Quando data vencimento < hoje();
+### Regras de Status (Calculadas Dinamicamente)
+
+O status é calculado automaticamente no Model baseado nas seguintes condições **(ordem de prioridade)**:
+
+#### 1. **NEGADA** (badge cinza - `secondary`)
+- **Condição:** `fscs = "00000"`
+- **Descrição:** Credencial foi negada pelo Centro de Inteligência
+- **Observação:** FSCS "00000" é considerado como "não existe" em todas as outras regras
+
+#### 2. **VENCIDA** (badge vermelho - `danger`)
+- **Condição:** `validity < hoje()`
+- **Descrição:** Data de validade já passou
+- **Aplica-se a:** CRED e TCMS
+
+#### 3. **TCMS VÁLIDA - Documento de Sigilo** (badge verde - `success`)
+- **Condição:** 
+  - `fscs = null` (sem FSCS)
+  - `type = TCMS`
+  - `credential` contém "TCMS" (case insensitive)
+- **Descrição:** Documento de sigilo que não requer FSCS para ser válido
+
+#### 4. **EM PROCESSAMENTO** (badge azul - `primary`)
+- **Condição:**
+  - `fscs` existe (não null e diferente de "00000")
+  - `type = TCMS`
+  - **`concession` existe** (data de concessão do termo)
+- **Descrição:** TCMS com FSCS válido e termo já concedido, aguardando aprovação final
+- **IMPORTANTE:** TCMS sem concessão é considerado PANE
+
+#### 5. **PENDENTE** (badge amarelo - `warning`)
+- **Condição:**
+  - `fscs` existe (não null e diferente de "00000")
+  - `type = CRED`
+  - `concession = null` (sem data de concessão)
+- **Descrição:** CRED com FSCS aprovado aguardando data de concessão
+
+#### 6. **VÁLIDA** (badge verde - `success`)
+- **Condição:**
+  - `fscs` existe (não null e diferente de "00000")
+  - `type = CRED`
+  - `concession` existe (com data de concessão)
+- **Descrição:** Credencial ativa e válida
+
+#### 7. **PANE - VERIFICAR** (badge vermelho - `danger`)
+- **Condição:** Qualquer outro caso que não se encaixe nas regras acima
+- **Exemplos de casos PANE:**
+  - TCMS sem FSCS e sem "TCMS" no número da credencial
+  - CRED sem FSCS
+  - **TCMS com FSCS mas sem data de concessão** (termo nunca foi assinado)
+- **Descrição:** Inconsistência que precisa ser verificada e corrigida
+
+### Ordenação na Tabela
+
+As credenciais são exibidas na seguinte ordem de prioridade:
+
+```
+PRIORIDADE 0: PANE - VERIFICAR (sempre primeiro)
+    ├─ TCMS sem FSCS e sem "TCMS" no credential
+    ├─ CRED sem FSCS
+    └─ TCMS com FSCS mas SEM concessão
+
+PRIORIDADE 1: EM PROCESSAMENTO
+    └─ TCMS com FSCS e COM concessão (ordenados por data de concessão)
+
+PRIORIDADE 2: DEMAIS CREDENCIAIS
+    └─ Ordenadas por data de validade (mais urgentes primeiro)
+
+PRIORIDADE 3: NEGADAS (sempre por último)
+    └─ FSCS = "00000"
+```
+
+### Cores de Fundo (Gradiente de Vencimento)
+
+Para credenciais válidas, a cor de fundo da linha varia conforme proximidade do vencimento:
+
+- **Vencida:** `bg-red-100` (vermelho claro)
+- **1-15 dias:** `bg-orange-200` (laranja forte - CRÍTICO)
+- **16-30 dias:** `bg-orange-100` (laranja médio - ATENÇÃO)
+- **31-45 dias:** `bg-yellow-200` (amarelo forte - ALERTA)
+- **46-60 dias:** `bg-yellow-100` (amarelo médio - Início gradiente)
+- **> 60 dias:** Sem cor especial (Normal)
+- **PANE:** `bg-red-200` com borda vermelha esquerda
+- **Negada:** `bg-gray-200`
+- **Pendente:** `bg-indigo-100`
+
+### Constraints de Banco de Dados
+
+- **`credential` (número da credencial):** UNIQUE - Não pode haver números repetidos
+- **`fscs`:** NÃO é unique - Múltiplas credenciais podem ter FSCS "00000" (negadas)
+- **`user_id`:** NOT NULL - Toda credencial deve estar vinculada a um usuário
+- **Regra de negócio:** Um usuário pode ter apenas UMA credencial ativa (não deletada)

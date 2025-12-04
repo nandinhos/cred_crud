@@ -34,7 +34,7 @@ class CredentialForm
                                     // Filtrar usuários que NÃO têm credenciais ativas
                                     $query->whereDoesntHave('credentials', function ($credentialQuery) use ($recordId) {
                                         $credentialQuery->whereNull('deleted_at');
-                                        
+
                                         // Se estiver editando, ignorar a credencial atual
                                         if ($recordId) {
                                             $credentialQuery->where('id', '!=', $recordId);
@@ -69,13 +69,13 @@ class CredentialForm
 
                         Forms\Components\TextInput::make('fscs')
                             ->label('FSCS')
-                            ->required()
+                            ->nullable()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true, modifyRuleUsing: function ($rule, $get) {
                                 return $rule->whereNull('deleted_at');
                             })
                             ->prefixIcon('heroicon-o-identification')
-                            ->helperText('Código único da credencial'),
+                            ->helperText('Código único da credencial (opcional para TCMS em processamento)'),
 
                         Forms\Components\Select::make('type')
                             ->label('Tipo de Documento')
@@ -85,16 +85,43 @@ class CredentialForm
                             ->live() // Tornar reativo para atualizar o campo de sigilo
                             ->prefixIcon('heroicon-o-document-text')
                             ->helperText('CRED: Credencial de Segurança | TCMS: Termo de Compromisso')
-                            ->afterStateUpdated(function ($state, $set) {
-                                // Limpar o sigilo quando o tipo mudar
-                                $set('secrecy', null);
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                // Ao selecionar TCMS, preencher automaticamente com "Acesso Restrito"
+                                if ($state === 'TCMS') {
+                                    $set('secrecy', 'AR');
+                                } else {
+                                    // Limpar o sigilo quando mudar para CRED
+                                    $set('secrecy', null);
+                                }
+
+                                // Recalcular validade quando tipo mudar
+                                $concession = $get('concession');
+                                if ($concession) {
+                                    $concessionDate = \Carbon\Carbon::parse($concession);
+
+                                    if ($state === 'CRED') {
+                                        // CRED: 2 anos
+                                        $validity = $concessionDate->copy()->addYears(2);
+                                    } elseif ($state === 'TCMS') {
+                                        // TCMS: 31/12 do ano da concessão
+                                        $validity = $concessionDate->copy()->endOfYear();
+                                    } else {
+                                        // Limpar validade se tipo não for selecionado
+                                        $validity = null;
+                                    }
+
+                                    $set('validity', $validity?->format('Y-m-d'));
+                                } else {
+                                    // Se não há data de concessão, limpar validade
+                                    $set('validity', null);
+                                }
                             }),
 
                         Forms\Components\Select::make('secrecy')
                             ->label('Nível de Sigilo')
                             ->options(function ($get) {
                                 $type = $get('type');
-                                
+
                                 // CRED: apenas R ou S
                                 if ($type === 'CRED') {
                                     return [
@@ -102,14 +129,14 @@ class CredentialForm
                                         'S' => 'Secreto',
                                     ];
                                 }
-                                
+
                                 // TCMS: apenas AR
                                 if ($type === 'TCMS') {
                                     return [
                                         'AR' => 'Acesso Restrito',
                                     ];
                                 }
-                                
+
                                 // Padrão: todas as opções
                                 return CredentialSecrecy::options();
                             })
@@ -124,15 +151,16 @@ class CredentialForm
                                 if ($type === 'TCMS') {
                                     return 'TCMS: Acesso Restrito';
                                 }
+
                                 return 'Selecione o tipo de documento primeiro';
                             }),
 
                         Forms\Components\TextInput::make('credential')
                             ->label('Número da Credencial')
-                            ->required()
+                            ->nullable()
                             ->maxLength(255)
                             ->prefixIcon('heroicon-o-hashtag')
-                            ->helperText('Número ou código identificador da credencial (texto simples)'),
+                            ->helperText('Número ou código identificador da credencial (opcional para TCMS em processamento)'),
 
                         Forms\Components\Textarea::make('observation')
                             ->label('Observações')
@@ -154,6 +182,28 @@ class CredentialForm
                             ->nullable()
                             ->native(false)
                             ->displayFormat('d/m/Y')
+                            ->live() // Tornar reativo para calcular validade
+                            ->afterStateUpdated(function ($state, $set, $get) {
+                                // Calcular validade automaticamente
+                                if ($state) {
+                                    $type = $get('type');
+                                    $concessionDate = \Carbon\Carbon::parse($state);
+
+                                    if ($type === 'CRED') {
+                                        // CRED: 2 anos
+                                        $validity = $concessionDate->copy()->addYears(2);
+                                    } elseif ($type === 'TCMS') {
+                                        // TCMS: 31/12 do ano da concessão
+                                        $validity = $concessionDate->copy()->endOfYear();
+                                    } else {
+                                        $validity = null;
+                                    }
+
+                                    $set('validity', $validity?->format('Y-m-d'));
+                                } else {
+                                    $set('validity', null);
+                                }
+                            })
                             ->prefixIcon('heroicon-o-calendar-days')
                             ->helperText('Data de concessão. A validade será calculada automaticamente.'),
 
@@ -163,7 +213,7 @@ class CredentialForm
                             ->native(false)
                             ->displayFormat('d/m/Y')
                             ->disabled()
-                            ->dehydrated(false)
+                            ->dehydrated(true) // Permitir salvar o valor calculado
                             ->prefixIcon('heroicon-o-clock')
                             ->helperText('Calculado automaticamente: CRED = 2 anos | TCMS = 31/12 do ano'),
                     ])

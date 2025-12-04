@@ -18,7 +18,7 @@ test('forType retorna gray para tipo desconhecido', function () {
 });
 
 test('forSecrecy retorna cor correta para Acesso Restrito', function () {
-    expect(BadgeColor::forSecrecy('AR'))->toBe('info');
+    expect(BadgeColor::forSecrecy('AR'))->toBe('indigo');
 });
 
 test('forSecrecy retorna cor correta para Reservado', function () {
@@ -80,15 +80,16 @@ test('forValidity retorna success quando faltam mais de 30 dias', function () {
 test('enum possui todos os cases necessários', function () {
     $cases = BadgeColor::cases();
     $values = array_map(fn ($case) => $case->value, $cases);
-    
+
     expect($values)->toContain('danger');
     expect($values)->toContain('warning');
     expect($values)->toContain('success');
     expect($values)->toContain('info');
     expect($values)->toContain('primary');
     expect($values)->toContain('gray');
+    expect($values)->toContain('indigo');
 });
 
-test('enum tem exatamente 6 cases', function () {
-    expect(BadgeColor::cases())->toHaveCount(6);
+test('enum tem exatamente 7 cases', function () {
+    expect(BadgeColor::cases())->toHaveCount(7);
 });

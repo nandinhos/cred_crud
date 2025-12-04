@@ -71,26 +71,26 @@ class UserSeeder extends Seeder
             'Rodrigo', 'Amanda', 'Felipe', 'Bruna', 'Gustavo', 'Renata', 'Leonardo', 'Carla',
             'Marcelo', 'Daniela', 'Anderson', 'Tatiana', 'Ricardo', 'Vanessa', 'Paulo', 'Simone',
             'Fabio', 'Cristina', 'Vinicius', 'Adriana', 'Alexandre', 'Monica', 'Roberto', 'Sandra',
-            'Sergio', 'Claudia', 'Marcos', 'Luciana', 'Antonio', 'Silvia', 'Jose'
+            'Sergio', 'Claudia', 'Marcos', 'Luciana', 'Antonio', 'Silvia', 'Jose',
         ];
 
         $sobrenomes = [
             'Silva', 'Santos', 'Oliveira', 'Souza', 'Lima', 'Pereira', 'Costa', 'Rodrigues',
             'Almeida', 'Nascimento', 'Araujo', 'Ribeiro', 'Carvalho', 'Gomes', 'Martins', 'Rocha',
-            'Fernandes', 'Barbosa', 'Dias', 'Monteiro', 'Cardoso', 'Teixeira', 'Cavalcanti', 'Ramos'
+            'Fernandes', 'Barbosa', 'Dias', 'Monteiro', 'Cardoso', 'Teixeira', 'Cavalcanti', 'Ramos',
         ];
 
         for ($i = 0; $i < 47; $i++) {
             $nome = $nomes[$i % count($nomes)];
             $sobrenome = $sobrenomes[$i % count($sobrenomes)];
             $rank = $allRanks->random();
-            
+
             $user = User::create([
                 'name' => $nome,
-                'full_name' => $rank->abbreviation . ' ' . $nome . ' ' . $sobrenome,
+                'full_name' => $rank->abbreviation.' '.$nome.' '.$sobrenome,
                 'rank_id' => $rank->id,
                 'office_id' => $offices->random()->id,
-                'email' => strtolower($nome . $i) . '@credcrud.com',
+                'email' => strtolower($nome.$i).'@credcrud.com',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]);
@@ -99,9 +99,9 @@ class UserSeeder extends Seeder
 
         $this->command->info('  👀 Consulta: 47 usuários');
         $this->command->info('');
-        $this->command->info('✅ Total de usuários criados: ' . User::count());
-        $this->command->info('👑 Super Admins: ' . User::role('super_admin')->count());
-        $this->command->info('🛡️  Admins: ' . User::role('admin')->count());
-        $this->command->info('👀 Consulta: ' . User::role('consulta')->count());
+        $this->command->info('✅ Total de usuários criados: '.User::count());
+        $this->command->info('👑 Super Admins: '.User::role('super_admin')->count());
+        $this->command->info('🛡️  Admins: '.User::role('admin')->count());
+        $this->command->info('👀 Consulta: '.User::role('consulta')->count());
     }
 }

@@ -26,7 +26,7 @@ enum CredentialSecrecy: string
     public function color(): string
     {
         return match ($this) {
-            self::ACESSO_RESTRITO => 'info',
+            self::ACESSO_RESTRITO => 'indigo',
             self::RESERVADO => 'success',
             self::SECRETO => 'danger',
         };

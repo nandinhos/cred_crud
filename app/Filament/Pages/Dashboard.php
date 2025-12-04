@@ -8,7 +8,7 @@ use Filament\Pages\Page;
 class Dashboard extends Page
 {
     protected string $view = 'filament.pages.dashboard';
-    
+
     public User $user;
 
     public function mount(): void

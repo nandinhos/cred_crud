@@ -32,7 +32,9 @@ class CredentialsTable
                     ->sortable()
                     ->copyable()
                     ->copyMessage('FSCS copiado!')
-                    ->copyMessageDuration(1500),
+                    ->copyMessageDuration(1500)
+                    ->placeholder('-')
+                    ->default('-'),
 
                 Tables\Columns\TextColumn::make('type')
                     ->label('Tipo')
@@ -77,7 +79,9 @@ class CredentialsTable
                     ->copyable()
                     ->copyMessage('Número copiado!')
                     ->copyMessageDuration(1500)
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->placeholder('-')
+                    ->default('-'),
 
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Usuário')
@@ -87,11 +91,11 @@ class CredentialsTable
                     ->formatStateUsing(function (Credential $record): string {
                         $name = $record->user?->name ?? 'N/A';
                         $office = $record->user?->office?->name ?? '';
-                        
+
                         if ($office) {
-                            return $name . '<br><span style="color: #6b7280; font-style: italic; font-size: 0.75rem;">' . $office . '</span>';
+                            return $name.'<br><span style="color: #6b7280; font-style: italic; font-size: 0.75rem;">'.$office.'</span>';
                         }
-                        
+
                         return $name;
                     })
                     ->toggleable(isToggledHiddenByDefault: false),
@@ -153,11 +157,12 @@ class CredentialsTable
                         Forms\Components\Select::make('status_filter')
                             ->label('Status')
                             ->options([
-                                'negada' => 'Negada',
-                                'vencida' => 'Vencida',
+                                'pane' => 'Pane - Verificar',
                                 'em_processamento' => 'Em Processamento',
+                                'vencida' => 'Vencida',
                                 'pendente' => 'Pendente',
-                                'ativa' => 'Ativa',
+                                'valida' => 'Válida',
+                                'negada' => 'Negada',
                             ])
                             ->placeholder('Todos os status'),
                     ])
@@ -167,11 +172,17 @@ class CredentialsTable
                         }
 
                         return match ($data['status_filter']) {
+                            'pane' => $query->whereNull('fscs')
+                                ->where('type', 'TCMS')
+                                ->where(function ($q) {
+                                    $q->whereNull('credential')
+                                        ->orWhere('credential', 'NOT LIKE', '%TCMS%');
+                                }),
                             'negada' => $query->where('fscs', '00000'),
                             'vencida' => $query->where('validity', '<', now()),
                             'em_processamento' => $query->where('type', 'TCMS')->whereNotNull('fscs'),
                             'pendente' => $query->where('type', 'CRED')->whereNotNull('fscs')->whereNull('concession'),
-                            'ativa' => $query->where('type', 'CRED')->whereNotNull('fscs')->whereNotNull('concession')->where('validity', '>=', now()),
+                            'valida' => $query->where('type', 'CRED')->whereNotNull('fscs')->whereNotNull('concession')->where('validity', '>=', now()),
                             default => $query,
                         };
                     }),
@@ -188,53 +199,88 @@ class CredentialsTable
             ])
             ->defaultSort('validity', 'asc') // Ordenar por validade (mais urgentes primeiro)
             ->paginated(false) // Remover paginação - mostrar todos os registros
+            ->modifyQueryUsing(function ($query) {
+                // Ordenação visual organizada:
+                // 1) Pane - Verificar (prioridade 0) - SEMPRE PRIMEIRO, independente do tipo
+                //    Inclui: TCMS sem FSCS, CRED sem FSCS, TCMS com FSCS mas SEM concessão
+                // 2) Em Processamento (prioridade 1) - TCMS com FSCS e COM concessão (ordenados por data)
+                // 3) Vencidas até Válidas ordenadas por data de validade (prioridade 2)
+                // 4) Negadas por último (prioridade 3)
+                return $query->selectRaw('
+                    credentials.*,
+                    CASE
+                        -- PANE: Casos que não se encaixam nas regras (SEMPRE PRIMEIRO)
+                        -- TCMS sem FSCS e sem "TCMS" no credential
+                        WHEN fscs IS NULL AND type = "TCMS" AND (credential IS NULL OR credential NOT LIKE "%TCMS%") THEN 0
+                        -- CRED sem FSCS
+                        WHEN fscs IS NULL AND type = "CRED" THEN 0
+                        -- TCMS com FSCS mas SEM concessão (PANE)
+                        WHEN fscs IS NOT NULL AND fscs != "00000" AND type = "TCMS" AND concession IS NULL THEN 0
+                        -- Em Processamento: TCMS com FSCS válido (não "00000") e COM concessão
+                        WHEN fscs IS NOT NULL AND fscs != "00000" AND type = "TCMS" AND concession IS NOT NULL THEN 1
+                        -- Negadas: FSCS = "00000" (por último)
+                        WHEN fscs = "00000" THEN 3
+                        -- Demais casos: ordenação por validade
+                        ELSE 2
+                    END as sort_priority
+                ')
+                    ->orderBy('sort_priority', 'asc')
+                    ->orderByRaw('CASE WHEN sort_priority = 1 THEN concession END ASC')
+                    ->orderByRaw('CASE WHEN sort_priority = 2 THEN validity END ASC')
+                    ->orderBy('created_at', 'desc');
+            })
             ->recordClasses(function (Credential $record): ?string {
+                // PRIORIDADE 1: Credenciais com status "Pane - Verificar" ficam com fundo vermelho vivo
+                if ($record->status === 'Pane - Verificar') {
+                    return 'bg-red-200 hover:bg-red-300 transition-colors duration-150 border-l-4 border-red-600';
+                }
+
                 // Credencial Negada - Cinza mais escuro
                 if ($record->fscs === '00000') {
                     return 'bg-gray-200 hover:bg-gray-300 transition-colors duration-150';
                 }
 
                 // Credencial Pendente (sem concessão) - Índigo claro
-                if (!$record->concession) {
+                if (! $record->concession) {
                     return 'bg-indigo-100 hover:bg-indigo-200 transition-colors duration-150';
                 }
 
                 // Credenciais sem validade
-                if (!$record->validity) {
+                if (! $record->validity) {
                     return null;
                 }
 
                 $validity = $record->validity;
-                
+
                 // Vencida - Vermelho mais forte
                 if ($validity->isPast()) {
                     return 'bg-red-100 hover:bg-red-200 transition-colors duration-150';
                 }
-                
+
                 $daysUntilExpiry = now()->diffInDays($validity, false);
-                
+
                 // Gradiente de 60 dias até vencimento (amarelo → laranja → vermelho)
-                
+
                 // Crítica (1-15 dias) - Laranja/Vermelho forte
                 if ($daysUntilExpiry <= 15) {
                     return 'bg-orange-200 hover:bg-orange-300 transition-colors duration-150';
                 }
-                
+
                 // Atenção (16-30 dias) - Laranja médio
                 if ($daysUntilExpiry <= 30) {
                     return 'bg-orange-100 hover:bg-orange-200 transition-colors duration-150';
                 }
-                
+
                 // Alerta (31-45 dias) - Amarelo forte
                 if ($daysUntilExpiry <= 45) {
                     return 'bg-yellow-200 hover:bg-yellow-300 transition-colors duration-150';
                 }
-                
+
                 // Início do gradiente (46-60 dias) - Amarelo médio
                 if ($daysUntilExpiry <= 60) {
                     return 'bg-yellow-100 hover:bg-yellow-200 transition-colors duration-150';
                 }
-                
+
                 // Normal (> 60 dias) - Sem cor especial
                 return null;
             })
