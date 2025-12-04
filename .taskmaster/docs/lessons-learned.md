@@ -1351,3 +1351,112 @@ php artisan view:clear
 - Arquivo: `app/Filament/Resources/UserResource.php`
 - Arquivo: `app/Filament/Resources/Credentials/CredentialResource.php`
 
+---
+
+## 🧪 Problema: Teste Falhando com Comparação de Enum vs String
+
+**Data:** 2025-12-03  
+**Contexto:** Testes de edição de credenciais no Filament
+
+### 🔴 PROBLEMA:
+
+Teste `it can edit credential` falhava com o erro:
+```
+Component has errors: "data.secrecy"
+Failed asserting that App\Enums\CredentialSecrecy Enum #7953 (SECRETO, 'S') is identical to 'S'.
+```
+
+**Causa Raiz:**
+- O modelo `Credential` usa **Eloquent casting** para converter o campo `secrecy` em Enum:
+  ```php
+  protected function casts(): array
+  {
+      return [
+          'secrecy' => CredentialSecrecy::class,
+      ];
+  }
+  ```
+- O teste comparava `$credential->secrecy` (que retorna um Enum) com `->value` (string)
+- Isso causava falha na asserção de identidade estrita
+
+### ✅ SOLUÇÃO:
+
+**Antes (❌ Incorreto):**
+```php
+expect($credential->secrecy)->toBe(CredentialSecrecy::SECRETO->value); // Compara Enum com string
+```
+
+**Depois (✅ Correto):**
+```php
+expect($credential->secrecy)->toBe(CredentialSecrecy::SECRETO); // Compara Enum com Enum
+```
+
+### 📝 APRENDIZADOS:
+
+1. **Entender Eloquent Casting:**
+   - Quando um atributo é castado para Enum, o Eloquent retorna a instância do Enum, não o valor raw
+   - Para obter o valor: `$credential->secrecy->value`
+   - Para comparar: usar a instância do Enum diretamente
+
+2. **Teste Completo de Edição:**
+   - Ao testar edição no Filament, fornecer TODOS os campos obrigatórios
+   - O formulário valida todos os campos, não apenas os que estão sendo modificados
+   - Usar `fillForm()` com todos os campos: `user_id`, `fscs`, `type`, `secrecy`, `credential`, `observation`
+
+3. **Pattern de Teste Correto:**
+   ```php
+   it('can edit credential', function () {
+       $user = User::factory()->admin()->create();
+       $credential = Credential::factory()->create([
+           'type' => CredentialType::CRED->value,
+           'secrecy' => CredentialSecrecy::RESERVADO->value,
+       ]);
+   
+       $this->actingAs($user);
+   
+       Livewire::test(EditCredential::class, ['record' => $credential->getRouteKey()])
+           ->fillForm([
+               'user_id' => $credential->user_id,
+               'fscs' => $credential->fscs,
+               'type' => $credential->type,
+               'secrecy' => CredentialSecrecy::SECRETO->value, // Alterando o sigilo
+               'credential' => $credential->credential,
+               'observation' => 'Updated Observation',
+           ])
+           ->call('save')
+           ->assertHasNoFormErrors();
+   
+       $credential->refresh();
+       expect($credential->observation)->toBe('Updated Observation');
+       expect($credential->secrecy)->toBe(CredentialSecrecy::SECRETO); // Enum, não ->value
+   });
+   ```
+
+### 🧪 COMANDOS DE DEBUG:
+
+```bash
+# Rodar teste específico
+vendor/bin/sail artisan test --filter="it can edit credential"
+
+# Ver o que o modelo retorna no tinker
+php artisan tinker
+$c = App\Models\Credential::first();
+$c->secrecy; // Retorna: App\Enums\CredentialSecrecy (Enum instance)
+$c->secrecy->value; // Retorna: 'R' ou 'S' (string)
+get_class($c->secrecy); // Retorna: "App\Enums\CredentialSecrecy"
+```
+
+### 📊 RESULTADO:
+
+- ✅ Teste passando: 183/183 testes (388 asserções)
+- ✅ Comparação de Enum correta
+- ✅ Formulário de edição totalmente preenchido
+- ✅ Commit: `test: corrige teste de edicao de credencial para validar enum corretamente`
+
+### 🔗 RELACIONADO:
+
+- Arquivo: `tests/Feature/Filament/CredentialResourceTest.php`
+- Arquivo: `app/Models/Credential.php`
+- Arquivo: `app/Enums/CredentialSecrecy.php`
+- Issue: Correção de testes após refatoração do sistema de credenciais
+
