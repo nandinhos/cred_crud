@@ -8,11 +8,58 @@ use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    // Criar roles para os testes
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-    Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-    Role::firstOrCreate(['name' => 'consulta', 'guard_name' => 'web']);
-    Role::firstOrCreate(['name' => 'operador', 'guard_name' => 'web']);
+    // Limpar cache de permissões
+    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+    // Criar permissões necessárias
+    $permissions = [
+        'Visualizar Credenciais',
+        'Criar Credenciais',
+        'Editar Credenciais',
+        'Excluir Credenciais',
+        'Visualizar Usuários',
+        'Criar Usuários',
+        'Editar Usuários',
+        'Excluir Usuários',
+        'Visualizar Logs',
+        'Exportar Relatórios',
+        'Gerenciar Permissões',
+    ];
+
+    foreach ($permissions as $permission) {
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+    }
+
+    // Criar roles e atribuir permissões
+    $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+    $superAdmin->syncPermissions($permissions);
+
+    $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $admin->syncPermissions([
+        'Visualizar Credenciais',
+        'Criar Credenciais',
+        'Editar Credenciais',
+        'Excluir Credenciais',
+        'Visualizar Usuários',
+        'Criar Usuários',
+        'Editar Usuários',
+        'Visualizar Logs',
+        'Exportar Relatórios',
+    ]);
+
+    $operador = Role::firstOrCreate(['name' => 'operador', 'guard_name' => 'web']);
+    $operador->syncPermissions([
+        'Visualizar Credenciais',
+        'Criar Credenciais',
+        'Editar Credenciais',
+        'Visualizar Logs',
+    ]);
+
+    $consulta = Role::firstOrCreate(['name' => 'consulta', 'guard_name' => 'web']);
+    $consulta->syncPermissions([
+        'Visualizar Credenciais',
+        'Visualizar Logs',
+    ]);
 });
 
 it('can list users', function () {

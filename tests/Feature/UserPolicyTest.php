@@ -8,23 +8,23 @@ beforeEach(function () {
     // Limpar cache de permissões
     app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-    // Criar permissões
-    Permission::create(['name' => 'view_users', 'guard_name' => 'web']);
-    Permission::create(['name' => 'create_users', 'guard_name' => 'web']);
-    Permission::create(['name' => 'edit_users', 'guard_name' => 'web']);
-    Permission::create(['name' => 'delete_users', 'guard_name' => 'web']);
+    // Criar permissões em português (alinhado com o sistema)
+    Permission::create(['name' => 'Visualizar Usuários', 'guard_name' => 'web']);
+    Permission::create(['name' => 'Criar Usuários', 'guard_name' => 'web']);
+    Permission::create(['name' => 'Editar Usuários', 'guard_name' => 'web']);
+    Permission::create(['name' => 'Excluir Usuários', 'guard_name' => 'web']);
 
     // Criar roles
-    $superAdmin = Role::create(['name' => 'Super Admin', 'guard_name' => 'web']);
-    $superAdmin->givePermissionTo(['view_users', 'create_users', 'edit_users', 'delete_users']);
+    $superAdmin = Role::create(['name' => 'super_admin', 'guard_name' => 'web']);
+    $superAdmin->givePermissionTo(['Visualizar Usuários', 'Criar Usuários', 'Editar Usuários', 'Excluir Usuários']);
 
     $admin = Role::create(['name' => 'admin', 'guard_name' => 'web']);
-    $admin->givePermissionTo(['view_users', 'create_users', 'edit_users', 'delete_users']);
+    $admin->givePermissionTo(['Visualizar Usuários', 'Criar Usuários', 'Editar Usuários', 'Excluir Usuários']);
 });
 
 it('user with permission can view any users', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('view_users');
+    $user->givePermissionTo('Visualizar Usuários');
 
     expect($user->can('viewAny', User::class))->toBeTrue();
 });
@@ -37,7 +37,7 @@ it('user without permission cannot view any users', function () {
 
 it('user with permission can view specific user', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('view_users');
+    $user->givePermissionTo('Visualizar Usuários');
 
     $otherUser = User::factory()->create();
 
@@ -46,7 +46,7 @@ it('user with permission can view specific user', function () {
 
 it('user with permission can create users', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('create_users');
+    $user->givePermissionTo('Criar Usuários');
 
     expect($user->can('create', User::class))->toBeTrue();
 });
@@ -59,7 +59,7 @@ it('user without permission cannot create users', function () {
 
 it('user with permission can update other users', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('edit_users');
+    $user->givePermissionTo('Editar Usuários');
 
     $otherUser = User::factory()->create();
 
@@ -68,7 +68,7 @@ it('user with permission can update other users', function () {
 
 it('user with permission can delete other users', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('delete_users');
+    $user->givePermissionTo('Excluir Usuários');
 
     $otherUser = User::factory()->create();
 
@@ -77,14 +77,14 @@ it('user with permission can delete other users', function () {
 
 it('user cannot delete themselves', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('delete_users');
+    $user->givePermissionTo('Excluir Usuários');
 
     expect($user->can('delete', $user))->toBeFalse();
 });
 
 it('user with permission can restore users', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('edit_users');
+    $user->givePermissionTo('Editar Usuários');
 
     $deletedUser = User::factory()->create();
     $deletedUser->delete();
@@ -94,7 +94,7 @@ it('user with permission can restore users', function () {
 
 it('super admin with permission can force delete other users', function () {
     $user = User::factory()->create();
-    $user->assignRole('Super Admin');
+    $user->assignRole('super_admin');
 
     $otherUser = User::factory()->create();
 
@@ -103,7 +103,7 @@ it('super admin with permission can force delete other users', function () {
 
 it('super admin cannot force delete themselves', function () {
     $user = User::factory()->create();
-    $user->assignRole('Super Admin');
+    $user->assignRole('super_admin');
 
     expect($user->can('forceDelete', $user))->toBeFalse();
 });

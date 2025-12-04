@@ -62,89 +62,57 @@ class CredentialResource extends Resource
 
     /**
      * Ocultar do menu sidebar para perfil consulta
+     * Usa a policy para determinar se o usuário pode acessar
      */
     public static function shouldRegisterNavigation(): bool
     {
-        $user = auth()->user();
-
-        if (! $user) {
-            return false;
-        }
-
-        // Apenas admin e super_admin veem no menu
-        return $user->hasRole(['admin', 'super_admin']);
+        // Apenas mostra no menu se o usuário pode criar ou editar credenciais
+        // Usuários 'consulta' não veem no menu, mas podem acessar via URL
+        return static::canCreate() || static::can('create');
     }
 
     /**
      * Verificar se o usuário pode acessar este recurso
+     * Delega para a CredentialPolicy via método viewAny
      */
     public static function canAccess(): bool
     {
-        $user = auth()->user();
-
-        if (! $user) {
-            return false;
-        }
-
-        // Admin ou super_admin podem acessar tudo
-        // Usuários com role 'consulta' NÃO podem acessar diretamente
-        return $user->hasRole(['admin', 'super_admin']);
+        return static::can('viewAny');
     }
 
     /**
      * Permitir criar credenciais
+     * Delega para a CredentialPolicy
      */
     public static function canCreate(): bool
     {
-        $user = auth()->user();
-
-        if (! $user) {
-            return false;
-        }
-
-        return $user->hasRole(['admin', 'super_admin']);
+        return static::can('create');
     }
 
     /**
      * Permitir editar credenciais
+     * Delega para a CredentialPolicy
      */
     public static function canEdit($record): bool
     {
-        $user = auth()->user();
-
-        if (! $user) {
-            return false;
-        }
-
-        return $user->hasRole(['admin', 'super_admin']);
+        return static::can('update', $record);
     }
 
     /**
      * Permitir deletar credenciais
+     * Delega para a CredentialPolicy
      */
     public static function canDelete($record): bool
     {
-        $user = auth()->user();
-
-        if (! $user) {
-            return false;
-        }
-
-        return $user->hasRole(['admin', 'super_admin']);
+        return static::can('delete', $record);
     }
 
     /**
      * Verificar se o usuário pode visualizar registros
+     * Delega para a CredentialPolicy
      */
     public static function canView($record): bool
     {
-        $user = auth()->user();
-
-        if (! $user) {
-            return false;
-        }
-
-        // Todos os roles autorizados podem visualizar
-        return $user->hasRole(['admin', 'super_admin', 'consulta']);
+        return static::can('view', $record);
     }
 }
