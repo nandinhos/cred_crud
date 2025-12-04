@@ -1460,3 +1460,112 @@ get_class($c->secrecy); // Retorna: "App\Enums\CredentialSecrecy"
 - Arquivo: `app/Enums/CredentialSecrecy.php`
 - Issue: Correção de testes após refatoração do sistema de credenciais
 
+
+## 🔒 Sistema de Permissões: Testes Desalinhados e Resources Ignorando Policies
+
+**Data**: 2025-01-20  
+**Contexto**: Laravel 12 + Filament 4 + Spatie Permission
+
+### ❌ PROBLEMA: Testes falhando e CredentialResource ignorando Policies
+
+#### 🔴 Sintomas
+1. **10 testes falhando** em `UserPolicyTest.php`
+   - Erro: "There is no permission named `Visualizar Usuários` for guard `web`"
+2. **CredentialResource** usando `hasRole()` diretamente
+   - Ignora completamente a `CredentialPolicy`
+   - Duplicação de lógica de autorização
+3. **Inconsistência** entre testes e produção
+   - Testes: Permissões em inglês (`view_users`, `create_users`)
+   - Produção: Permissões em português (`Visualizar Usuários`, `Criar Usuários`)
+
+#### 🔍 Diagnóstico
+
+**1. Problema nos Testes**:
+```php
+// ❌ ERRADO - UserPolicyTest.php (antes)
+Permission::create(['name' => 'view_users', 'guard_name' => 'web']);
+$user->givePermissionTo('view_users'); // Permissão não existe no sistema real
+
+// ✅ CORRETO - UserPolicyTest.php (depois)
+Permission::create(['name' => 'Visualizar Usuários', 'guard_name' => 'web']);
+$user->givePermissionTo('Visualizar Usuários'); // Alinhado com produção
+```
+
+**2. Problema no CredentialResource**:
+```php
+// ❌ ERRADO - Ignora Policy
+public static function canAccess(): bool
+{
+    $user = auth()->user();
+    return $user->hasRole(['admin', 'super_admin']); // Lógica duplicada
+}
+
+// ✅ CORRETO - Usa Policy
+public static function canAccess(): bool
+{
+    return static::can('viewAny'); // Delega para CredentialPolicy
+}
+```
+
+**3. Setup Incompleto em Testes**:
+```php
+// ❌ ERRADO - RoleAuthorizationTest.php (antes)
+beforeEach(function () {
+    Role::firstOrCreate(['name' => 'admin']); // Sem permissões
+});
+
+// ✅ CORRETO - RoleAuthorizationTest.php (depois)
+beforeEach(function () {
+    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    
+    // Criar permissões
+    $permissions = ['Visualizar Credenciais', 'Criar Credenciais', ...];
+    foreach ($permissions as $permission) {
+        Permission::firstOrCreate(['name' => $permission]);
+    }
+    
+    // Atribuir permissões às roles
+    $admin = Role::firstOrCreate(['name' => 'admin']);
+    $admin->syncPermissions(['Visualizar Credenciais', 'Criar Credenciais']);
+});
+```
+
+#### ✅ SOLUÇÃO
+
+**1. Alinhar Testes com Produção**:
+- Usar **nomes de permissões em português** em todos os testes
+- Criar **setup completo** no `beforeEach` de cada teste
+
+**2. Refatorar Resources para Usar Policies**:
+```php
+// CredentialResource.php - DEPOIS
+public static function canAccess(): bool
+{
+    return static::can('viewAny');
+}
+
+public static function canCreate(): bool
+{
+    return static::can('create');
+}
+```
+
+**3. Arquivos Modificados**:
+- `tests/Feature/UserPolicyTest.php`
+- `tests/Feature/RoleAuthorizationTest.php`
+- `tests/Feature/Filament/UserResourceTest.php`
+- `app/Filament/Resources/Credentials/CredentialResource.php`
+
+### 📊 RESULTADO:
+✅ **62 testes passando** (121 assertions)
+✅ Sistema de permissões **consistente** e **totalmente testado**
+✅ Resources delegando corretamente para Policies
+
+### 🎓 LIÇÕES APRENDIDAS
+
+1. **Sempre alinhar testes com produção**: Testes devem usar os mesmos nomes de permissões
+2. **Setup de testes deve ser completo**: Criar todas as permissões no `beforeEach`
+3. **Policies são a fonte única de verdade**: Resources devem delegar usando `static::can()`
+4. **Cache de permissões**: Sempre limpar com `forgetCachedPermissions()` nos testes
+
+---
