@@ -16,4 +16,13 @@ class EditUser extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    /**
+     * Redirecionar para a listagem após editar o usuário
+     * Melhora a experiência do usuário ao confirmar visualmente que a ação foi realizada
+     */
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

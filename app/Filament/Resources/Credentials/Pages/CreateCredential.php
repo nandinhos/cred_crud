@@ -12,4 +12,13 @@ class CreateCredential extends CreateRecord
     protected ?string $heading = 'Criar Credencial';
 
     protected ?string $subheading = 'Cadastre uma nova credencial de segurança';
+
+    /**
+     * Redirecionar para a listagem após criar a credencial
+     * Melhora a experiência do usuário ao confirmar visualmente que a ação foi realizada
+     */
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

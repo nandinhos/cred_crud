@@ -24,4 +24,13 @@ class EditCredential extends EditRecord
             RestoreAction::make(),
         ];
     }
+
+    /**
+     * Redirecionar para a listagem após editar a credencial
+     * Melhora a experiência do usuário ao confirmar visualmente que a ação foi realizada
+     */
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
