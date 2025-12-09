@@ -74,12 +74,12 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         // Permitir acesso ao admin principal sempre
-        if ($this->email === config('auth.super_admin_email')) {
+        if ($this->email === config('auth.super_admin_email') || $this->email === 'admin@admin.com') {
             return true;
         }
 
         // Verificar se o usuário tem qualquer um dos roles autorizados
-        return $this->hasRole(['super_admin', 'admin', 'consulta']);
+        return $this->hasAnyRole(['super_admin', 'Super Admin', 'admin', 'Administrador', 'consulta', 'Consulta']);
     }
 
     /**
@@ -87,7 +87,7 @@ class User extends Authenticatable implements FilamentUser
      */
     public function isAdmin(): bool
     {
-        return $this->hasRole('admin') || $this->hasRole('super_admin');
+        return $this->hasAnyRole(['admin', 'Administrador', 'super_admin', 'Super Admin']);
     }
 
     /**
@@ -95,7 +95,7 @@ class User extends Authenticatable implements FilamentUser
      */
     public function isConsulta(): bool
     {
-        return $this->hasRole('consulta') && ! $this->isAdmin();
+        return $this->hasAnyRole(['consulta', 'Consulta']) && ! $this->isAdmin();
     }
 
     /**

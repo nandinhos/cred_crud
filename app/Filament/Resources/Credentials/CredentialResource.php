@@ -61,14 +61,11 @@ class CredentialResource extends Resource
     }
 
     /**
-     * Ocultar do menu sidebar para perfil consulta
-     * Usa a policy para determinar se o usuário pode acessar
+     * Mostrar menu para quem pode visualizar credenciais
      */
     public static function shouldRegisterNavigation(): bool
     {
-        // Apenas mostra no menu se o usuário pode criar ou editar credenciais
-        // Usuários 'consulta' não veem no menu, mas podem acessar via URL
-        return static::canCreate() || static::can('create');
+        return static::canAccess();
     }
 
     /**

@@ -211,9 +211,16 @@ class UserResource extends Resource
                     ->tooltip('Editar')
                     ->url(fn ($record): string => Pages\EditUser::getUrl(['record' => $record]))
                     ->icon('heroicon-m-pencil-square'),
-                DeleteAction::make()
+                Action::make('delete')
                     ->label('')
-                    ->tooltip('Excluir'),
+                    ->tooltip('Excluir')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Excluir Usuário')
+                    ->modalDescription('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')
+                    ->modalSubmitActionLabel('Sim, excluir')
+                    ->action(fn ($record) => $record->delete()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -241,7 +248,8 @@ class UserResource extends Resource
     }
 
     /**
-     * Ocultar do menu sidebar para perfil consulta
+     * Ocultar do menu sidebar - APENAS super admin pode ver
+     * Regra: admin NÃO tem acesso à tela de usuários
      */
     public static function shouldRegisterNavigation(): bool
     {
@@ -251,12 +259,13 @@ class UserResource extends Resource
             return false;
         }
 
-        // Apenas admin e super_admin veem no menu
-        return $user->hasRole(['admin', 'super_admin']);
+        // APENAS super admin pode ver menu de usuários
+        return $user->hasAnyRole(['super_admin', 'Super Admin']);
     }
 
     /**
-     * Bloquear acesso direto via URL para perfil consulta
+     * Bloquear acesso direto via URL
+     * APENAS super admin pode acessar
      */
     public static function canAccess(): bool
     {
@@ -266,12 +275,11 @@ class UserResource extends Resource
             return false;
         }
 
-        // Apenas admin e super_admin podem acessar
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->hasAnyRole(['super_admin', 'Super Admin']);
     }
 
     /**
-     * Permitir criar usuários
+     * Permitir criar usuários - APENAS super admin
      */
     public static function canCreate(): bool
     {
@@ -281,11 +289,11 @@ class UserResource extends Resource
             return false;
         }
 
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->hasAnyRole(['super_admin', 'Super Admin']);
     }
 
     /**
-     * Permitir editar usuários
+     * Permitir editar usuários - APENAS super admin
      */
     public static function canEdit($record): bool
     {
@@ -295,11 +303,11 @@ class UserResource extends Resource
             return false;
         }
 
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->hasAnyRole(['super_admin', 'Super Admin']);
     }
 
     /**
-     * Permitir deletar usuários
+     * Permitir deletar usuários - APENAS super admin
      */
     public static function canDelete($record): bool
     {
@@ -309,7 +317,7 @@ class UserResource extends Resource
             return false;
         }
 
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->hasAnyRole(['super_admin', 'Super Admin']);
     }
 
     public static function canView($record): bool
@@ -320,6 +328,6 @@ class UserResource extends Resource
             return false;
         }
 
-        return $user->hasRole(['admin', 'super_admin', 'consulta']);
+        return $user->hasAnyRole(['admin', 'super_admin', 'Super Admin', 'Administrador', 'consulta', 'Consulta']);
     }
 }

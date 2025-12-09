@@ -2285,3 +2285,56 @@ protected function getRedirectUrl(): string
 - **Satisfação do usuário:** Significativamente melhorada
 
 ---
+
+
+---
+
+## 📅 Data: 09/12/2025
+
+### ❌ ERRO: "Permission denied" ao escrever em storage/logs e storage/framework/cache
+
+**🔧 Contexto:** Após sincronizar repositório e reiniciar containers Docker, a aplicação retornava erro 500 com mensagem "Failed to open stream: Permission denied" para arquivos de log e cache.
+
+**🚨 Problema identificado:**
+- Arquivos dentro de `storage/` tinham ownership incorreto (root ou www-data ao invés de sail)
+- Permissões muito restritivas (644 ao invés de 664/775)
+- Após reiniciar containers, as permissões definidas anteriormente eram perdidas
+
+**💡 Solução aplicada:**
+
+```bash
+# Corrigir permissões dentro do container Docker
+docker-compose exec laravel.test bash -c "
+    # Definir proprietário correto (sail:sail é o usuário do Sail)
+    chown -R sail:sail storage bootstrap/cache
+    
+    # Permissões corretas para diretórios (775 = rwxrwxr-x)
+    find storage -type d -exec chmod 775 {} \;
+    find bootstrap/cache -type d -exec chmod 775 {} \;
+    
+    # Permissões corretas para arquivos (664 = rw-rw-r--)
+    find storage -type f -exec chmod 664 {} \;
+    find bootstrap/cache -type f -exec chmod 664 {} \;
+"
+```
+
+**✅ Validação:**
+- Aplicação retorna HTTP 200 após correção
+- Cache e logs funcionam corretamente
+- Script `fix-permissions.sh` criado para uso futuro
+
+**📚 Lição aprendida:**
+- **NÃO usar chmod 777** - é inseguro e má prática
+- Usar `775` para diretórios (rwxrwxr-x) e `664` para arquivos (rw-rw-r--)
+- O usuário correto em Laravel Sail é `sail:sail`
+- Sempre corrigir permissões DENTRO do container, não no host
+
+**🔄 Ações preventivas:**
+- Usar script `./fix-permissions.sh` após sincronizar repositório
+- Adicionar comando de permissões no `post-install` do composer.json
+- Documentar em `.taskmaster/docs/useful-commands.md`
+
+**Tags:** #docker #sail #permissions #storage #laravel
+
+---
+

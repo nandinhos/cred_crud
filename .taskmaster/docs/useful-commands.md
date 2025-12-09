@@ -82,7 +82,19 @@ php artisan tinker --execute="\$user = \\App\\Models\\User::where('email', 'admi
 
 ### Problemas de Permissão Docker
 ```bash
-# Corrigir permissões de arquivos
+# Opção 1: Usar o script de correção de permissões
+./fix-permissions.sh
+
+# Opção 2: Corrigir manualmente dentro do container
+docker-compose exec laravel.test bash -c "
+    chown -R sail:sail storage bootstrap/cache
+    find storage -type d -exec chmod 775 {} \;
+    find storage -type f -exec chmod 664 {} \;
+    find bootstrap/cache -type d -exec chmod 775 {} \;
+    find bootstrap/cache -type f -exec chmod 664 {} \;
+"
+
+# Opção 3: Corrigir permissões no host (fora do container)
 sudo chown -R $USER:$USER .
 sudo chmod -R 755 storage bootstrap/cache
 
