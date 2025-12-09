@@ -13,10 +13,10 @@ class CredentialPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasAnyPermission([
-            'view_credential', 
-            'view_any_credential', 
+            'view_credential',
+            'view_any_credential',
             'view_credentials',
-            'Visualizar Credenciais'
+            'Visualizar Credenciais',
         ]);
     }
 
@@ -26,9 +26,9 @@ class CredentialPolicy
     public function view(User $user, Credential $credential): bool
     {
         return $user->hasAnyPermission([
-            'view_credential', 
+            'view_credential',
             'view_credentials',
-            'Visualizar Credenciais'
+            'Visualizar Credenciais',
         ]);
     }
 
@@ -38,9 +38,9 @@ class CredentialPolicy
     public function create(User $user): bool
     {
         return $user->hasAnyPermission([
-            'create_credential', 
+            'create_credential',
             'create_credentials',
-            'Criar Credenciais'
+            'Criar Credenciais',
         ]);
     }
 
@@ -50,9 +50,9 @@ class CredentialPolicy
     public function update(User $user, Credential $credential): bool
     {
         return $user->hasAnyPermission([
-            'update_credential', 
+            'update_credential',
             'edit_credentials',
-            'Editar Credenciais'
+            'Editar Credenciais',
         ]);
     }
 
@@ -62,9 +62,9 @@ class CredentialPolicy
     public function delete(User $user, Credential $credential): bool
     {
         return $user->hasAnyPermission([
-            'delete_credential', 
+            'delete_credential',
             'delete_credentials',
-            'Excluir Credenciais'
+            'Excluir Credenciais',
         ]);
     }
 
@@ -75,9 +75,9 @@ class CredentialPolicy
     {
         return $user->hasAnyPermission([
             'restore_credential',
-            'update_credential', 
+            'update_credential',
             'edit_credentials',
-            'Editar Credenciais'
+            'Editar Credenciais',
         ]);
     }
 
@@ -88,9 +88,9 @@ class CredentialPolicy
     {
         return $user->hasAnyPermission([
             'force_delete_credential',
-            'delete_credential', 
+            'delete_credential',
             'delete_credentials',
-            'Excluir Credenciais'
+            'Excluir Credenciais',
         ]) && $user->hasAnyRole(['super_admin', 'Super Admin']);
     }
 }

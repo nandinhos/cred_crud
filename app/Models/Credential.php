@@ -44,19 +44,19 @@ class Credential extends Model
 
                 if ($existingCredential) {
                     $status = $existingCredential->status;
-                    
+
                     // Se a credencial existente está vencida, permitir e deletar a antiga
                     if ($status === 'Vencida') {
                         // Será deletada no evento 'created'
                         return;
                     }
-                    
+
                     // Se credencial está ATIVA, EM PROCESSAMENTO ou PANE - bloquear
                     if (in_array($status, ['Ativa', 'Em Processamento', 'Pane - Verificar', 'Pendente'])) {
                         throw new \Exception(
-                            "Este usuário já possui uma credencial com status '{$status}'. " .
-                            "Não é possível criar uma nova credencial enquanto houver uma ativa, em processamento ou com pane. " .
-                            "Delete ou resolva a situação da credencial atual primeiro."
+                            "Este usuário já possui uma credencial com status '{$status}'. ".
+                            'Não é possível criar uma nova credencial enquanto houver uma ativa, em processamento ou com pane. '.
+                            'Delete ou resolva a situação da credencial atual primeiro.'
                         );
                     }
                 }
@@ -91,10 +91,10 @@ class Credential extends Model
 
                 if ($existingCredential) {
                     $status = $existingCredential->status;
-                    
+
                     throw new \Exception(
-                        "Este usuário já possui uma credencial com status '{$status}'. " .
-                        "Não é possível restaurar. Delete a credencial ativa primeiro."
+                        "Este usuário já possui uma credencial com status '{$status}'. ".
+                        'Não é possível restaurar. Delete a credencial ativa primeiro.'
                     );
                 }
             }

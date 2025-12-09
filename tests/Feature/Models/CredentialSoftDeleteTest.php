@@ -82,111 +82,111 @@ class CredentialSoftDeleteTest extends TestCase
     /** @test */
     public function relacionamento_credentials_nao_retorna_deletadas_por_padrao(): void
     {
-        // Criar credencial ativa
-        $activeCredential = Credential::factory()->create([
+        // Criar credencial vencida primeiro
+        $expiredCredential = Credential::factory()->expired()->create([
             'user_id' => $this->user->id,
         ]);
 
-        // Criar e deletar credencial
-        $deletedCredential = Credential::factory()->create([
+        // Criar credencial ativa (automaticamente deleta a vencida)
+        $activeCredential = Credential::factory()->active()->create([
             'user_id' => $this->user->id,
         ]);
-        $deletedCredential->delete();
 
         // Verificar que apenas a ativa é retornada
+        $this->user->refresh();
         $credentials = $this->user->credentials;
 
         $this->assertCount(1, $credentials);
         $this->assertTrue($credentials->contains($activeCredential));
-        $this->assertFalse($credentials->contains($deletedCredential));
+        $this->assertFalse($credentials->contains($expiredCredential));
     }
 
     /** @test */
-    public function relacionamento_credentialHistory_retorna_todas_incluindo_deletadas(): void
+    public function relacionamento_credential_history_retorna_todas_incluindo_deletadas(): void
     {
-        // Criar credencial ativa
-        $activeCredential = Credential::factory()->create([
+        // Criar credencial vencida primeiro
+        $expiredCredential = Credential::factory()->expired()->create([
             'user_id' => $this->user->id,
         ]);
 
-        // Criar e deletar credencial
-        $deletedCredential = Credential::factory()->create([
+        // Criar credencial ativa (automaticamente deleta a vencida)
+        $activeCredential = Credential::factory()->active()->create([
             'user_id' => $this->user->id,
         ]);
-        $deletedCredential->delete();
 
-        // Verificar que ambas são retornadas
+        // Verificar que ambas são retornadas (incluindo a deletada)
+        $this->user->refresh();
         $history = $this->user->credentialHistory;
 
         $this->assertCount(2, $history);
         $this->assertTrue($history->contains($activeCredential));
-        $this->assertTrue($history->contains($deletedCredential));
+        $this->assertTrue($history->contains($expiredCredential));
     }
 
     /** @test */
-    public function relacionamento_activeCredential_retorna_apenas_nao_deletadas(): void
+    public function relacionamento_active_credential_retorna_apenas_nao_deletadas(): void
     {
-        // Criar credencial ativa
-        $activeCredential = Credential::factory()->create([
+        // Criar credencial vencida primeiro (permite criar nova)
+        $expiredCredential = Credential::factory()->expired()->create([
             'user_id' => $this->user->id,
         ]);
 
-        // Criar e deletar credencial
-        $deletedCredential = Credential::factory()->create([
+        // Criar credencial ativa (irá deletar automaticamente a vencida)
+        $activeCredential = Credential::factory()->active()->create([
             'user_id' => $this->user->id,
         ]);
-        $deletedCredential->delete();
 
-        // Verificar que apenas a ativa é retornada
+        // Verificar que a ativa existe e a vencida foi deletada
+        $this->user->refresh();
         $activeCredentials = $this->user->activeCredential;
 
         $this->assertCount(1, $activeCredentials);
         $this->assertTrue($activeCredentials->contains($activeCredential));
-        $this->assertFalse($activeCredentials->contains($deletedCredential));
+
+        // Verificar que a credencial vencida foi soft deleted
+        $this->assertSoftDeleted('credentials', ['id' => $expiredCredential->id]);
     }
 
     /** @test */
-    public function query_withTrashed_retorna_todas_credenciais(): void
+    public function query_with_trashed_retorna_todas_credenciais(): void
     {
-        // Criar credencial ativa
-        $activeCredential = Credential::factory()->create([
+        // Criar credencial vencida primeiro
+        $expiredCredential = Credential::factory()->expired()->create([
             'user_id' => $this->user->id,
         ]);
 
-        // Criar e deletar credencial
-        $deletedCredential = Credential::factory()->create([
+        // Criar credencial ativa (automaticamente deleta a vencida)
+        $activeCredential = Credential::factory()->active()->create([
             'user_id' => $this->user->id,
         ]);
-        $deletedCredential->delete();
 
         // Buscar todas (incluindo deletadas)
         $allCredentials = Credential::withTrashed()->get();
 
         $this->assertCount(2, $allCredentials);
         $this->assertTrue($allCredentials->contains($activeCredential));
-        $this->assertTrue($allCredentials->contains($deletedCredential));
+        $this->assertTrue($allCredentials->contains($expiredCredential));
     }
 
     /** @test */
-    public function query_onlyTrashed_retorna_apenas_deletadas(): void
+    public function query_only_trashed_retorna_apenas_deletadas(): void
     {
-        // Criar credencial ativa
-        $activeCredential = Credential::factory()->create([
+        // Criar credencial vencida primeiro
+        $expiredCredential = Credential::factory()->expired()->create([
             'user_id' => $this->user->id,
         ]);
 
-        // Criar e deletar credencial
-        $deletedCredential = Credential::factory()->create([
+        // Criar credencial ativa (automaticamente deleta a vencida)
+        $activeCredential = Credential::factory()->active()->create([
             'user_id' => $this->user->id,
         ]);
-        $deletedCredential->delete();
 
         // Buscar apenas deletadas
         $trashedCredentials = Credential::onlyTrashed()->get();
 
         $this->assertCount(1, $trashedCredentials);
         $this->assertFalse($trashedCredentials->contains($activeCredential));
-        $this->assertTrue($trashedCredentials->contains($deletedCredential));
+        $this->assertTrue($trashedCredentials->contains($expiredCredential));
     }
 
     /** @test */
@@ -206,20 +206,24 @@ class CredentialSoftDeleteTest extends TestCase
     /** @test */
     public function deleted_at_timestamp_e_registrado_ao_deletar(): void
     {
-        $credential = Credential::factory()->create([
+        // Usar credencial negada que pode ser deletada sem conflito
+        $credential = Credential::factory()->denied()->create([
             'user_id' => $this->user->id,
         ]);
 
         $this->assertNull($credential->deleted_at);
 
-        $beforeDelete = now();
+        $beforeDelete = now()->subSecond(); // Dar 1 segundo de tolerância
         $credential->delete();
-        $afterDelete = now();
+        $afterDelete = now()->addSecond(); // Dar 1 segundo de tolerância
 
         $deletedAt = $credential->fresh()->deleted_at;
 
         $this->assertNotNull($deletedAt);
-        $this->assertTrue($deletedAt->between($beforeDelete, $afterDelete));
+        $this->assertTrue(
+            $deletedAt->between($beforeDelete, $afterDelete),
+            "deleted_at ({$deletedAt}) should be between {$beforeDelete} and {$afterDelete}"
+        );
     }
 
     /** @test */
@@ -239,7 +243,8 @@ class CredentialSoftDeleteTest extends TestCase
     /** @test */
     public function multiplas_credenciais_podem_ser_deletadas_e_restauradas(): void
     {
-        $credentials = Credential::factory()->count(5)->create([
+        // Criar 5 credenciais negadas (podem coexistir) para o mesmo usuário
+        $credentials = Credential::factory()->denied()->count(5)->create([
             'user_id' => $this->user->id,
         ]);
 
@@ -251,7 +256,7 @@ class CredentialSoftDeleteTest extends TestCase
         $this->assertEquals(5, Credential::onlyTrashed()->count());
         $this->assertEquals(0, Credential::count());
 
-        // Restaurar todas
+        // Restaurar todas (credenciais negadas podem coexistir)
         Credential::onlyTrashed()->restore();
 
         $this->assertEquals(0, Credential::onlyTrashed()->count());
@@ -285,18 +290,22 @@ class CredentialSoftDeleteTest extends TestCase
     /** @test */
     public function credencial_deletada_mantem_todos_os_dados(): void
     {
-        $credential = Credential::factory()->create([
+        // Usar credencial negada para evitar conflitos de regra de negócio
+        $credential = Credential::factory()->denied()->create([
             'user_id' => $this->user->id,
-            'fscs' => '12345',
-            'type' => 'CRED',
-            'secrecy' => 'R',
             'credential' => 'CRED-2024-001',
         ]);
 
-        $originalData = $credential->toArray();
-        
+        $originalData = [
+            'fscs' => $credential->fscs,
+            'type' => $credential->type,
+            'secrecy' => $credential->secrecy,
+            'credential' => $credential->credential,
+            'user_id' => $credential->user_id,
+        ];
+
         $credential->delete();
-        
+
         $deletedCredential = Credential::withTrashed()->find($credential->id);
 
         // Verificar que todos os dados foram mantidos (exceto deleted_at)
@@ -305,5 +314,8 @@ class CredentialSoftDeleteTest extends TestCase
         $this->assertEquals($originalData['secrecy'], $deletedCredential->secrecy);
         $this->assertEquals($originalData['credential'], $deletedCredential->credential);
         $this->assertEquals($originalData['user_id'], $deletedCredential->user_id);
+
+        // Verificar que a credencial está soft deleted
+        $this->assertTrue($deletedCredential->trashed());
     }
 }

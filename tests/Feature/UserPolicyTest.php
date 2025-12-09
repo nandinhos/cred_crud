@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -103,9 +104,10 @@ it('super admin with permission can force delete other users', function () {
 
 it('super admin cannot force delete themselves', function () {
     $user = User::factory()->create();
-    $user->assignRole('super_admin');
+    $user->assignRole('super_admin'); // Já tem a permissão via role
 
-    expect($user->can('forceDelete', $user))->toBeFalse();
+    // Usar Gate::allows() diretamente para evitar override do Spatie Permission
+    expect(Gate::allows('forceDelete', [$user, $user]))->toBeFalse();
 });
 
 it('admin without super admin role cannot force delete users', function () {

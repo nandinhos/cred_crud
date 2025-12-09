@@ -42,14 +42,14 @@ class CredentialsRelationManager extends RelationManager
     {
         // Usar o formulário padrão, mas ocultar o campo de usuário
         $form = CredentialForm::configure($schema);
-        
+
         // Encontrar e modificar o campo user_id para ser hidden
         $components = $form->getComponents();
-        
+
         foreach ($components as $component) {
             if (method_exists($component, 'getChildComponents')) {
                 $childComponents = $component->getChildComponents();
-                
+
                 foreach ($childComponents as $key => $child) {
                     if (method_exists($child, 'getName') && $child->getName() === 'user_id') {
                         // Substituir o Select por um Hidden com valor fixo
@@ -57,12 +57,12 @@ class CredentialsRelationManager extends RelationManager
                             ->default(fn () => $this->getOwnerRecord()->id);
                     }
                 }
-                
+
                 // Atualizar os componentes filhos
                 $component->schema($childComponents);
             }
         }
-        
+
         return $form;
     }
 
@@ -156,7 +156,7 @@ class CredentialsRelationManager extends RelationManager
                             ->markdown()
                             ->columnSpanFull(),
                     ])
-                    ->visible(fn ($record) => !empty($record->observation))
+                    ->visible(fn ($record) => ! empty($record->observation))
                     ->collapsible(),
 
                 Section::make('Informações do Usuário')

@@ -38,13 +38,6 @@ class CredentialFactory extends Factory
         ];
     }
 
-    public function expired(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'validity' => now()->subDays(rand(1, 365)),
-        ]);
-    }
-
     public function expiringSoon(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -80,18 +73,6 @@ class CredentialFactory extends Factory
         ]);
     }
 
-    public function denied(): static
-    {
-        return $this->state(function (array $attributes) {
-            static $counter = 0;
-            $counter++;
-
-            return [
-                'fscs' => $counter === 1 ? '00000' : '00000-'.$counter,
-            ];
-        });
-    }
-
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -107,5 +88,35 @@ class CredentialFactory extends Factory
             'type' => CredentialType::CRED,
             'concession' => now()->subMonths(6),
         ]);
+    }
+
+    /**
+     * Credencial vencida - pode ser substituída por nova
+     */
+    public function expired(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => CredentialType::CRED,
+            'concession' => now()->subYears(3),
+            'validity' => now()->subDays(30),
+        ]);
+    }
+
+    /**
+     * Credencial negada - pode ter múltiplas por usuário
+     */
+    public function denied(): static
+    {
+        return $this->state(function (array $attributes) {
+            static $counter = 0;
+            $counter++;
+
+            return [
+                'fscs' => '00000',
+                'type' => CredentialType::CRED,
+                'concession' => null,
+                'validity' => null,
+            ];
+        });
     }
 }

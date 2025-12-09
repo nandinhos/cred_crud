@@ -64,11 +64,16 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model): bool
     {
-        // Super Admin ou usuário com permissão específica, mas nunca a si mesmo
+        // NUNCA pode deletar a si mesmo - retorno explícito
         if ($user->id === $model->id) {
             return false;
         }
 
-        return $user->hasPermissionTo('Excluir Usuários') && $user->hasRole('super_admin');
+        // Apenas super admins com permissão específica
+        if (! $user->hasRole('super_admin')) {
+            return false;
+        }
+
+        return $user->hasPermissionTo('Excluir Usuários');
     }
 }
