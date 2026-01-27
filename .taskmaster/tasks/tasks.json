@@ -1403,12 +1403,26 @@
         "priority": "medium",
         "subtasks": [],
         "updatedAt": "2025-11-22T19:49:43.732Z"
+      },
+      {
+        "id": "16",
+        "title": "Instalação da Ferramenta jq no Ambiente Docker (Sail)",
+        "description": "Configurar a instalação persistente do utilitário jq no container de aplicação do Laravel Sail via apt-get para manipulação de JSON no terminal.",
+        "details": "A instalação da ferramenta `jq` deve ser feita no nível da imagem Docker para garantir que ela persista entre recriações de containers. Como o projeto utiliza Laravel Sail (evidenciado pelo uso de `vendor/bin/sail` nas tarefas anteriores), o procedimento envolve editar o Dockerfile.\n\n1. **Identificar/Publicar Dockerfile**:\n   - Verifique se a pasta `./docker` existe na raiz. Caso contrário, publique os assets do Sail:\n   ```bash\n   vendor/bin/sail artisan sail:publish\n   ```\n\n2. **Editar o Dockerfile**:\n   - Abra o arquivo `Dockerfile` correspondente à versão do PHP utilizada no projeto (geralmente localizado em `./docker/8.x/Dockerfile`).\n   - Localize o comando `RUN apt-get update && apt-get install -y...`.\n   - Adicione `jq` à lista de pacotes instalados pelo `apt-get`. Garanta que ele esteja na mesma linha ou concatenado corretamente com `\\`.\n\n3. **Reconstruir o Ambiente**:\n   - Para efetivar a instalação, reconstrua a imagem do container:\n   ```bash\n   vendor/bin/sail build --no-cache\n   vendor/bin/sail up -d\n   ```",
+        "testStrategy": "1. **Verificação de Instalação**:\n   - Acesse o terminal do container: `vendor/bin/sail shell` ou `vendor/bin/sail exec laravel bash`.\n   - Execute o comando: `jq --version`. Deve retornar a versão instalada (ex: `jq-1.6`).\n\n2. **Teste Funcional de Parseamento**:\n   - Execute um teste rápido de processamento JSON no terminal do container:\n   ```bash\n   echo '{\"teste\": \"sucesso\"}' | jq .teste\n   ```\n   - O resultado no terminal deve ser `\"sucesso\"`.",
+        "status": "in-progress",
+        "dependencies": [
+          "4"
+        ],
+        "priority": "medium",
+        "subtasks": [],
+        "updatedAt": "2026-01-27T19:40:33.694Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-23T20:53:45.678Z",
-      "taskCount": 15,
+      "lastModified": "2026-01-27T19:40:33.695Z",
+      "taskCount": 16,
       "completedCount": 13,
       "tags": [
         "master"
