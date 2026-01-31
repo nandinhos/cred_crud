@@ -44,3 +44,7 @@ node_modules/
 # tasks/ 
 backup_*.sql
 /storage/metrics/*.json
+
+# AI Dev State (dynamic session data)
+.aidev/state/
+.env

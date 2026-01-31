@@ -1,0 +1,27 @@
+{
+  "platform": "antigravity",
+  "project": "
+❌ Ops! O comando falhou (Erro: 1 na linha 289)
+🔍 Sugestão: Tente rodar 'aidev doctor --fix' para resolver problemas de ambiente.",
+  "stack": "filament",
+  "mcpServers": {
+    "serena": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"],
+      "description": "Analise semantica de codigo"
+    },
+    "basic-memory": {
+      "command": "uvx",
+      "args": ["basic-memory", "mcp"],
+      "description": "Memoria persistente"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "env": {
+        "CONTEXT7_API_KEY": ""
+      },
+      "description": "Documentacao de bibliotecas"
+    }
+  }
+}

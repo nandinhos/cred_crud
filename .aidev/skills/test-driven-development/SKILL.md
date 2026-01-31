@@ -1,0 +1,104 @@
+---
+name: test-driven-development
+description: Enforces RED-GREEN-REFACTOR cycle - deletes code without tests
+triggers:
+  - "implementar"
+  - "código"
+  - "desenvolver"
+globs:
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "tests/**"
+---
+
+## Safe-Guard & Backup (PROTEÇÃO DE DADOS)
+
+> [!IMPORTANT]
+> **SEGURANÇA EM PRIMEIRO LUGAR**: Antes de qualquer operação de deleção ou refatoração profunda, você DEVE garantir a integridade dos dados.
+
+1. **Snapshots Obrigatórios**: Use o comando `aidev snapshot` antes de mudanças estruturais.
+2. **Double-Check de Deleção**: Se o ciclo RED-GREEN-REFACTOR exigir a deleção de código sem teste, você deve:
+   - Listar exatamente o que será deletado.
+   - Confirmar se não há arquivos vitais do projeto ou de outros projetos no caminho.
+3. **Isolamento**: Nunca execute comandos de deleção (`rm -rf`) em caminhos genéricos ou raízes de projetos sem verificação tripla.
+
+## THE CYCLE (RED-GREEN-REFACTOR)
+
+### RED Phase
+1. Write a failing test.
+2. Test MUST fail for the right reason.
+3. Verify the failure message.
+
+### GREEN Phase
+1. Write MINIMAL code to pass.
+2. No extra features.
+
+### REFACTOR Phase
+1. Improve code quality.
+2. **Snapshot Before Refactor**: Execute `aidev snapshot` if the change is high-risk.
+3. All tests MUST pass.
+
+## CRITICAL RULES
+- **Code without tests = Technical Debt**.
+- **Accidental Deletion = Critical Failure**. Se houver risco de deleção acidental, PARE e peça confirmação humana.
+
+## Testing Anti-Patterns to Avoid
+
+### 1. Test After Implementation
+❌ Write code → Write test
+✅ Write test → Write code
+
+### 2. Testing Implementation Details
+❌ `expect(spy.toHaveBeenCalledWith(...))`
+✅ `expect(result).toBe(...)`
+
+### 3. Tests That Always Pass
+❌ No assertions
+❌ Catching all exceptions
+✅ Specific assertions that can fail
+
+### 4. Flaky Tests
+❌ Depend on timing
+❌ Depend on external state
+✅ Isolated, deterministic
+
+### 5. Testing the Framework
+❌ Testing that React renders
+✅ Testing YOUR component logic
+
+## Test Structure
+```javascript
+describe('Feature', () => {
+  // Setup
+  beforeEach(() => {
+    // Arrange
+  });
+
+  it('should do X when Y', () => {
+    // Arrange
+    const input = ...;
+    
+    // Act
+    const result = feature(input);
+    
+    // Assert
+    expect(result).toBe(expected);
+  });
+
+  // Teardown
+  afterEach(() => {
+    // Cleanup
+  });
+});
+```
+
+## Coverage Goals
+- Unit tests: 80%+ coverage
+- Integration tests: Critical paths
+- E2E tests: Happy paths + error cases
+
+## Tools by Stack
+- **JavaScript**: Jest, Vitest, Testing Library
+- **PHP**: PHPUnit, Pest
+- **Python**: pytest, unittest
+- **Go**: testing package

@@ -104,6 +104,19 @@ class NotifyExpiringCredentials extends Command
             $notificationCount++;
         }
 
+        // Log detalhado de segurança para cada credencial expirando
+        foreach ($expiringCredentials as $credential) {
+            $daysLeft = now()->diffInDays($credential->validity);
+            
+            Log::channel('security')->warning('Credencial expirando', [
+                'fscs' => $credential->fscs,
+                'name' => $credential->name,
+                'validity' => $credential->validity->format('Y-m-d'),
+                'days_left' => $daysLeft,
+                'user' => $credential->user?->name ?? 'N/A',
+            ]);
+        }
+
         $this->newLine();
         $this->info("✅ {$notificationCount} notificação(ões) enviada(s) com sucesso!");
 
