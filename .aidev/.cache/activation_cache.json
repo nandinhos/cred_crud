@@ -1,0 +1,13 @@
+{
+  "version": "3.5.0",
+  "generated_at": "2026-02-04T08:25:18-03:00",
+  "hash": "2d9a2c061ffa65cef9d43e7b3a31b82aa9f2801bf655c8cad5e20840b44108eb",
+  "project": "cred_crud",
+  "stack": "laravel",
+  "agents": ["architect", "backend", "devops", "frontend", "legacy-analyzer", "orchestrator", "qa", "security-guardian"],
+  "agent_roles": {"architect": "System design, architecture decisions, and high-level planning.", "backend": "Server-side implementation following TDD.", "devops": "Infrastructure, deployment, and operational concerns.", "frontend": "Client-side implementation with TDD where applicable.", "legacy-analyzer": "Specialized in analyzing and refactoring legacy codebases.", "orchestrator": "Meta-agent que coordena outros agentes e escolhe workflows apropriados. Sua função principal é garantir a continuidade do desenvolvimento através de múltiplas sessões e LLMs utilizando o ecossis", "qa": "Quality assurance through testing and validation.", "security-guardian": "Validates all changes for security implications."},
+  "skills": ["brainstorming", "learned-lesson", "systematic-debugging", "test-driven-development", "writing-plans"],
+  "rules": ["generic"],
+  "agents_count": 8,
+  "skills_count": 5
+}

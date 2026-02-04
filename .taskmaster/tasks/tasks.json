@@ -652,7 +652,7 @@
         "complexity": 6,
         "recommendedSubtasks": 8,
         "expansionPrompt": "Dividir em: (1) Configurar os canais de logging (daily, security, audit) em config/logging.php; (2) Criar e registrar um AuditMiddleware para log de ações do usuário; (3) Criar o comando Artisan 'CollectMetrics' para coletar e salvar métricas do sistema; (4) Criar o comando Artisan 'BackupDatabase' com funcionalidade de limpeza de backups antigos; (5) Criar o comando 'NotifyExpiringCredentials' para alertas; (6) Agendar todos os novos comandos no Console/Kernel; (7) Testar a execução individual e agendada de cada comando; (8) Documentar as novas rotinas de manutenção e monitoramento.",
-        "updatedAt": "2025-11-23T20:53:45.676Z",
+        "updatedAt": "2026-02-04T11:54:36.337Z",
         "subtasks": [
           {
             "id": 1,
@@ -708,9 +708,10 @@
               1
             ],
             "details": "Gerar o comando `NotifyExpiringCredentials`. Implementar a query que busca credenciais com a data de `validity` entre `now()` e `now()->addDays(30)`. Para cada credencial encontrada, registrar um `Log::channel('security')->warning(...)` com os detalhes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Criar no banco de dados algumas credenciais de teste que expiram em 5, 15 e 29 dias. Executar `php artisan credentials:notify-expiring` e verificar tanto o output no console quanto as entradas de log detalhadas no arquivo `storage/logs/security.log`.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-04T11:54:36.337Z"
           },
           {
             "id": 6,
@@ -749,6 +750,99 @@
             "details": "Descrever a finalidade de cada canal de log, a estrutura dos logs de auditoria e segurança. Explicar como executar manualmente os comandos (`db:backup`, `metrics:collect`) e como restaurar um backup. Listar a programação das tarefas configurada no Scheduler.",
             "status": "pending",
             "testStrategy": "Revisão por pares da documentação para garantir que ela seja clara, completa e útil para um novo desenvolvedor que se junte ao projeto ou para a equipe de operações responsável pela manutenção do sistema.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 9,
+            "title": "Configuração de Canais de Logging Estruturado",
+            "description": "Configurar os canais de log no arquivo de configuração para suportar logging de segurança e auditoria com políticas de retenção específicas.",
+            "dependencies": [],
+            "details": "Atualizar `config/logging.php` definindo três canais principais: 'daily' (padrão, 14 dias), 'security' (level warning, 90 dias) e 'audit' (level info, 365 dias). Garantir que os caminhos de armazenamento em `storage_path('logs/...')` estejam corretos.",
+            "status": "pending",
+            "testStrategy": "Verificar se as configurações retornam os valores corretos via `tinker`: `config('logging.channels.security')`. Garantir permissões de escrita na pasta storage.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 10,
+            "title": "Implementação e Registro do Middleware de Auditoria",
+            "description": "Criar middleware responsável por interceptar requisições HTTP e registrar ações dos usuários autenticados no canal de auditoria.",
+            "dependencies": [
+              9
+            ],
+            "details": "Criar `App\\Http\\Middleware\\AuditMiddleware`. No método `handle`, verificar se há usuário logado e registrar: user_id, email, método HTTP, URL e IP usando `Log::channel('audit')->info(...)`. Registrar o middleware no Kernel ou `app.php`.",
+            "status": "pending",
+            "testStrategy": "Realizar uma requisição autenticada e verificar se uma entrada foi criada em `storage/logs/audit.log` com os metadados corretos.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 11,
+            "title": "Criação do Comando de Coleta de Métricas (CollectMetrics)",
+            "description": "Desenvolver comando Artisan para agregar estatísticas do sistema (usuários, credenciais, tamanho do banco) e persistir em arquivo JSON.",
+            "dependencies": [],
+            "details": "Criar `App\\Console\\Commands\\CollectMetrics`. Coletar: total de credenciais, expiradas, usuários ativos no dia e tamanho do DB via query no `information_schema`. Salvar JSON em `storage/metrics/` com timestamp.",
+            "status": "pending",
+            "testStrategy": "Executar `php artisan metrics:collect` e validar se o JSON gerado contém a estrutura de dados esperada e dados reais do banco.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 12,
+            "title": "Desenvolvimento da Rotina de Backup de Banco de Dados",
+            "description": "Implementar comando de backup que utiliza mysqldump para exportar o banco e gerencia a rotação de arquivos antigos.",
+            "dependencies": [],
+            "details": "Criar `App\\Console\\Commands\\BackupDatabase`. Usar `exec` com `mysqldump`. Implementar opção `--keep` (padrão 7) para deletar arquivos mais antigos que X dias. Armazenar em `storage/app/backups`.",
+            "status": "pending",
+            "testStrategy": "Executar o comando, restaurar o dump gerado em um banco de teste para validar integridade e verificar se arquivos antigos são deletados corretamente.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 13,
+            "title": "Implementação de Alertas de Credenciais Expirando",
+            "description": "Criar comando para identificar credenciais próximas da expiração e registrar alertas no log de segurança.",
+            "dependencies": [
+              9
+            ],
+            "details": "Criar `App\\Console\\Commands\\NotifyExpiringCredentials`. Query: `validity` entre hoje e +30 dias. Para cada resultado, logar aviso no canal 'security' com detalhes da credencial e do responsável.",
+            "status": "pending",
+            "testStrategy": "Criar credenciais dummy com validade para daqui a 15 dias. Rodar o comando e verificar se o alerta aparece em `storage/logs/security.log`.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 14,
+            "title": "Agendamento de Tarefas no Console Kernel",
+            "description": "Configurar o Scheduler do Laravel para executar as rotinas de backup, métricas e notificações nos horários definidos.",
+            "dependencies": [
+              11,
+              12,
+              13
+            ],
+            "details": "Editar `routes/console.php` ou `App\\Console\\Kernel`: Backup (daily 02:00, keep=30), Metrics (hourly), Notify (daily 09:00). Adicionar callback `onFailure` para logar erros críticos no canal de segurança.",
+            "status": "pending",
+            "testStrategy": "Executar `php artisan schedule:list` para confirmar o registro e horários. Testar execução forçada com `schedule:run`.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 15,
+            "title": "Criação de Dashboard Visual de Métricas no Filament",
+            "description": "Implementar uma página customizada no painel administrativo para visualizar graficamente os dados coletados pelos arquivos JSON de métricas.",
+            "dependencies": [
+              11
+            ],
+            "details": "Executar `make:filament-page MetricsDashboard`. Implementar lógica para ler o último arquivo JSON em `storage/metrics` e exibir os dados usando Widgets de Stats ou Charts do Filament.",
+            "status": "pending",
+            "testStrategy": "Acessar a página no painel admin e verificar se os dados exibidos correspondem ao conteúdo do último JSON gerado pelo comando de métricas.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 16,
+            "title": "Validação Final e Documentação de Manutenção",
+            "description": "Realizar testes integrados de todas as ferramentas de monitoramento e documentar os processos de backup e restore.",
+            "dependencies": [
+              14,
+              15
+            ],
+            "details": "Simular falhas para testar logs de erro. Documentar localização dos logs, estrutura dos JSONs de métricas e procedimento de restore do banco de dados na Wiki/README do projeto.",
+            "status": "pending",
+            "testStrategy": null,
             "parentId": "undefined"
           }
         ]
@@ -1421,7 +1515,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-31T07:40:14.035Z",
+      "lastModified": "2026-02-04T11:54:36.337Z",
       "taskCount": 16,
       "completedCount": 14,
       "tags": [
